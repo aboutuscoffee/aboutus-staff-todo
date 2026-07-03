@@ -1,0 +1,13 @@
+{
+  "name": "About Us Coffee — スタッフ管理",
+  "short_name": "Staff Todo",
+  "description": "About Us Coffee のスタッフ担当制度・タスク管理",
+  "start_url": "/aboutus-staff-todo/",
+  "display": "standalone",
+  "background_color": "#f4efe9",
+  "theme_color": "#292524",
+  "icons": [
+    { "src": "/aboutus-staff-todo/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/aboutus-staff-todo/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
