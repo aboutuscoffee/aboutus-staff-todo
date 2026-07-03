@@ -27,7 +27,7 @@ export default function PersonalView({
     <div>
       <SummaryCards summary={summary} />
       {staffMember.stores.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           {staffMember.stores.map((sk) => (
             <StoreCard key={sk} storeKey={sk} items={storeTodosForStore(storeTodos, sk)} readonly onGoToEdit={onGoStoreTodos} />
           ))}

@@ -6,7 +6,7 @@ export default function SummaryCards({ summary }) {
     { num: `${summary.goalPct}%`, label: '成長目標達成率' },
   ];
   return (
-    <div className="grid grid-cols-4 gap-2 mb-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
       {cards.map((c, i) => (
         <div key={i} className="bg-[#F5F3EE] rounded-md p-2.5 text-center">
           <div className="text-lg font-medium">{c.num}</div>

@@ -11,7 +11,7 @@ export default function PasswordTable({ staff, roles, onReset }) {
   };
 
   return (
-    <table className="w-full border-collapse text-xs">
+    <div className="overflow-x-auto"><table className="w-full border-collapse text-xs min-w-[420px]">
       <thead>
         <tr>
           <th className="text-left font-medium text-stone-500 text-[11px] px-2.5 py-1.5 border-b border-stone-300">スタッフ</th>
@@ -47,6 +47,6 @@ export default function PasswordTable({ staff, roles, onReset }) {
           );
         })}
       </tbody>
-    </table>
+    </table></div>
   );
 }

@@ -25,7 +25,7 @@ export default function RoleTable({ roles, staff, onTogglePerm, onToggleViewScop
       <div className="bg-stone-100 text-[11px] text-stone-500 rounded-md px-[10px] py-2.5 mb-2.5 max-w-[600px] leading-relaxed">
         「全体ToDo表示」のチェックがない役職は全体一覧に表示されません。GMは常に非表示です。
       </div>
-      <table className="w-full border-collapse text-xs">
+      <div className="overflow-x-auto"><table className="w-full border-collapse text-xs min-w-[640px]">
         <thead>
           <tr>
             <th className="text-left font-medium text-stone-500 text-[11px] px-2.5 py-1.5 border-b border-stone-300">役職名</th>
@@ -81,7 +81,7 @@ export default function RoleTable({ roles, staff, onTogglePerm, onToggleViewScop
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
 
       <div className="flex flex-col gap-2 mt-2.5 p-3 border border-dashed border-stone-300 rounded-md">
         <div className="text-[11px] font-semibold text-stone-500">新しい役職を追加</div>

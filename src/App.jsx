@@ -53,7 +53,7 @@ export default function App() {
 
 function AppShell({ data, setData }) {
   const { loggedInUserKey, logout, openLoginModal } = useSession();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [view, setView] = useState('overview');
   const [si, setSi] = useState(null);
   const [printData, setPrintData] = useState(null);
@@ -92,9 +92,10 @@ function AppShell({ data, setData }) {
   const removeStoreTodoRow = removeFrom('storeTodos', 'store_todos', 'id');
 
   // --- ナビゲーション ---
-  const goView = (v) => { setView(v); };
-  const goPersonal = (key) => { setView('personal'); setSi(key); };
+  const goView = (v) => { setView(v); setCollapsed(true); };
+  const goPersonal = (key) => { setView('personal'); setSi(key); setCollapsed(true); };
   const trySettings = () => {
+    setCollapsed(true);
     if (loggedInUserKey && isAdminRole(staff, roles, loggedInUserKey)) { setView('settings'); return; }
     openLoginModal({
       subText: '設定の閲覧はGM / オーナーのログインが必要です',
@@ -267,11 +268,12 @@ function AppShell({ data, setData }) {
         onGoView={goView}
         onGoPersonal={goPersonal}
         onTrySettings={trySettings}
+        onClose={() => setCollapsed(true)}
       />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <div className="px-3.5 py-2.5 border-b border-stone-100 flex items-center gap-2.5 flex-shrink-0">
-          <button type="button" onClick={() => setCollapsed((c) => !c)} className="text-stone-500 text-lg px-1.5 py-0.5 rounded hover:bg-stone-100">☰</button>
-          <span className="text-base font-semibold flex-1">{topbarTitle}</span>
+          <button type="button" onClick={() => setCollapsed((c) => !c)} className="text-stone-500 text-lg px-1.5 py-0.5 rounded hover:bg-stone-100 md:hidden">☰</button>
+          <span className="text-base font-semibold flex-1 min-w-0 truncate">{topbarTitle}</span>
           {loggedInStaff && (
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-[11px] text-stone-400">{loggedInStaff.name}（{roles.find((r) => r.key === loggedInStaff.role)?.label}）</span>

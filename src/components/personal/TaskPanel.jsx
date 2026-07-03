@@ -23,8 +23,8 @@ export default function TaskPanel({ tasks, duties, otherStaff, onAddTask, onTogg
     <div>
       <div className="text-[11px] text-stone-400 mb-2">完了タスクは完了日から4ヶ月後に自動削除されます</div>
       <div className="text-xs font-medium text-stone-500 mb-1.5">タスク追加</div>
-      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-1.5 mb-1.5 items-center">
-        <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="タスク名を入力..." className="px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px]" />
+      <div className="flex flex-wrap gap-1.5 mb-1.5 items-center">
+        <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="タスク名を入力..." className="flex-1 min-w-[140px] px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px]" />
         <select value={duty} onChange={(e) => setDuty(e.target.value)} className="px-1.5 py-1 rounded-md border border-stone-300 text-xs">
           {dutyOptions.map((d) => <option key={d} value={d}>{d}</option>)}
         </select>

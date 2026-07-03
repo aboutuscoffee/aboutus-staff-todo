@@ -30,7 +30,7 @@ export default function EvalRecordForm({ record, interviewerOptions, onSave, onC
 
   return (
     <div className="flex flex-col gap-2.5 max-w-[560px]">
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         <div className="flex flex-col gap-1">
           <div className="text-[11px] font-medium text-stone-500">面談日</div>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="px-[9px] py-1.5 rounded-md border border-stone-300 text-sm" />
