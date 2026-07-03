@@ -57,17 +57,17 @@ export default function OverviewTable({ staff, roles, tasks, onToggleDone, onOpe
         </select>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-[13px] table-fixed">
+        <table className="w-full min-w-[720px] border-collapse text-[13px] table-fixed">
           <thead>
             <tr>
               <th className="w-[22px]" />
-              <th className="w-[70px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300">スタッフ</th>
-              <th className="text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300">タスク</th>
-              <th className="w-[70px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300">担当業務</th>
-              <th className="w-[70px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300">ステータス</th>
-              <th className="w-[54px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300">目標時間</th>
-              <th className="w-[68px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300">作業日</th>
-              <th className="w-[68px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300">期限</th>
+              <th className="w-[70px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300 whitespace-nowrap">スタッフ</th>
+              <th className="text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300 whitespace-nowrap">タスク</th>
+              <th className="w-[80px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300 whitespace-nowrap">担当業務</th>
+              <th className="w-[80px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300 whitespace-nowrap">ステータス</th>
+              <th className="w-[64px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300 whitespace-nowrap">目標時間</th>
+              <th className="w-[68px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300 whitespace-nowrap">作業日</th>
+              <th className="w-[68px] text-left font-medium text-stone-500 text-xs px-3 py-2.5 border-b border-stone-300 whitespace-nowrap">期限</th>
             </tr>
           </thead>
           <tbody>
