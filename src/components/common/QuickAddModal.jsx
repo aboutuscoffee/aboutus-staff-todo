@@ -4,7 +4,7 @@ import { showErrorToast } from './Toast';
 import { PRIORITY_OPTIONS } from '../../constants';
 import { useSession } from '../../context/SessionContext';
 
-export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool }) {
+export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo }) {
   const { loggedInUserKey } = useSession();
   const [mode, setMode] = useState('task');
   const [text, setText] = useState('');
@@ -17,6 +17,8 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
   const [poolKind, setPoolKind] = useState('todo');
   const [poolDeadline, setPoolDeadline] = useState('');
   const [targetKeys, setTargetKeys] = useState([]);
+  const [memoTo, setMemoTo] = useState(loggedInUserKey);
+  const [memoText, setMemoText] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -31,6 +33,8 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
       setPoolKind('todo');
       setPoolDeadline('');
       setTargetKeys([]);
+      setMemoTo(loggedInUserKey);
+      setMemoText('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -41,6 +45,16 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
   const recipients = (staff || []).filter((s) => s.key !== loggedInUserKey);
 
   const submit = () => {
+    if (mode === 'memo') {
+      const trimmedMemo = memoText.trim();
+      if (!trimmedMemo) {
+        showErrorToast('メモを入力してください');
+        return;
+      }
+      onSendMemo(memoTo, trimmedMemo);
+      onClose();
+      return;
+    }
     const trimmed = text.trim();
     if (mode === 'task') {
       const minutes = toMin(timeValue, unit);
@@ -65,19 +79,37 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
     <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50" onClick={onClose}>
       <div className="w-[320px] bg-white rounded-2xl px-[20px] py-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex gap-1.5 mb-4">
-          <button type="button" onClick={() => setMode('task')} className={tabClass(mode === 'task')}>📋 自分のタスク</button>
-          <button type="button" onClick={() => setMode('pool')} className={tabClass(mode === 'pool')}>🎯 依頼タスク</button>
+          <button type="button" onClick={() => setMode('task')} className={tabClass(mode === 'task')}>📋 タスク</button>
+          <button type="button" onClick={() => setMode('pool')} className={tabClass(mode === 'pool')}>🎯 依頼</button>
+          <button type="button" onClick={() => setMode('memo')} className={tabClass(mode === 'memo')}>💬 メモ</button>
         </div>
 
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="タスク名を入力...*"
-          className="w-full px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px] mb-2"
-        />
+        {mode !== 'memo' && (
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="タスク名を入力...*"
+            className="w-full px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px] mb-2"
+          />
+        )}
 
-        {mode === 'task' ? (
+        {mode === 'memo' ? (
+          <div className="mb-3">
+            <div className="text-xs text-stone-500 mb-1">宛先</div>
+            <select value={memoTo} onChange={(e) => setMemoTo(e.target.value)} className="w-full px-1.5 py-1.5 rounded-md border border-stone-300 text-xs mb-2">
+              <option value={loggedInUserKey}>自分（自分用メモ）</option>
+              {recipients.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}
+            </select>
+            <textarea
+              value={memoText}
+              onChange={(e) => setMemoText(e.target.value)}
+              placeholder="メモを入力..."
+              rows={4}
+              className="w-full px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px] resize-none"
+            />
+          </div>
+        ) : mode === 'task' ? (
           <>
             <div className="flex flex-wrap gap-1.5 mb-2 items-center">
               <span className="text-xs text-stone-500">担当業務</span>
@@ -153,7 +185,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
 
         <div className="flex gap-1.5">
           <button type="button" onClick={onClose} className="flex-1 py-2 rounded-md border border-stone-300 bg-white text-sm">キャンセル</button>
-          <button type="button" onClick={submit} className="flex-1 py-2 rounded-md bg-stone-900 text-white text-sm font-medium">＋ 追加</button>
+          <button type="button" onClick={submit} className="flex-1 py-2 rounded-md bg-stone-900 text-white text-sm font-medium">{mode === 'memo' ? '送信' : '＋ 追加'}</button>
         </div>
       </div>
     </div>

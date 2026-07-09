@@ -10,6 +10,7 @@ const TYPE_ICON = {
   task_done: '✔️',
   store_comment: '🏪',
   eval_comment: '🗒️',
+  memo_sent: '📤',
 };
 
 const SWIPE_OPEN = -56;
@@ -90,20 +91,8 @@ function NotificationRow({ n, onDelete }) {
   );
 }
 
-export default function NotificationPanel({ open, onClose, notifications, otherStaff, onSendMemo, onDeleteNotification, onClearNotifications }) {
-  const [composing, setComposing] = useState(false);
-  const [toKey, setToKey] = useState(otherStaff[0]?.key ?? '');
-  const [text, setText] = useState('');
-
+export default function NotificationPanel({ open, onClose, notifications, onDeleteNotification, onClearNotifications }) {
   if (!open) return null;
-
-  const send = () => {
-    const trimmed = text.trim();
-    if (!trimmed || !toKey) return;
-    onSendMemo(toKey, trimmed);
-    setText('');
-    setComposing(false);
-  };
 
   const memos = notifications.filter((n) => n.type === 'memo');
   const alerts = notifications.filter((n) => n.type !== 'memo');
@@ -123,28 +112,6 @@ export default function NotificationPanel({ open, onClose, notifications, otherS
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-2 bg-stone-50 flex items-center justify-between flex-shrink-0">
             <span className="text-[11px] font-medium text-stone-500">💬 メモ</span>
-          </div>
-          <div className="px-4 py-2.5 border-b border-stone-100 flex-shrink-0">
-            {!composing ? (
-              <button type="button" onClick={() => setComposing(true)} className="w-full py-1.5 rounded-md border border-stone-300 bg-white text-xs font-medium">💬 メモを送る</button>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                <select value={toKey} onChange={(e) => setToKey(e.target.value)} className="px-1.5 py-1 rounded-md border border-stone-300 text-xs">
-                  {otherStaff.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}
-                </select>
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="メモを入力..."
-                  rows={2}
-                  className="w-full px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px] resize-none"
-                />
-                <div className="flex gap-1.5">
-                  <button type="button" onClick={() => { setComposing(false); setText(''); }} className="flex-1 py-1.5 rounded-md border border-stone-300 bg-white text-xs">キャンセル</button>
-                  <button type="button" onClick={send} className="flex-1 py-1.5 rounded-md bg-stone-900 text-white text-xs font-medium">送信</button>
-                </div>
-              </div>
-            )}
           </div>
           {memos.length === 0 ? (
             <p className="text-xs text-stone-400 text-center py-4">メモはありません</p>

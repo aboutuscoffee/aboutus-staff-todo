@@ -131,9 +131,14 @@ function AppShell({ data, setData }) {
   };
 
   const onSendMemo = (toKey, text) => {
+    if (toKey === loggedInUserKey) {
+      notify(loggedInUserKey, 'memo', text);
+      showToast('メモを保存しました');
+      return;
+    }
     const toName = staff.find((s) => s.key === toKey)?.name || '';
     notify(toKey, 'memo', `${loggedInStaff?.name}さんからのメモ: ${text}`, loggedInUserKey);
-    notify(loggedInUserKey, 'memo', `${toName}さんへのメモ: ${text}`, loggedInUserKey);
+    notify(loggedInUserKey, 'memo_sent', `${toName}さんへメモを送信しました: ${text}`, loggedInUserKey);
     showToast('メモを送信しました');
   };
 
@@ -498,13 +503,12 @@ function AppShell({ data, setData }) {
         duties={loggedInStaff?.duties || []}
         onAddTask={(fields) => onAddTask(loggedInUserKey, fields)}
         onAddPool={onAddPool}
+        onSendMemo={onSendMemo}
       />
       <NotificationPanel
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
         notifications={notifications}
-        otherStaff={staff.filter((s) => s.key !== loggedInUserKey)}
-        onSendMemo={onSendMemo}
         onDeleteNotification={onDeleteNotification}
         onClearNotifications={onClearNotifications}
       />
