@@ -4,7 +4,7 @@ import { showErrorToast } from './Toast';
 import { PRIORITY_OPTIONS } from '../../constants';
 import { useSession } from '../../context/SessionContext';
 
-export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo }) {
+export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode }) {
   const { loggedInUserKey } = useSession();
   const [mode, setMode] = useState('task');
   const [text, setText] = useState('');
@@ -22,7 +22,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
 
   useEffect(() => {
     if (open) {
-      setMode('task');
+      setMode(initialMode || 'task');
       setText('');
       setDuty(duties[0] || 'その他');
       setPriority('mid');

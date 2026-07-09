@@ -91,7 +91,7 @@ function NotificationRow({ n, onDelete }) {
   );
 }
 
-export default function NotificationPanel({ open, onClose, notifications, onDeleteNotification, onClearNotifications }) {
+export default function NotificationPanel({ open, onClose, notifications, onDeleteNotification, onClearNotifications, onOpenMemoCompose }) {
   if (!open) return null;
 
   const memos = notifications.filter((n) => n.type === 'memo');
@@ -112,6 +112,7 @@ export default function NotificationPanel({ open, onClose, notifications, onDele
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-2 bg-stone-50 flex items-center justify-between flex-shrink-0">
             <span className="text-[11px] font-medium text-stone-500">💬 メモ</span>
+            <button type="button" onClick={onOpenMemoCompose} className="text-stone-500 hover:text-stone-900 text-base font-semibold leading-none px-1" aria-label="メモを送る">＋</button>
           </div>
           {memos.length === 0 ? (
             <p className="text-xs text-stone-400 text-center py-4">メモはありません</p>

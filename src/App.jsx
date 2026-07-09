@@ -72,6 +72,7 @@ function AppShell({ data, setData }) {
   const [personalTab, setPersonalTab] = useState(null);
   const [printData, setPrintData] = useState(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddMode, setQuickAddMode] = useState('task');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -416,7 +417,7 @@ function AppShell({ data, setData }) {
         <div className="px-2.5 sm:px-3.5 pb-2.5 pt-11 sm:pt-[max(0.625rem,env(safe-area-inset-top))] border-b border-stone-100 flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
           <button type="button" onClick={() => setCollapsed((c) => !c)} className="text-stone-500 text-lg px-1.5 py-0.5 rounded hover:bg-stone-100 md:hidden">☰</button>
           <span className="text-base font-semibold flex-1 min-w-0 truncate">{topbarTitle}</span>
-          <button type="button" onClick={() => setQuickAddOpen(true)} className="text-stone-900 text-base font-semibold leading-none px-1 flex-shrink-0" aria-label="タスク追加">＋</button>
+          <button type="button" onClick={() => { setQuickAddMode('task'); setQuickAddOpen(true); }} className="text-stone-900 text-base font-semibold leading-none px-1 flex-shrink-0" aria-label="タスク追加">＋</button>
           <button type="button" onClick={() => setCalendarOpen(true)} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-stone-100 flex-shrink-0" aria-label="カレンダー">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-600">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -504,6 +505,7 @@ function AppShell({ data, setData }) {
         onAddTask={(fields) => onAddTask(loggedInUserKey, fields)}
         onAddPool={onAddPool}
         onSendMemo={onSendMemo}
+        initialMode={quickAddMode}
       />
       <NotificationPanel
         open={notifOpen}
@@ -511,6 +513,7 @@ function AppShell({ data, setData }) {
         notifications={notifications}
         onDeleteNotification={onDeleteNotification}
         onClearNotifications={onClearNotifications}
+        onOpenMemoCompose={() => { setNotifOpen(false); setQuickAddMode('memo'); setQuickAddOpen(true); }}
       />
       <CalendarModal
         open={calendarOpen}
