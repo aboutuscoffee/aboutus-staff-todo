@@ -53,7 +53,7 @@ export default function CalendarModal({ open, onClose, staff, tasks, onOpenPerso
       <div className="fixed inset-0 bg-black/30" />
       <div
         className="fixed inset-x-2 bottom-4 sm:inset-x-8 md:inset-x-20 bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-        style={{ top: 'max(1rem, env(safe-area-inset-top))' }}
+        style={{ top: 'max(2.75rem, env(safe-area-inset-top))' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3 border-b border-stone-100 flex items-center justify-between flex-shrink-0">

@@ -115,7 +115,7 @@ export default function NotificationPanel({ open, onClose, notifications, otherS
         className="fixed right-0 top-0 bottom-0 w-[320px] max-w-[90vw] bg-white shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-stone-100 flex items-center justify-between flex-shrink-0">
+        <div className="px-4 pb-3 pt-11 sm:pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-stone-100 flex items-center justify-between flex-shrink-0">
           <span className="text-sm font-semibold">通知</span>
           <button type="button" onClick={onClose} className="text-stone-400 hover:text-stone-900 text-lg leading-none px-1">✕</button>
         </div>
