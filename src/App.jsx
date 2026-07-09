@@ -408,7 +408,7 @@ function AppShell({ data, setData }) {
         onClose={() => setCollapsed(true)}
       />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <div className="px-2.5 sm:px-3.5 py-2.5 border-b border-stone-100 flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+        <div className="px-2.5 sm:px-3.5 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] border-b border-stone-100 flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
           <button type="button" onClick={() => setCollapsed((c) => !c)} className="text-stone-500 text-lg px-1.5 py-0.5 rounded hover:bg-stone-100 md:hidden">☰</button>
           <span className="text-base font-semibold flex-1 min-w-0 truncate">{topbarTitle}</span>
           <button type="button" onClick={() => setQuickAddOpen(true)} className="text-stone-900 text-base font-semibold leading-none px-1 flex-shrink-0" aria-label="タスク追加">＋</button>

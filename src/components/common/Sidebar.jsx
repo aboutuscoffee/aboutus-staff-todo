@@ -52,7 +52,7 @@ export default function Sidebar({ collapsed, staff, roles, view, si, onGoView, o
           collapsed ? 'hidden' : 'fixed inset-y-0 left-0 w-[230px] shadow-2xl'
         } md:static md:flex md:z-auto md:w-[190px] md:min-w-[190px] md:shadow-none md:border-r md:border-stone-200`}
       >
-        <div className="px-[14px] py-[10px] border-b border-stone-100 flex-shrink-0">
+        <div className="px-[14px] pb-[10px] pt-[max(10px,env(safe-area-inset-top))] border-b border-stone-100 flex-shrink-0">
           <span className="text-[13px] font-semibold whitespace-nowrap">About Us ☕</span>
         </div>
         <div className="overflow-y-auto flex-1 py-2">
