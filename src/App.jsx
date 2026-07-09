@@ -486,7 +486,6 @@ function AppShell({ data, setData }) {
               staffKey={si} staff={staff} roles={roles} tasks={tasks} goals={goals} goalMilestones={goalMilestones}
               storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords}
               initialTab={personalTab}
-              onGoStoreTodos={() => goView('storetodos')}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
               onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
               onAddGoal={onAddGoal} onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}

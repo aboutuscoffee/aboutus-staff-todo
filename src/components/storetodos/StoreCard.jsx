@@ -4,7 +4,7 @@ import { STORE_INFO } from '../../constants';
 export default function StoreCard({
   storeKey, items, monthText, readonly, historical, hideHeader,
   comment = '', canComment, onSaveComment,
-  onAdd, onToggle, onDelete, onGoToEdit,
+  onAdd, onToggle, onDelete,
 }) {
   const [text, setText] = useState('');
   const [editingComment, setEditingComment] = useState(false);
@@ -48,11 +48,6 @@ export default function StoreCard({
           )}
         </div>
       ))}
-      {readonly && (
-        <div className="text-[10px] text-stone-400 mt-1.5">
-          🔒 読み取り専用 — <button type="button" onClick={onGoToEdit} className="text-[10px] bg-white border border-stone-300 rounded-md px-2 py-0.5">編集はこちら</button>
-        </div>
-      )}
       {itemsInteractive && (
         <div className="flex gap-1.5 mt-1.5">
           <input

@@ -13,7 +13,6 @@ import { useSession } from '../../context/SessionContext';
 export default function PersonalView({
   staffKey, staff, roles, tasks, goals, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords,
   initialTab,
-  onGoStoreTodos,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
   onAddGoal, onAddMilestone, onToggleMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
@@ -48,7 +47,6 @@ export default function PersonalView({
               monthText={monthLabel(monthKey())}
               items={storeTodosForStore(storeTodos, sk, monthKey())}
               readonly
-              onGoToEdit={onGoStoreTodos}
             />
           ))}
         </div>
