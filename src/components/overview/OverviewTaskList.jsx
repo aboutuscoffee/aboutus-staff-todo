@@ -6,6 +6,21 @@ import { useSession } from '../../context/SessionContext';
 import { taskCompare } from '../../lib/selectors';
 import { isOwnerRole } from '../../lib/permissions';
 
+function FilterSelect({ value, onChange, children }) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={onChange}
+        className="text-xs pl-[10px] pr-5 py-1 rounded-full border border-stone-300 bg-white text-stone-500 appearance-none"
+      >
+        {children}
+      </select>
+      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-stone-400">▼</span>
+    </div>
+  );
+}
+
 export default function OverviewTaskList({
   staff, roles, tasks, onToggleDone, onOpenPersonal,
   onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
@@ -42,24 +57,24 @@ export default function OverviewTaskList({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+      <div className="flex flex-col gap-1.5 mb-2.5">
         <SortChips value={sortBy} onChange={setSortBy} />
-        <div className="flex flex-wrap items-center justify-end gap-1.5 ml-auto">
-          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="text-xs px-[10px] py-1 rounded-full border border-stone-300 bg-white text-stone-500 appearance-none">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <FilterSelect value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
             <option value="all">全役職</option>
             {overviewRoles.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
-          </select>
-          <select value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)} className="text-xs px-[10px] py-1 rounded-full border border-stone-300 bg-white text-stone-500 appearance-none">
+          </FilterSelect>
+          <FilterSelect value={storeFilter} onChange={(e) => setStoreFilter(e.target.value)}>
             <option value="all">全店舗</option>
             {STORE_KEYS.map((sk) => <option key={sk} value={sk}>{STORE_INFO[sk].label}</option>)}
-          </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs px-[10px] py-1 rounded-full border border-stone-300 bg-white text-stone-500 appearance-none">
-            <option value="all">全ステータス・全状態</option>
+          </FilterSelect>
+          <FilterSelect value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="all">全ステータス</option>
             <option value="open">未完了のみ</option>
             <option value="done">完了のみ</option>
             <option value="review">確認待ち</option>
             <option value="none_status">ステータスなし（未完了）</option>
-          </select>
+          </FilterSelect>
         </div>
       </div>
       <div>
