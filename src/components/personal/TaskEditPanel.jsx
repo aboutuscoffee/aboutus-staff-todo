@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { fmtMin } from '../../utils';
+import { PRIORITY_OPTIONS } from '../../constants';
+import TrashIcon from '../common/TrashIcon';
 
-export default function TaskEditPanel({ task, duties, otherStaff, onSave, onReassign, onReleaseToPool }) {
+export default function TaskEditPanel({ task, duties, otherStaff, onSave, onDelete, onReassign, onReleaseToPool }) {
   const [text, setText] = useState(task.text);
   const [duty, setDuty] = useState(task.duty);
+  const [priority, setPriority] = useState(task.priority || 'mid');
   const [minutesValue, setMinutesValue] = useState(task.minutes || '');
   const [unit, setUnit] = useState('min');
   const [workdate, setWorkdate] = useState(task.workdate || '');
@@ -18,10 +21,15 @@ export default function TaskEditPanel({ task, duties, otherStaff, onSave, onReas
     onSave({
       text: trimmed,
       duty,
+      priority,
       minutes: minutesValue ? Math.round(unit === 'hr' ? parseFloat(minutesValue) * 60 : parseFloat(minutesValue)) : task.minutes,
       workdate,
       deadline,
     });
+  };
+
+  const remove = () => {
+    if (window.confirm('このタスクを削除しますか？')) onDelete();
   };
 
   return (
@@ -34,6 +42,10 @@ export default function TaskEditPanel({ task, duties, otherStaff, onSave, onReas
       />
       <select value={duty} onChange={(e) => setDuty(e.target.value)} className="px-[7px] py-1 rounded-md border border-stone-300 text-xs">
         {dutyOptions.map((d) => <option key={d} value={d}>{d}</option>)}
+      </select>
+      <span className="text-[11px] text-stone-500">優先度</span>
+      <select value={priority} onChange={(e) => setPriority(e.target.value)} className="px-[7px] py-1 rounded-md border border-stone-300 text-xs">
+        {PRIORITY_OPTIONS.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
       </select>
       <span className="text-[11px] text-stone-500">時間</span>
       <input
@@ -64,6 +76,7 @@ export default function TaskEditPanel({ task, duties, otherStaff, onSave, onReas
           className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs"
         >変更</button>
         <button type="button" onClick={onReleaseToPool} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 プールに戻す</button>
+        <button type="button" onClick={remove} className="ml-auto px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs text-[#A32D2D] hover:bg-[#FCEBEB] flex items-center gap-1"><TrashIcon size={13} />削除</button>
       </div>
     </div>
   );

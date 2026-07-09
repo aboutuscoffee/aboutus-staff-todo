@@ -1,7 +1,7 @@
 export default function SummaryCards({ summary }) {
   const cards = [
     { num: summary.total, label: '今日のタスク' },
-    { num: summary.done, label: '完了タスク' },
+    { num: summary.doneThisMonth, label: '今月の完了タスク' },
     { num: summary.onTimePct === null ? '—' : `${summary.onTimePct}%`, label: <>期限内完了率<br /><span className="text-[9px] text-stone-400">過去30日</span></> },
     { num: `${summary.goalPct}%`, label: '成長目標達成率' },
   ];

@@ -2,7 +2,7 @@ import { STORE_INFO, STORE_KEYS } from '../../constants';
 
 function RoleBadge({ staffMember, roles }) {
   const role = roles.find((r) => r.key === staffMember.role);
-  if (!role) return null;
+  if (!role || role.key === 'staff') return null;
   if (role.key === 'GM' || role.is_owner) {
     return <span className="text-[10px] px-[5px] py-[1px] rounded font-semibold bg-[#E1F5EE] text-[#085041]">{role.label}</span>;
   }
@@ -25,18 +25,22 @@ export default function Sidebar({ collapsed, staff, roles, view, si, onGoView, o
     });
   });
 
-  const item = (s) => (
-    <div
-      key={s.key}
-      className={`flex items-center justify-between px-[14px] py-[6px] cursor-pointer text-[13px] ${
-        view === 'personal' && si === s.key ? 'bg-white text-stone-900 font-medium' : 'text-stone-500 hover:bg-white hover:text-stone-900'
-      }`}
-      onClick={() => onGoPersonal(s.key)}
-    >
-      <span>{s.name}</span>
-      <RoleBadge staffMember={s} roles={roles} />
-    </div>
-  );
+  const item = (s) => {
+    const isOwner = roles.find((r) => r.key === s.role)?.is_owner;
+    const active = isOwner ? view === 'owner' : view === 'personal' && si === s.key;
+    return (
+      <div
+        key={s.key}
+        className={`flex items-center justify-between px-[14px] py-[6px] cursor-pointer text-[13px] ${
+          active ? 'bg-white text-stone-900 font-medium' : 'text-stone-500 hover:bg-white hover:text-stone-900'
+        }`}
+        onClick={() => (isOwner ? onGoView('owner') : onGoPersonal(s.key))}
+      >
+        <span>{s.name}</span>
+        <RoleBadge staffMember={s} roles={roles} />
+      </div>
+    );
+  };
 
   return (
     <>

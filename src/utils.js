@@ -13,6 +13,35 @@ export const monthAgo = (() => {
   d.setDate(d.getDate() - 30);
   return isoDate(d);
 })();
+export const monthStart = (() => {
+  const d = new Date();
+  d.setDate(1);
+  return isoDate(d);
+})();
+export function monthKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+export function monthKeyRange(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  return {
+    start: isoDate(new Date(y, m - 1, 1)),
+    end: isoDate(new Date(y, m, 0)),
+    nextStart: isoDate(new Date(y, m, 1)),
+    nextEnd: isoDate(new Date(y, m + 1, 0)),
+  };
+}
+export function pastMonthKeys(n) {
+  const now = new Date();
+  const out = [];
+  for (let i = 1; i <= n; i++) {
+    out.push(monthKey(new Date(now.getFullYear(), now.getMonth() - i, 1)));
+  }
+  return out;
+}
+export function monthLabel(ym) {
+  const [y, m] = ym.split('-');
+  return `${y}年${Number(m)}月`;
+}
 export const fourMoAgo = (() => {
   const d = new Date();
   d.setMonth(d.getMonth() - 4);
@@ -49,10 +78,6 @@ export function dlLabel(d) {
   if (d === today) return '今日';
   if (d === tomorrow) return '明日';
   return d.slice(5).replace('-', '/');
-}
-
-export function statusClass(s) {
-  return s === 'inprogress' ? 'st-ip' : s === 'review' ? 'st-rv' : '';
 }
 
 export async function sha256(text) {

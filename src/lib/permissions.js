@@ -23,6 +23,25 @@ export function isAdminRole(staff, roles, key) {
   return role?.key === 'GM' || !!role?.is_owner;
 }
 
+export function isOwnerRole(staff, roles, key) {
+  const staffMember = staff.find((s) => s.key === key);
+  const role = staffMember && findRole(roles, staffMember.role);
+  return !!role?.is_owner;
+}
+
 export function loginableStaff(staff, roles) {
   return staff.filter((s) => findRole(roles, s.role)?.can_login);
+}
+
+export function currentOwnerKey(staff, roles) {
+  const ownerRole = roles.find((r) => r.is_owner);
+  if (!ownerRole) return null;
+  const owner = staff.find((s) => s.role === ownerRole.key);
+  return owner ? owner.key : null;
+}
+
+export function canAssignOwner(staff, roles, viewerKey) {
+  const ownerKey = currentOwnerKey(staff, roles);
+  if (!ownerKey) return true;
+  return viewerKey === ownerKey;
 }

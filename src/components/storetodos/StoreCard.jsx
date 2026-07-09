@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { STORE_INFO } from '../../constants';
-import { thisMonth } from '../../utils';
 
-export default function StoreCard({ storeKey, items, readonly, onAdd, onToggle, onDelete, onGoToEdit }) {
+export default function StoreCard({
+  storeKey, items, monthText, readonly, historical, hideHeader,
+  comment = '', canComment, onSaveComment,
+  onAdd, onToggle, onDelete, onGoToEdit,
+}) {
   const [text, setText] = useState('');
+  const [editingComment, setEditingComment] = useState(false);
+  const [commentDraft, setCommentDraft] = useState(comment);
+
+  const itemsInteractive = !readonly && !historical;
 
   const submit = () => {
     const trimmed = text.trim();
@@ -12,33 +19,41 @@ export default function StoreCard({ storeKey, items, readonly, onAdd, onToggle, 
     setText('');
   };
 
+  const saveComment = () => {
+    onSaveComment(commentDraft.trim());
+    setEditingComment(false);
+  };
+
   return (
     <div className={`rounded-2xl p-[14px_16px] ${readonly ? 'border border-stone-100 bg-white' : 'bg-[#F5F3EE]'}`}>
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-[13px] font-semibold">{STORE_INFO[storeKey].label}</span>
-        <span className="text-[11px] text-stone-400">{thisMonth}</span>
-      </div>
+      {!hideHeader && (
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[13px] font-semibold">{STORE_INFO[storeKey].label}</span>
+          {monthText && <span className="text-[11px] text-stone-400">{monthText}</span>}
+        </div>
+      )}
       {items.length === 0 && <span className="text-[11px] text-stone-400">取組項目がありません</span>}
       {items.map((item) => (
         <div key={item.id} className="flex items-center gap-[7px] text-xs text-stone-500 mb-1">
           <input
             type="checkbox"
             checked={item.done}
-            disabled={readonly}
+            disabled={!itemsInteractive}
             onChange={() => onToggle && onToggle(item.id)}
             className="w-[13px] h-[13px] accent-[#1D9E75] flex-shrink-0"
           />
           <span className={item.done ? 'line-through text-stone-400' : ''}>{item.text}</span>
-          {!readonly && (
+          {itemsInteractive && (
             <button type="button" onClick={() => onDelete(item.id)} className="ml-auto text-stone-400 hover:text-stone-700 text-[11px] px-0.5">✕</button>
           )}
         </div>
       ))}
-      {readonly ? (
+      {readonly && (
         <div className="text-[10px] text-stone-400 mt-1.5">
           🔒 読み取り専用 — <button type="button" onClick={onGoToEdit} className="text-[10px] bg-white border border-stone-300 rounded-md px-2 py-0.5">編集はこちら</button>
         </div>
-      ) : (
+      )}
+      {itemsInteractive && (
         <div className="flex gap-1.5 mt-1.5">
           <input
             type="text"
@@ -49,6 +64,33 @@ export default function StoreCard({ storeKey, items, readonly, onAdd, onToggle, 
             className="flex-1 px-[7px] py-1 rounded-md border border-stone-300 text-xs"
           />
           <button type="button" onClick={submit} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">追加</button>
+        </div>
+      )}
+
+      {onSaveComment && (
+        <div className="mt-2.5 pt-2 border-t border-stone-200/70">
+          <div className="text-[10px] text-stone-500 mb-1">SMコメント</div>
+          {editingComment ? (
+            <div className="flex flex-col gap-1.5">
+              <textarea
+                value={commentDraft}
+                onChange={(e) => setCommentDraft(e.target.value)}
+                rows={2}
+                className="w-full px-[7px] py-1 rounded-md border border-stone-300 text-xs resize-none"
+              />
+              <div className="flex gap-1.5">
+                <button type="button" onClick={() => { setCommentDraft(comment); setEditingComment(false); }} className="px-2 py-0.5 rounded-md border border-stone-300 bg-white text-[11px]">キャンセル</button>
+                <button type="button" onClick={saveComment} className="px-2 py-0.5 rounded-md bg-stone-900 text-white text-[11px]">保存</button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-1.5">
+              <p className="text-xs text-stone-600 flex-1 whitespace-pre-wrap">{comment || (canComment ? '' : 'コメントはありません')}</p>
+              {canComment && (
+                <button type="button" onClick={() => { setCommentDraft(comment); setEditingComment(true); }} className="text-stone-400 hover:text-stone-900 text-xs flex-shrink-0">✏️</button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

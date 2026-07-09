@@ -1,24 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SummaryCards from './SummaryCards';
+import GoalSummary from './GoalSummary';
 import TaskPanel from './TaskPanel';
 import GoalPanel from './GoalPanel';
 import EvalPanel from './EvalPanel';
 import StoreCard from '../storetodos/StoreCard';
 import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary } from '../../lib/selectors';
-import { monthAgo } from '../../utils';
+import { monthAgo, monthStart, monthKey, monthLabel } from '../../utils';
+import { isOwnerRole } from '../../lib/permissions';
+import { useSession } from '../../context/SessionContext';
 
 export default function PersonalView({
-  staffKey, staff, roles, tasks, goals, goalMilestones, storeTodos, evalRecords,
+  staffKey, staff, roles, tasks, goals, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords,
+  initialTab,
   onGoStoreTodos,
-  onAddTask, onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
+  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
   onAddGoal, onAddMilestone, onToggleMilestone,
-  onSaveProfile, onCreateRecord, onSaveRecord, onPrint,
+  onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
 }) {
   const [pTab, setPTab] = useState('tasks');
+  const { loggedInUserKey } = useSession();
   const staffMember = staff.find((s) => s.key === staffKey);
+
+  useEffect(() => {
+    if (initialTab) setPTab(initialTab);
+  }, [staffKey, initialTab]);
+
   if (!staffMember) return null;
 
-  const summary = computeSummary(tasks, goals, goalMilestones, staffKey, monthAgo);
+  const isOwner = loggedInUserKey === staffKey || isOwnerRole(staff, roles, loggedInUserKey);
+
+  const summary = computeSummary(tasks, goals, goalMilestones, staffKey, monthAgo, monthStart);
   const myTasks = tasksForStaff(tasks, staffKey);
   const myGoals = goalsForStaff(goals, goalMilestones, staffKey);
   const otherStaff = staff.filter((s) => s.key !== staffKey);
@@ -26,10 +38,18 @@ export default function PersonalView({
   return (
     <div>
       <SummaryCards summary={summary} />
+      <GoalSummary goals={myGoals} />
       {staffMember.stores.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           {staffMember.stores.map((sk) => (
-            <StoreCard key={sk} storeKey={sk} items={storeTodosForStore(storeTodos, sk)} readonly onGoToEdit={onGoStoreTodos} />
+            <StoreCard
+              key={sk}
+              storeKey={sk}
+              monthText={monthLabel(monthKey())}
+              items={storeTodosForStore(storeTodos, sk, monthKey())}
+              readonly
+              onGoToEdit={onGoStoreTodos}
+            />
           ))}
         </div>
       )}
@@ -45,7 +65,7 @@ export default function PersonalView({
           tasks={myTasks}
           duties={staffMember.duties || []}
           otherStaff={otherStaff}
-          onAddTask={(fields) => onAddTask(staffKey, fields)}
+          isOwner={isOwner}
           onToggleDone={(id) => onToggleTaskDone(staffKey, id)}
           onDelete={(id) => onDeleteTask(id)}
           onSave={(id, updates) => onSaveTaskEdit(id, updates)}
@@ -68,10 +88,12 @@ export default function PersonalView({
           staff={staff}
           roles={roles}
           evalRecords={evalRecords}
+          monthlyEvalRecords={monthlyEvalRecords}
           onSaveProfile={onSaveProfile}
           onCreateRecord={onCreateRecord}
           onSaveRecord={onSaveRecord}
           onPrint={onPrint}
+          onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
         />
       )}
     </div>

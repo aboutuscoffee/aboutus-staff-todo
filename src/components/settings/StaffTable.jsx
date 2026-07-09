@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { STORE_INFO, STORE_KEYS } from '../../constants';
 
-export default function StaffTable({ staff, roles, onReorder, onUpdateField, onDelete, onAdd }) {
+export default function StaffTable({ staff, roles, canAssignOwner, onReorder, onUpdateField, onDelete, onAdd }) {
   const [dragSrc, setDragSrc] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
   const [names, setNames] = useState({});
@@ -10,6 +10,8 @@ export default function StaffTable({ staff, roles, onReorder, onUpdateField, onD
   const [newRole, setNewRole] = useState(roles[0]?.key ?? '');
 
   const nameValue = (s) => names[s.key] ?? s.name;
+  const roleOptionsFor = (currentRoleKey) => (canAssignOwner ? roles : roles.filter((r) => !r.is_owner || r.key === currentRoleKey));
+  const addableRoles = canAssignOwner ? roles : roles.filter((r) => !r.is_owner);
 
   const drop = (idx) => {
     setDragOverIdx(null);
@@ -79,10 +81,11 @@ export default function StaffTable({ staff, roles, onReorder, onUpdateField, onD
               </div>
               <select
                 value={s.role}
+                disabled={!canAssignOwner && roles.find((r) => r.key === s.role)?.is_owner}
                 onChange={(e) => onUpdateField(s.key, { role: e.target.value })}
-                className="px-[7px] py-1 rounded-md border border-stone-300 text-xs w-auto"
+                className="px-[7px] py-1 rounded-md border border-stone-300 text-xs w-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {roles.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+                {roleOptionsFor(s.role).map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
               </select>
               <div className="flex gap-0.5 items-center">
                 <button
@@ -119,7 +122,7 @@ export default function StaffTable({ staff, roles, onReorder, onUpdateField, onD
             </label>
           ))}
           <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="px-2 py-1 rounded-md border border-stone-300 text-xs">
-            {roles.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+            {addableRoles.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
           </select>
           <button type="button" onClick={submitAdd} className="px-3 py-1.5 rounded-md border border-stone-300 bg-white text-xs">＋ 追加</button>
         </div>

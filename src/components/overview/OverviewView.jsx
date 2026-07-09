@@ -1,11 +1,18 @@
 import PoolDashboard from './PoolDashboard';
-import OverviewTable from './OverviewTable';
+import OverviewTaskList from './OverviewTaskList';
 
-export default function OverviewView({ staff, roles, tasks, poolTasks, onAddPool, onClaimPool, onDeletePool, onToggleTaskDone, onOpenPersonal }) {
+export default function OverviewView({
+  staff, roles, tasks, poolTasks, onClaimPool, onDeletePool, onToggleTaskDone, onOpenPersonal,
+  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
+}) {
   return (
     <div>
-      <PoolDashboard poolTasks={poolTasks} staff={staff} onAdd={onAddPool} onClaim={onClaimPool} onDelete={onDeletePool} />
-      <OverviewTable staff={staff} roles={roles} tasks={tasks} onToggleDone={onToggleTaskDone} onOpenPersonal={onOpenPersonal} />
+      <PoolDashboard poolTasks={poolTasks} onClaim={onClaimPool} onDelete={onDeletePool} />
+      <OverviewTaskList
+        staff={staff} roles={roles} tasks={tasks} onToggleDone={onToggleTaskDone} onOpenPersonal={onOpenPersonal}
+        onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange}
+        onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
+      />
     </div>
   );
 }

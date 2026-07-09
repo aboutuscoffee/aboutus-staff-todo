@@ -1,13 +1,42 @@
-export function tasksForStaff(tasks, staffKey) {
-  return tasks
-    .filter((t) => t.staff_key === staffKey)
-    .slice()
-    .sort((a, b) => {
-      if (a.done !== b.done) return a.done ? 1 : -1;
-      const da = a.deadline || '', db = b.deadline || '';
-      if (da !== db) return da < db ? -1 : 1;
-      return (a.duty || '').localeCompare(b.duty || '');
-    });
+import { monthKeyRange } from '../utils';
+import { findRole } from './permissions';
+import { STORE_KEYS } from '../constants';
+
+const PRIORITY_RANK = { high: 0, mid: 1, low: 2 };
+
+function cmpDate(da, db) {
+  da = da || '';
+  db = db || '';
+  if (da === db) return 0;
+  return da < db ? -1 : 1;
+}
+
+export function taskCompare(criterion) {
+  return (a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (criterion === 'priority') {
+      const pa = PRIORITY_RANK[a.priority] ?? 1;
+      const pb = PRIORITY_RANK[b.priority] ?? 1;
+      if (pa !== pb) return pa - pb;
+    } else if (criterion === 'workdate') {
+      const c = cmpDate(a.workdate, b.workdate);
+      if (c !== 0) return c;
+    } else {
+      const c = cmpDate(a.deadline, b.deadline);
+      if (c !== 0) return c;
+    }
+    const c2 = cmpDate(a.deadline, b.deadline);
+    if (c2 !== 0) return c2;
+    return (a.duty || '').localeCompare(b.duty || '');
+  };
+}
+
+export function sortTasks(tasks, criterion = 'deadline') {
+  return tasks.slice().sort(taskCompare(criterion));
+}
+
+export function tasksForStaff(tasks, staffKey, criterion = 'deadline') {
+  return sortTasks(tasks.filter((t) => t.staff_key === staffKey), criterion);
 }
 
 export function goalsForStaff(goals, goalMilestones, staffKey) {
@@ -23,8 +52,31 @@ export function evalRecordsForStaff(evalRecords, staffKey) {
   return evalRecords.filter((r) => r.staff_key === staffKey).slice().sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
-export function storeTodosForStore(storeTodos, storeKey) {
-  return storeTodos.filter((t) => t.store_key === storeKey).slice().sort((a, b) => a.sort_order - b.sort_order);
+export function storeTodosForStore(storeTodos, storeKey, ym) {
+  return storeTodos
+    .filter((t) => t.store_key === storeKey && t.year_month === ym)
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order);
+}
+
+export function pastStoreMonths(storeTodos, currentYm) {
+  const seen = new Set();
+  const combos = [];
+  storeTodos.forEach((t) => {
+    if (t.year_month === currentYm) return;
+    const key = `${t.store_key}|${t.year_month}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    combos.push({ storeKey: t.store_key, yearMonth: t.year_month });
+  });
+  return combos.sort((a, b) => {
+    if (a.yearMonth !== b.yearMonth) return a.yearMonth < b.yearMonth ? 1 : -1;
+    return STORE_KEYS.indexOf(a.storeKey) - STORE_KEYS.indexOf(b.storeKey);
+  });
+}
+
+export function storeMonthNoteFor(storeMonthNotes, storeKey, ym) {
+  return storeMonthNotes.find((n) => n.store_key === storeKey && n.year_month === ym) || null;
 }
 
 export function allDuties(staff) {
@@ -34,13 +86,70 @@ export function allDuties(staff) {
   return Array.from(set);
 }
 
-export function computeSummary(tasks, goals, goalMilestones, staffKey, monthAgo) {
+export function monthlyEvalRecordsForStaff(monthlyEvalRecords, staffKey) {
+  return monthlyEvalRecords
+    .filter((r) => r.staff_key === staffKey)
+    .slice()
+    .sort((a, b) => (a.year_month < b.year_month ? 1 : -1));
+}
+
+export function computeMonthlyStats(tasks, goals, goalMilestones, staffKey, ym) {
+  const { start, end, nextStart, nextEnd } = monthKeyRange(ym);
+  const staffTasks = tasks.filter((t) => t.staff_key === staffKey);
+
+  const completedTasks = staffTasks.filter(
+    (t) => t.done && t.done_date && t.done_date >= start && t.done_date <= end
+  ).length;
+
+  const totalTasks = staffTasks.filter((t) => {
+    if (!t.deadline) return false;
+    if (t.deadline >= start && t.deadline <= end) return true;
+    if (t.deadline > end && t.workdate && t.workdate >= start && t.workdate <= end) return true;
+    if (t.deadline >= nextStart && t.deadline <= nextEnd && !t.workdate) return true;
+    return false;
+  }).length;
+
+  const onTimeBucket = staffTasks.filter((t) => {
+    if (!t.deadline) return false;
+    if (t.deadline >= start && t.deadline <= end) return true;
+    if (t.deadline >= nextStart && t.deadline <= nextEnd && t.done && t.done_date && t.done_date >= start && t.done_date <= end) return true;
+    return false;
+  });
+  const onTimePct = onTimeBucket.length
+    ? Math.round((onTimeBucket.filter((t) => t.done && t.done_date && t.done_date <= t.deadline).length / onTimeBucket.length) * 100)
+    : null;
+
+  const milestones = goalMilestones.filter((m) => goals.some((g) => g.staff_key === staffKey && g.id === m.goal_id));
+  const goalPct = milestones.length ? Math.round((milestones.filter((m) => m.done).length / milestones.length) * 100) : 0;
+
+  return { totalTasks, completedTasks, onTimePct, goalPct };
+}
+
+export function computeSummary(tasks, goals, goalMilestones, staffKey, monthAgo, monthStart) {
   const staffTasks = tasks.filter((t) => t.staff_key === staffKey);
   const total = staffTasks.length;
-  const done = staffTasks.filter((t) => t.done).length;
+  const doneThisMonth = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthStart).length;
   const recent = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthAgo && t.deadline);
   const onTimePct = recent.length ? Math.round((recent.filter((t) => t.done_date <= t.deadline).length / recent.length) * 100) : null;
   const milestones = goalMilestones.filter((m) => goals.some((g) => g.staff_key === staffKey && g.id === m.goal_id));
   const goalPct = milestones.length ? Math.round((milestones.filter((m) => m.done).length / milestones.length) * 100) : 0;
-  return { total, done, onTimePct, goalPct };
+  return { total, doneThisMonth, onTimePct, goalPct };
+}
+
+export function pendingReviewTasks(tasks, criterion = 'deadline') {
+  return tasks.filter((t) => t.status === 'review' && !t.done).sort(taskCompare(criterion));
+}
+
+export function ownerStaffSummaries(staff, roles, tasks, goals, goalMilestones, monthAgo) {
+  return staff
+    .filter((s) => !findRole(roles, s.role)?.is_owner)
+    .map((s) => {
+      const staffTasks = tasks.filter((t) => t.staff_key === s.key);
+      const poolDoneCount = staffTasks.filter((t) => t.done && t.from_pool).length;
+      const recent = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthAgo && t.deadline);
+      const onTimePct = recent.length ? Math.round((recent.filter((t) => t.done_date <= t.deadline).length / recent.length) * 100) : null;
+      const milestones = goalMilestones.filter((m) => goals.some((g) => g.staff_key === s.key && g.id === m.goal_id));
+      const goalPct = milestones.length ? Math.round((milestones.filter((m) => m.done).length / milestones.length) * 100) : 0;
+      return { key: s.key, name: s.name, duties: s.duties || [], overallEvalHtml: s.overall_eval_html, goalPct, poolDoneCount, onTimePct };
+    });
 }
