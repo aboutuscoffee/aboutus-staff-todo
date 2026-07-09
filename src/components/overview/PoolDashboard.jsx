@@ -8,11 +8,12 @@ export default function PoolDashboard({ poolTasks, onClaim, onDelete }) {
   const { loggedInUserKey } = useSession();
   const visibleTasks = poolTasks.filter((p) => !p.target_keys || p.target_keys.length === 0 || p.target_keys.includes(loggedInUserKey));
 
+  if (visibleTasks.length === 0) return null;
+
   return (
     <div className="rounded-lg bg-[#F5F3EE] p-[14px_16px] mb-4">
       <div className="text-[13px] font-semibold mb-2.5">🎯 担当者募集中のタスク</div>
       <div className="mb-1">
-        {visibleTasks.length === 0 && <div className="text-xs text-stone-400 px-0.5 py-2">現在、担当者募集中のタスクはありません</div>}
         {visibleTasks.map((p) => {
           const dc = dlClass(p.deadline, false);
           return (
