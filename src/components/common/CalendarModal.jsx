@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { STORE_KEYS, STORE_INFO } from '../../constants';
 import { useSession } from '../../context/SessionContext';
+import FilterSelect from './FilterSelect';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -15,7 +16,7 @@ export default function CalendarModal({ open, onClose, staff, roles, tasks, onOp
   const [month, setMonth] = useState(now.getMonth()); // 0-indexed
   const [dateField, setDateField] = useState('workdate'); // 'workdate' | 'deadline'
   const [scope, setScope] = useState('all'); // 'all' | 'store' | 'mine'
-  const [storeKey, setStoreKey] = useState(STORE_KEYS[0]);
+  const [storeKey, setStoreKey] = useState('');
 
   if (!open) return null;
 
@@ -78,12 +79,14 @@ export default function CalendarModal({ open, onClose, staff, roles, tasks, onOp
 
         <div className="px-4 py-2 border-b border-stone-100 flex gap-1.5 flex-wrap items-center flex-shrink-0">
           <button type="button" onClick={() => setScope('all')} className={`text-xs px-[10px] py-1 rounded-full border ${scope === 'all' ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-300'}`}>全員</button>
-          <button type="button" onClick={() => setScope('store')} className={`text-xs px-[10px] py-1 rounded-full border ${scope === 'store' ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-300'}`}>店舗</button>
-          {scope === 'store' && (
-            <select value={storeKey} onChange={(e) => setStoreKey(e.target.value)} className="text-xs px-[10px] py-1 rounded-full border border-stone-300 bg-white text-stone-500">
-              {STORE_KEYS.map((sk) => <option key={sk} value={sk}>{STORE_INFO[sk].label}</option>)}
-            </select>
-          )}
+          <FilterSelect
+            value={storeKey}
+            active={scope === 'store'}
+            onChange={(e) => { setStoreKey(e.target.value); setScope('store'); }}
+          >
+            <option value="" disabled>店舗</option>
+            {STORE_KEYS.map((sk) => <option key={sk} value={sk}>{STORE_INFO[sk].label}</option>)}
+          </FilterSelect>
           <button type="button" onClick={() => setScope('mine')} className={`text-xs px-[10px] py-1 rounded-full border ${scope === 'mine' ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-300'}`}>個人</button>
         </div>
 
@@ -101,15 +104,18 @@ export default function CalendarModal({ open, onClose, staff, roles, tasks, onOp
                 <div key={i} className={`min-h-[70px] rounded-md border p-1 ${isToday ? 'border-[#1D9E75] bg-[#EAF6F1]' : 'border-stone-100'}`}>
                   <div className={`text-[10px] mb-0.5 ${isToday ? 'text-[#1D9E75] font-semibold' : 'text-stone-400'}`}>{d}</div>
                   <div className="flex flex-col gap-0.5">
-                    {dayTasks.slice(0, 3).map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => { onOpenPersonal(t.staff_key); onClose(); }}
-                        className={`text-left text-[9px] leading-tight px-1 py-0.5 rounded truncate ${t.done ? 'bg-stone-100 text-stone-400 line-through' : 'bg-[#F5F3EE] text-stone-700'}`}
-                        title={`${staffName(t.staff_key)}：${t.text}`}
-                      >{scope !== 'mine' ? `${staffName(t.staff_key)}：` : ''}{t.text}</button>
-                    ))}
+                    {dayTasks.slice(0, 3).map((t) => {
+                      const isUrgent = t.deadline === todayStr && t.priority === 'high';
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => { onOpenPersonal(t.staff_key); onClose(); }}
+                          className={`text-left text-[9px] leading-tight px-1 py-0.5 rounded truncate ${t.done ? 'bg-stone-100 text-stone-400 line-through' : isUrgent ? 'bg-[#FCEBEB] text-[#A32D2D] font-medium' : 'bg-[#F5F3EE] text-stone-700'}`}
+                          title={`${staffName(t.staff_key)}：${t.text}`}
+                        >{scope !== 'mine' ? `${staffName(t.staff_key)}：` : ''}{t.text}</button>
+                      );
+                    })}
                     {dayTasks.length > 3 && (
                       <span className="text-[9px] text-stone-400">+{dayTasks.length - 3}件</span>
                     )}

@@ -2,24 +2,10 @@ import { useMemo, useState } from 'react';
 import { STORE_INFO, STORE_KEYS } from '../../constants';
 import TaskItem from '../common/TaskItem';
 import SortChips from '../common/SortChips';
+import FilterSelect from '../common/FilterSelect';
 import { useSession } from '../../context/SessionContext';
 import { taskCompare } from '../../lib/selectors';
 import { isOwnerRole } from '../../lib/permissions';
-
-function FilterSelect({ value, onChange, children }) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={onChange}
-        className="text-xs pl-[10px] pr-5 py-1 rounded-full border border-stone-300 bg-white text-stone-500 appearance-none"
-      >
-        {children}
-      </select>
-      <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-stone-400">▼</span>
-    </div>
-  );
-}
 
 export default function OverviewTaskList({
   staff, roles, tasks, onToggleDone, onOpenPersonal,
