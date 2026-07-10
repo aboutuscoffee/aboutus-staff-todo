@@ -32,7 +32,7 @@ export default function GoalCard({ goal, onToggleMilestone, onAddMilestone }) {
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
           placeholder="マイルストーンを追加..."
           className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs"
         />

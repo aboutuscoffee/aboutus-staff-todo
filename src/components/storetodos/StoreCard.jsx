@@ -54,7 +54,7 @@ export default function StoreCard({
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submit()}
+            onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
             placeholder="取組を追加..."
             className="flex-1 px-[7px] py-1 rounded-md border border-stone-300 text-xs"
           />

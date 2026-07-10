@@ -26,7 +26,7 @@ export default function GoalPanel({ goals, onToggleMilestone, onAddMilestone, on
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
           placeholder="新しい目標..."
           className="flex-1 px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px]"
         />

@@ -54,7 +54,7 @@ export default function EvalProfileForm({ staffMember, onSave, onCancel }) {
             type="text"
             value={newDuty}
             onChange={(e) => setNewDuty(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addDuty(); } }}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); addDuty(); } }}
             placeholder="担当業務を追加（例：撮影）"
             className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs"
           />

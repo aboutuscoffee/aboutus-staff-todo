@@ -63,7 +63,7 @@ export default function LoginModal({ staff, roles }) {
             placeholder="パスワードを入力"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submit()}
+            onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
           />
         </div>
 
