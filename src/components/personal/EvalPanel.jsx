@@ -63,7 +63,7 @@ export default function EvalPanel({ targetStaff, staff, roles, evalRecords, mont
           <div
             className={`px-2.5 py-1.5 rounded-md border border-stone-300 text-[11px] cursor-pointer ${subTab === 'monthly' ? 'bg-stone-100 font-medium' : 'bg-white'}`}
             onClick={() => setSubTab('monthly')}
-          >月次達成率</div>
+          >月間達成率</div>
         )}
         {canEdit && (
           <div

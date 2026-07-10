@@ -20,6 +20,7 @@ import OwnerView from './components/owner/OwnerView';
 import PrintRecord from './components/personal/PrintRecord';
 
 const VIEW_TITLES = { overview: '全員一覧', storetodos: '店舗月次目標', settings: '設定', owner: 'オーナーページ' };
+const MONTHLY_EVAL_START_YM = '2026-07';
 
 export default function App() {
   const [data, setData] = useState(null);
@@ -92,7 +93,7 @@ function AppShell({ data, setData }) {
     if (didBackfillMonthly.current) return;
     didBackfillMonthly.current = true;
     const missing = [];
-    pastMonthKeys(3).forEach((ym) => {
+    pastMonthKeys(3).filter((ym) => ym >= MONTHLY_EVAL_START_YM).forEach((ym) => {
       staff.forEach((s) => {
         if (monthlyEvalRecords.some((r) => r.staff_key === s.key && r.year_month === ym)) return;
         const stats = computeMonthlyStats(tasks, goals, goalMilestones, s.key, ym);
