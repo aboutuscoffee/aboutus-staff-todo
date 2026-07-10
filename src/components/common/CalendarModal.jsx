@@ -8,7 +8,7 @@ function pad(n) {
   return String(n).padStart(2, '0');
 }
 
-export default function CalendarModal({ open, onClose, staff, tasks, onOpenPersonal }) {
+export default function CalendarModal({ open, onClose, staff, roles, tasks, onOpenPersonal }) {
   const { loggedInUserKey } = useSession();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -19,10 +19,12 @@ export default function CalendarModal({ open, onClose, staff, tasks, onOpenPerso
 
   if (!open) return null;
 
+  const shownStaff = staff.filter((s) => roles.find((r) => r.key === s.role)?.show_in_overview);
+
   const scopedStaffKeys = (() => {
     if (scope === 'mine') return new Set([loggedInUserKey]);
-    if (scope === 'store') return new Set(staff.filter((s) => s.stores.includes(storeKey)).map((s) => s.key));
-    return new Set(staff.map((s) => s.key));
+    if (scope === 'store') return new Set(shownStaff.filter((s) => s.stores.includes(storeKey)).map((s) => s.key));
+    return new Set(shownStaff.map((s) => s.key));
   })();
 
   const tasksByDay = {};

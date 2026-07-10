@@ -518,6 +518,7 @@ function AppShell({ data, setData }) {
         open={calendarOpen}
         onClose={() => setCalendarOpen(false)}
         staff={staff}
+        roles={roles}
         tasks={tasks}
         onOpenPersonal={goPersonal}
       />
