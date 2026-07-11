@@ -83,6 +83,7 @@ function AppShell({ data, setData }) {
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
+  const canViewPersonal = (key) => key === loggedInUserKey || !isOwnerRole(staff, roles, key);
 
   useEffect(() => {
     if (loggedInUserKey) fetchNotifications(loggedInUserKey).then(setNotifications).catch(() => {});
@@ -552,7 +553,7 @@ function AppShell({ data, setData }) {
               />
             ) : null
           )}
-          {view === 'personal' && si && (
+          {view === 'personal' && si && canViewPersonal(si) && (
             <PersonalView
               staffKey={si} staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
               storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords}
