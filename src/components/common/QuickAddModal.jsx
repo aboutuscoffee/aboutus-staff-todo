@@ -4,7 +4,7 @@ import { showErrorToast } from './Toast';
 import { PRIORITY_OPTIONS } from '../../constants';
 import { useSession } from '../../context/SessionContext';
 
-export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode, prefill }) {
+export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode, prefill, canRestrictTask }) {
   const { loggedInUserKey } = useSession();
   const [mode, setMode] = useState('task');
   const [text, setText] = useState('');
@@ -14,6 +14,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
   const [taskDeadline, setTaskDeadline] = useState(today);
   const [timeValue, setTimeValue] = useState('');
   const [unit, setUnit] = useState('min');
+  const [restricted, setRestricted] = useState(false);
   const [poolKind, setPoolKind] = useState('todo');
   const [poolDeadline, setPoolDeadline] = useState('');
   const [targetKeys, setTargetKeys] = useState([]);
@@ -30,6 +31,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
       setTaskDeadline(today);
       setTimeValue('');
       setUnit('min');
+      setRestricted(false);
       setPoolKind('todo');
       setPoolDeadline(prefill?.deadline || '');
       setTargetKeys([]);
@@ -62,7 +64,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
         showErrorToast('タスク名・作業時間・期限は必須です');
         return;
       }
-      onAddTask({ text: trimmed, duty: duty || 'その他', priority, workdate: workdate || today, deadline: taskDeadline, minutes });
+      onAddTask({ text: trimmed, duty: duty || 'その他', priority, workdate: workdate || today, deadline: taskDeadline, minutes, restricted });
     } else {
       if (!trimmed) {
         showErrorToast('タスク名を入力してください');
@@ -137,6 +139,12 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
                 <button type="button" onClick={() => setUnit('hr')} className={`px-[9px] py-[3px] text-xs ${unit === 'hr' ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>時間</button>
               </div>
             </div>
+            {canRestrictTask && (
+              <label className="flex items-center gap-1.5 mb-3 text-xs text-stone-500 cursor-pointer">
+                <input type="checkbox" checked={restricted} onChange={(e) => setRestricted(e.target.checked)} className="w-[13px] h-[13px] accent-[#1D9E75]" />
+                限定公開にする
+              </label>
+            )}
           </>
         ) : (
           <div className="flex flex-wrap gap-1.5 mb-3 items-center">

@@ -8,7 +8,7 @@ import StoreCard from '../storetodos/StoreCard';
 import TaskOfferCard from './TaskOfferCard';
 import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff } from '../../lib/selectors';
 import { monthAgo, monthStart, monthKey, monthLabel } from '../../utils';
-import { isOwnerRole, isAdminRole, canOfferOwnTask } from '../../lib/permissions';
+import { isOwnerRole, isAdminRole, canOfferOwnTask, canViewTask } from '../../lib/permissions';
 import { useSession } from '../../context/SessionContext';
 
 export default function PersonalView({
@@ -36,7 +36,7 @@ export default function PersonalView({
   const canConvertToRequest = isOwner && canOfferOwnTask(staff, roles, loggedInUserKey);
 
   const summary = computeSummary(tasks, goals, goalInitiatives, goalMilestones, staffKey, monthAgo, monthStart);
-  const myTasks = tasksForStaff(tasks, staffKey);
+  const myTasks = tasksForStaff(tasks, staffKey).filter((t) => canViewTask(staff, roles, loggedInUserKey, t));
   const myOffers = isSelf ? pendingOffersForStaff(tasks, staffKey) : [];
   const myGoals = goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey);
   const otherStaff = staff.filter((s) => s.key !== staffKey);

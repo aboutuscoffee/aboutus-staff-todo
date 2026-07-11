@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { STORE_KEYS, STORE_INFO } from '../../constants';
 import { useSession } from '../../context/SessionContext';
 import FilterSelect from './FilterSelect';
+import { canViewTask } from '../../lib/permissions';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -31,7 +32,7 @@ export default function CalendarModal({ open, onClose, staff, roles, tasks, onOp
   const tasksByDay = {};
   tasks.forEach((t) => {
     const d = t[dateField];
-    if (!d || t.pending_approval || !scopedStaffKeys.has(t.staff_key)) return;
+    if (!d || t.pending_approval || !scopedStaffKeys.has(t.staff_key) || !canViewTask(staff, roles, loggedInUserKey, t)) return;
     const [y, m] = d.split('-').map(Number);
     if (y !== year || m !== month + 1) return;
     (tasksByDay[d] ||= []).push(t);

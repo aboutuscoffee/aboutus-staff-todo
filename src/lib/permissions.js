@@ -35,6 +35,20 @@ export function canOfferOwnTask(staff, roles, key) {
   return !!role?.can_edit;
 }
 
+export function canRestrictTask(staff, roles, key) {
+  const staffMember = staff.find((s) => s.key === key);
+  const role = staffMember && findRole(roles, staffMember.role);
+  return role?.key === 'SM' || role?.key === 'GM';
+}
+
+export function canViewTask(staff, roles, viewerKey, task) {
+  if (!task.restricted || viewerKey === task.staff_key) return true;
+  const ownerRole = findRole(roles, staff.find((s) => s.key === task.staff_key)?.role);
+  if (ownerRole?.key === 'SM') return isAdminRole(staff, roles, viewerKey);
+  if (ownerRole?.key === 'GM') return isOwnerRole(staff, roles, viewerKey);
+  return true;
+}
+
 export function loginableStaff(staff, roles) {
   return staff.filter((s) => findRole(roles, s.role)?.can_login);
 }

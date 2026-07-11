@@ -5,7 +5,7 @@ import SortChips from '../common/SortChips';
 import FilterSelect from '../common/FilterSelect';
 import { useSession } from '../../context/SessionContext';
 import { taskCompare } from '../../lib/selectors';
-import { isOwnerRole, canOfferOwnTask } from '../../lib/permissions';
+import { isOwnerRole, canOfferOwnTask, canViewTask } from '../../lib/permissions';
 
 export default function OverviewTaskList({
   staff, roles, tasks, onToggleDone, onOpenPersonal,
@@ -28,7 +28,7 @@ export default function OverviewTaskList({
       if (!role?.show_in_overview) return;
       if (roleFilter !== 'all' && s.role !== roleFilter) return;
       if (storeFilter !== 'all' && !s.stores.includes(storeFilter)) return;
-      tasks.filter((t) => t.staff_key === s.key && !t.pending_approval).forEach((t) => {
+      tasks.filter((t) => t.staff_key === s.key && !t.pending_approval && canViewTask(staff, roles, loggedInUserKey, t)).forEach((t) => {
         let pass = true;
         if (statusFilter === 'open' && t.done) pass = false;
         else if (statusFilter === 'done' && !t.done) pass = false;
@@ -40,7 +40,7 @@ export default function OverviewTaskList({
     const cmp = taskCompare(sortBy);
     out.sort((a, b) => cmp(a.t, b.t));
     return out;
-  }, [staff, roles, tasks, roleFilter, storeFilter, statusFilter, sortBy]);
+  }, [staff, roles, tasks, roleFilter, storeFilter, statusFilter, sortBy, loggedInUserKey]);
 
   return (
     <div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications } from './lib/db';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
-import { isAdminRole, isOwnerRole, canAssignOwner } from './lib/permissions';
+import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
 import { STORE_INFO } from './constants';
 import Sidebar from './components/common/Sidebar';
@@ -378,7 +378,7 @@ function AppShell({ data, setData }) {
 
   // --- 個人ページ：タスク ---
   const onAddTask = (staffKey, fields) => {
-    upsertTask({ staff_key: staffKey, text: fields.text, duty: fields.duty, priority: fields.priority || 'mid', status: '', done: false, done_date: null, deadline: fields.deadline, workdate: fields.workdate || today, minutes: fields.minutes }).then(() => showToast());
+    upsertTask({ staff_key: staffKey, text: fields.text, duty: fields.duty, priority: fields.priority || 'mid', status: '', done: false, done_date: null, deadline: fields.deadline, workdate: fields.workdate || today, minutes: fields.minutes, restricted: !!fields.restricted }).then(() => showToast());
   };
   const onDeleteTask = (id) => removeTask(id);
   const onSaveTaskEdit = (id, updates) => {
@@ -541,8 +541,11 @@ function AppShell({ data, setData }) {
             </svg>
           </button>
           {loggedInStaff && (
-            <button type="button" onClick={() => goPersonal(loggedInUserKey)} className="text-[11px] text-stone-500 hover:text-stone-900 flex-shrink-0 whitespace-nowrap">
-              {loggedInStaff.name}<span className="hidden sm:inline">（{roles.find((r) => r.key === loggedInStaff.role)?.label}）</span>
+            <button type="button" onClick={() => goPersonal(loggedInUserKey)} className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-stone-100 flex-shrink-0" aria-label="マイページ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-600">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+              </svg>
             </button>
           )}
           <button type="button" onClick={openNotifications} className="relative w-7 h-7 flex items-center justify-center rounded-full hover:bg-stone-100 flex-shrink-0">
@@ -628,6 +631,7 @@ function AppShell({ data, setData }) {
         onSendMemo={onSendMemo}
         initialMode={quickAddMode}
         prefill={quickAddPrefill}
+        canRestrictTask={loggedInUserKey ? canRestrictTask(staff, roles, loggedInUserKey) : false}
       />
       <TaskOfferModal
         offers={offersToPopup}
