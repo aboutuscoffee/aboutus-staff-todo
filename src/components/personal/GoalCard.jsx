@@ -56,7 +56,7 @@ export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilest
                 {goal.edited_at && <span className="text-[9px] text-stone-300">{editedLabel(goal.edited_at)}</span>}
                 <span className="text-xs text-stone-500">{pct}%</span>
                 {isOwner && (
-                  <button type="button" onClick={() => { setDraft(goal.title); setEditing(true); }} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm">✏️</button>
+                  <button type="button" onClick={() => { setDraft(goal.title); setEditing(true); }} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm">✎</button>
                 )}
               </div>
             </div>

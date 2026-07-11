@@ -39,7 +39,7 @@ export default function SwipeRow({ canEdit, onEdit, bgClassName = 'bg-white', ch
             type="button"
             onClick={() => { setOffset(0); onEdit(); }}
             className="w-14 flex items-center justify-center bg-stone-200 text-stone-700 text-lg"
-          >✏️</button>
+          >✎</button>
         </div>
       )}
       <div

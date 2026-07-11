@@ -5,7 +5,6 @@ import DateBadge from './DateBadge';
 import PriorityBadge from './PriorityBadge';
 import ProgressSlider from './ProgressSlider';
 import StatusSelect from './StatusSelect';
-import TrashIcon from './TrashIcon';
 import TaskEditPanel from '../personal/TaskEditPanel';
 import { dlClass, today } from '../../utils';
 
@@ -66,12 +65,12 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
               type="button"
               onClick={() => { setEditing(true); setOffset(0); }}
               className="w-14 flex items-center justify-center bg-stone-200 text-stone-700 text-lg"
-            >✏️</button>
+            >✎</button>
             <button
               type="button"
               onClick={handleDelete}
               className="w-14 flex items-center justify-center bg-[#E24B4A] text-white text-lg"
-            ><TrashIcon size={18} /></button>
+            >✕</button>
           </div>
         )}
         <div
@@ -130,7 +129,7 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
               <ProgressSlider value={task.progress} onCommit={(v) => onSave({ progress: v })} />
             </div>
             {isOwner && (
-              <button type="button" onClick={() => setEditing((e) => !e)} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm flex-shrink-0">✏️</button>
+              <button type="button" onClick={() => setEditing((e) => !e)} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm flex-shrink-0">✎</button>
             )}
           </div>
         </div>

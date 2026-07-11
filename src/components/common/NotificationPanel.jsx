@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import TrashIcon from './TrashIcon';
 
 const TYPE_ICON = {
   pool_posted: '🎯',
@@ -24,7 +23,7 @@ function fmtTime(iso) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function MemoRow({ n }) {
+function MemoRow({ n, onDelete }) {
   return (
     <div className="px-4 py-2.5 border-b border-stone-50 flex gap-2 items-start">
       <span className="text-sm flex-shrink-0">💬</span>
@@ -32,6 +31,7 @@ function MemoRow({ n }) {
         <p className="text-[12px] text-stone-700 break-words">{n.message}</p>
         <p className="text-[10px] text-stone-400 mt-0.5">{fmtTime(n.created_at)}</p>
       </div>
+      <button type="button" onClick={onDelete} className="text-stone-300 hover:text-[#E24B4A] px-1 text-xs flex-shrink-0">✕</button>
     </div>
   );
 }
@@ -67,7 +67,7 @@ function NotificationRow({ n, onDelete }) {
   return (
     <div className="relative overflow-hidden border-b border-stone-50">
       <div className="absolute inset-y-0 right-0 flex md:hidden" style={{ width: `${-SWIPE_OPEN}px` }}>
-        <button type="button" onClick={onDelete} className="w-14 flex items-center justify-center bg-[#E24B4A] text-white text-lg"><TrashIcon size={18} /></button>
+        <button type="button" onClick={onDelete} className="w-14 flex items-center justify-center bg-[#E24B4A] text-white text-lg">✕</button>
       </div>
       <div
         className="relative bg-white px-4 py-2.5 flex gap-2 items-start transition-transform duration-150 ease-out"
@@ -86,7 +86,7 @@ function NotificationRow({ n, onDelete }) {
           type="button"
           onClick={onDelete}
           className="hidden md:inline-flex text-stone-300 hover:text-[#E24B4A] px-1 flex-shrink-0"
-        ><TrashIcon size={14} /></button>
+        >✕</button>
       </div>
     </div>
   );
@@ -117,7 +117,7 @@ export default function NotificationPanel({ open, onClose, notifications, onDele
           </div>
           {memos.length === 0 ? (
             <p className="text-xs text-stone-400 text-center py-4">メモはありません</p>
-          ) : memos.map((n) => <MemoRow key={n.id} n={n} />)}
+          ) : memos.map((n) => <MemoRow key={n.id} n={n} onDelete={() => onDeleteNotification(n.id)} />)}
 
           <div className="px-4 py-2 bg-stone-50 flex items-center justify-between flex-shrink-0">
             <span className="text-[11px] font-medium text-stone-500">🔔 通知</span>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { fmtMin } from '../../utils';
 import { PRIORITY_OPTIONS } from '../../constants';
-import TrashIcon from '../common/TrashIcon';
 
 export default function TaskEditPanel({ task, duties, otherStaff, onSave, onDelete, onReassign, onReleaseToPool }) {
   const [text, setText] = useState(task.text);
@@ -76,7 +75,7 @@ export default function TaskEditPanel({ task, duties, otherStaff, onSave, onDele
           className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs"
         >変更</button>
         <button type="button" onClick={onReleaseToPool} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 プールに戻す</button>
-        <button type="button" onClick={remove} className="ml-auto px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs text-[#A32D2D] hover:bg-[#FCEBEB] flex items-center gap-1"><TrashIcon size={13} />削除</button>
+        <button type="button" onClick={remove} className="ml-auto px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs text-[#A32D2D] hover:bg-[#FCEBEB]">削除</button>
       </div>
     </div>
   );

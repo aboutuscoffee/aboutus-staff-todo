@@ -82,7 +82,7 @@ export default function StoreCard({
             <div className="flex items-start gap-1.5">
               <p className="text-xs text-stone-600 flex-1 whitespace-pre-wrap">{comment || (canComment ? '' : 'コメントはありません')}</p>
               {canComment && (
-                <button type="button" onClick={() => { setCommentDraft(comment); setEditingComment(true); }} className="text-stone-400 hover:text-stone-900 text-xs flex-shrink-0">✏️</button>
+                <button type="button" onClick={() => { setCommentDraft(comment); setEditingComment(true); }} className="text-stone-400 hover:text-stone-900 text-xs flex-shrink-0">✎</button>
               )}
             </div>
           )}

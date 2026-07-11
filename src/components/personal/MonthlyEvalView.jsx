@@ -31,7 +31,7 @@ function CommentBlock({ record, canEdit, onSaveComment }) {
         <div className="flex items-start gap-1.5">
           <p className="text-xs text-stone-600 flex-1 whitespace-pre-wrap">{comment || (canEdit ? '' : 'コメントはありません')}</p>
           {canEdit && (
-            <button type="button" onClick={() => { setDraft(comment); setEditing(true); }} className="text-stone-400 hover:text-stone-900 text-xs flex-shrink-0">✏️</button>
+            <button type="button" onClick={() => { setDraft(comment); setEditing(true); }} className="text-stone-400 hover:text-stone-900 text-xs flex-shrink-0">✎</button>
           )}
         </div>
       )}
