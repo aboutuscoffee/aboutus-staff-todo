@@ -29,6 +29,12 @@ export function isOwnerRole(staff, roles, key) {
   return !!role?.is_owner;
 }
 
+export function canOfferOwnTask(staff, roles, key) {
+  const staffMember = staff.find((s) => s.key === key);
+  const role = staffMember && findRole(roles, staffMember.role);
+  return !!role?.can_edit;
+}
+
 export function loginableStaff(staff, roles) {
   return staff.filter((s) => findRole(roles, s.role)?.can_login);
 }

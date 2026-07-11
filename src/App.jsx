@@ -11,6 +11,7 @@ import LoginScreen from './components/common/LoginScreen';
 import QuickAddModal from './components/common/QuickAddModal';
 import NotificationPanel from './components/common/NotificationPanel';
 import CalendarModal from './components/common/CalendarModal';
+import TaskOfferModal from './components/common/TaskOfferModal';
 import Toast, { showToast } from './components/common/Toast';
 import OverviewView from './components/overview/OverviewView';
 import StoreTodosView from './components/storetodos/StoreTodosView';
@@ -75,15 +76,19 @@ function AppShell({ data, setData }) {
   const [printData, setPrintData] = useState(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddMode, setQuickAddMode] = useState('task');
+  const [quickAddPrefill, setQuickAddPrefill] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [dismissedOfferIds, setDismissedOfferIds] = useState([]);
 
   const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
   const canViewPersonal = (key) => key === loggedInUserKey || !isOwnerRole(staff, roles, key);
+  const myPendingOffers = tasks.filter((t) => t.pending_approval && t.staff_key === loggedInUserKey);
+  const offersToPopup = myPendingOffers.filter((t) => !dismissedOfferIds.includes(t.id));
 
   useEffect(() => {
     if (loggedInUserKey) fetchNotifications(loggedInUserKey).then(setNotifications).catch(() => {});
@@ -201,12 +206,49 @@ function AppShell({ data, setData }) {
 
   // --- 全員一覧・担当者募集プール ---
   const onAddPool = (text, kind, deadline, priority, targetKeys) => {
+    if (kind === 'todo' && targetKeys && targetKeys.length === 1) {
+      const recipientKey = targetKeys[0];
+      const recipientName = staff.find((s) => s.key === recipientKey)?.name || '';
+      upsertTask({
+        staff_key: recipientKey, text, duty: 'その他', priority: priority || 'mid', status: '',
+        done: false, done_date: null, deadline: deadline || today, workdate: today, minutes: null,
+        from_pool: true, pending_approval: true, offered_by: loggedInUserKey,
+      }).then(() => {
+        showToast();
+        notify(loggedInUserKey, 'pool_posted', `「${text}」を${recipientName}さんに依頼しました`);
+        notify(recipientKey, 'task_offered', `${loggedInStaff?.name}さんから「${text}」の依頼が届きました`, loggedInUserKey);
+      });
+      return;
+    }
     const recipients = targetKeys && targetKeys.length ? targetKeys : staff.filter((s) => s.key !== loggedInUserKey).map((s) => s.key);
     upsertPool({ text, kind, deadline, workdate: null, minutes: null, priority: priority || 'mid', target_keys: targetKeys && targetKeys.length ? targetKeys : null, created_by: loggedInUserKey, created_at: today }).then(() => {
       showToast();
       notify(loggedInUserKey, 'pool_posted', `「${text}」を依頼タスクとして投稿しました`);
       recipients.forEach((key) => notify(key, 'pool_available', `新しい依頼タスク「${text}」が届きました`));
     });
+  };
+  const onApproveTaskOffer = (taskId) => {
+    const t = tasks.find((x) => x.id === taskId);
+    if (!t) return;
+    upsertTask({ ...t, pending_approval: false }).then(() => {
+      showToast();
+      if (t.offered_by) notify(t.offered_by, 'pool_claimed', `${loggedInStaff?.name}さんが「${t.text}」の依頼を受け取りました`);
+    });
+  };
+  const onHandOffTaskOffer = (taskId, newStaffKey) => {
+    const t = tasks.find((x) => x.id === taskId);
+    if (!t) return;
+    const newStaffName = staff.find((s) => s.key === newStaffKey)?.name || '';
+    upsertTask({ ...t, staff_key: newStaffKey, pending_approval: true }).then(() => {
+      showToast();
+      notify(newStaffKey, 'task_offered', `${loggedInStaff?.name}さんから「${t.text}」の依頼が届きました`, loggedInUserKey);
+      if (t.offered_by) notify(t.offered_by, 'task_offer_handoff', `「${t.text}」の依頼が${newStaffName}さんに振り替えられました`);
+    });
+  };
+  const onConvertToRequest = (task) => {
+    setQuickAddPrefill({ text: task.text, priority: task.priority, deadline: task.deadline, sourceTaskId: task.id });
+    setQuickAddMode('pool');
+    setQuickAddOpen(true);
   };
   const onClaimPool = async (poolId, staffKey) => {
     const p = poolTasks.find((x) => x.id === poolId);
@@ -523,7 +565,7 @@ function AppShell({ data, setData }) {
               onClaimPool={onClaimPool} onDeletePool={onDeletePool}
               onToggleTaskDone={onToggleTaskDone} onOpenPersonal={goPersonal}
               onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange}
-              onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
+              onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest}
             />
           )}
           {view === 'storetodos' && (
@@ -560,6 +602,7 @@ function AppShell({ data, setData }) {
               initialTab={personalTab}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
               onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
+              onApproveTaskOffer={onApproveTaskOffer} onHandOffTaskOffer={onHandOffTaskOffer} onConvertToRequest={onConvertToRequest}
               onAddGoal={onAddGoal} onRenameGoal={onRenameGoal} onDeleteGoal={onDeleteGoal}
               onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
               onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}
@@ -573,13 +616,26 @@ function AppShell({ data, setData }) {
       <LoginModal staff={staff} roles={roles} />
       <QuickAddModal
         open={quickAddOpen}
-        onClose={() => setQuickAddOpen(false)}
+        onClose={() => { setQuickAddOpen(false); setQuickAddPrefill(null); }}
         staff={staff}
         duties={loggedInStaff?.duties || []}
         onAddTask={(fields) => onAddTask(loggedInUserKey, fields)}
-        onAddPool={onAddPool}
+        onAddPool={(text, kind, deadline, priority, targetKeys) => {
+          onAddPool(text, kind, deadline, priority, targetKeys);
+          if (quickAddPrefill?.sourceTaskId) removeTask(quickAddPrefill.sourceTaskId);
+          setQuickAddPrefill(null);
+        }}
         onSendMemo={onSendMemo}
         initialMode={quickAddMode}
+        prefill={quickAddPrefill}
+      />
+      <TaskOfferModal
+        offers={offersToPopup}
+        staff={staff}
+        canHandOff={isAdminRole(staff, roles, loggedInUserKey)}
+        onApprove={(id) => { onApproveTaskOffer(id); setDismissedOfferIds((ids) => [...ids, id]); }}
+        onHandOff={(id, newKey) => { onHandOffTaskOffer(id, newKey); setDismissedOfferIds((ids) => [...ids, id]); }}
+        onClose={() => setDismissedOfferIds((ids) => [...ids, ...offersToPopup.map((t) => t.id)])}
       />
       <NotificationPanel
         open={notifOpen}

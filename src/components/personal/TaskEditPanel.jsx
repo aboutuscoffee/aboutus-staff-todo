@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { fmtMin } from '../../utils';
 import { PRIORITY_OPTIONS } from '../../constants';
 
-export default function TaskEditPanel({ task, duties, otherStaff, onSave, onDelete, onReassign, onReleaseToPool }) {
+export default function TaskEditPanel({ task, duties, otherStaff, canConvertToRequest, onConvertToRequest, onSave, onDelete, onReassign, onReleaseToPool }) {
   const [text, setText] = useState(task.text);
   const [duty, setDuty] = useState(task.duty);
   const [priority, setPriority] = useState(task.priority || 'mid');
@@ -75,6 +75,9 @@ export default function TaskEditPanel({ task, duties, otherStaff, onSave, onDele
           className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs"
         >変更</button>
         <button type="button" onClick={onReleaseToPool} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 プールに戻す</button>
+        {canConvertToRequest && (
+          <button type="button" onClick={onConvertToRequest} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 依頼タスクに変更する</button>
+        )}
         <button type="button" onClick={remove} className="ml-auto px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs text-[#A32D2D] hover:bg-[#FCEBEB]">削除</button>
       </div>
     </div>

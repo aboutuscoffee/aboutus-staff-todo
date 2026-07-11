@@ -10,7 +10,7 @@ import { dlClass, today } from '../../utils';
 
 const SWIPE_OPEN = -112;
 
-export default function TaskItem({ task, duties, otherStaff, staffName, onOpenStaff, isOwner = true, onToggleDone, onDelete, onSave, onStatusChange, onReassign, onReleaseToPool }) {
+export default function TaskItem({ task, duties, otherStaff, staffName, onOpenStaff, isOwner = true, canConvertToRequest, onConvertToRequest, onToggleDone, onDelete, onSave, onStatusChange, onReassign, onReleaseToPool }) {
   const [editing, setEditing] = useState(false);
   const [comment, setComment] = useState(task.comment || '');
   const [offset, setOffset] = useState(0);
@@ -140,6 +140,8 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
           task={task}
           duties={duties}
           otherStaff={otherStaff}
+          canConvertToRequest={canConvertToRequest}
+          onConvertToRequest={onConvertToRequest ? () => { onConvertToRequest(); setEditing(false); } : undefined}
           onSave={(updates) => { onSave(updates); setEditing(false); }}
           onDelete={() => { onDelete(); setEditing(false); }}
           onReassign={(newKey) => { onReassign(newKey); setEditing(false); }}

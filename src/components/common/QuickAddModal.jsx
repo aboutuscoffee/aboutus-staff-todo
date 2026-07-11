@@ -4,7 +4,7 @@ import { showErrorToast } from './Toast';
 import { PRIORITY_OPTIONS } from '../../constants';
 import { useSession } from '../../context/SessionContext';
 
-export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode }) {
+export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode, prefill }) {
   const { loggedInUserKey } = useSession();
   const [mode, setMode] = useState('task');
   const [text, setText] = useState('');
@@ -22,22 +22,22 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
 
   useEffect(() => {
     if (open) {
-      setMode(initialMode || 'task');
-      setText('');
+      setMode(prefill ? 'pool' : (initialMode || 'task'));
+      setText(prefill?.text || '');
       setDuty(duties[0] || 'その他');
-      setPriority('mid');
+      setPriority(prefill?.priority || 'mid');
       setWorkdate(today);
       setTaskDeadline(today);
       setTimeValue('');
       setUnit('min');
       setPoolKind('todo');
-      setPoolDeadline('');
+      setPoolDeadline(prefill?.deadline || '');
       setTargetKeys([]);
       setMemoTo(loggedInUserKey);
       setMemoText('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, prefill]);
 
   if (!open) return null;
 

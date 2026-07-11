@@ -5,15 +5,17 @@ import TaskPanel from './TaskPanel';
 import GoalPanel from './GoalPanel';
 import EvalPanel from './EvalPanel';
 import StoreCard from '../storetodos/StoreCard';
-import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary } from '../../lib/selectors';
+import TaskOfferCard from './TaskOfferCard';
+import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff } from '../../lib/selectors';
 import { monthAgo, monthStart, monthKey, monthLabel } from '../../utils';
-import { isOwnerRole } from '../../lib/permissions';
+import { isOwnerRole, isAdminRole, canOfferOwnTask } from '../../lib/permissions';
 import { useSession } from '../../context/SessionContext';
 
 export default function PersonalView({
   staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords,
   initialTab,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
+  onApproveTaskOffer, onHandOffTaskOffer, onConvertToRequest,
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
@@ -29,9 +31,13 @@ export default function PersonalView({
   if (!staffMember) return null;
 
   const isOwner = loggedInUserKey === staffKey || isOwnerRole(staff, roles, loggedInUserKey);
+  const isSelf = loggedInUserKey === staffKey;
+  const canHandOffOffer = isAdminRole(staff, roles, loggedInUserKey);
+  const canConvertToRequest = isOwner && canOfferOwnTask(staff, roles, loggedInUserKey);
 
   const summary = computeSummary(tasks, goals, goalInitiatives, goalMilestones, staffKey, monthAgo, monthStart);
   const myTasks = tasksForStaff(tasks, staffKey);
+  const myOffers = isSelf ? pendingOffersForStaff(tasks, staffKey) : [];
   const myGoals = goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey);
   const otherStaff = staff.filter((s) => s.key !== staffKey);
 
@@ -60,18 +66,37 @@ export default function PersonalView({
       </div>
 
       {pTab === 'tasks' && (
-        <TaskPanel
+        <>
+          {myOffers.length > 0 && (
+            <div className="mb-3">
+              {myOffers.map((t) => (
+                <TaskOfferCard
+                  key={t.id}
+                  task={t}
+                  offererName={staff.find((s) => s.key === t.offered_by)?.name || ''}
+                  canHandOff={canHandOffOffer}
+                  otherStaff={staff.filter((s) => s.key !== staffKey)}
+                  onApprove={() => onApproveTaskOffer(t.id)}
+                  onHandOff={(newKey) => onHandOffTaskOffer(t.id, newKey)}
+                />
+              ))}
+            </div>
+          )}
+          <TaskPanel
           tasks={myTasks}
           duties={staffMember.duties || []}
           otherStaff={otherStaff}
           isOwner={isOwner}
+          canConvertToRequest={canConvertToRequest}
+          onConvertToRequest={onConvertToRequest}
           onToggleDone={(id) => onToggleTaskDone(staffKey, id)}
           onDelete={(id) => onDeleteTask(id)}
           onSave={(id, updates) => onSaveTaskEdit(id, updates)}
           onStatusChange={(id, status) => onTaskStatusChange(id, status)}
           onReassign={(id, newKey) => onReassignTask(id, newKey)}
           onReleaseToPool={(id) => onReleaseTaskToPool(id)}
-        />
+          />
+        </>
       )}
       {pTab === 'goals' && (
         <GoalPanel

@@ -3,7 +3,7 @@ import TaskItem from '../common/TaskItem';
 import SortChips from '../common/SortChips';
 import { sortTasks } from '../../lib/selectors';
 
-export default function TaskPanel({ tasks, duties, otherStaff, isOwner, onToggleDone, onDelete, onSave, onStatusChange, onReassign, onReleaseToPool }) {
+export default function TaskPanel({ tasks, duties, otherStaff, isOwner, canConvertToRequest, onConvertToRequest, onToggleDone, onDelete, onSave, onStatusChange, onReassign, onReleaseToPool }) {
   const [sortBy, setSortBy] = useState('deadline');
   const sortedTasks = sortTasks(tasks, sortBy);
 
@@ -20,6 +20,8 @@ export default function TaskPanel({ tasks, duties, otherStaff, isOwner, onToggle
             duties={duties}
             otherStaff={otherStaff}
             isOwner={isOwner}
+            canConvertToRequest={canConvertToRequest}
+            onConvertToRequest={onConvertToRequest ? () => onConvertToRequest(t) : undefined}
             onToggleDone={() => onToggleDone(t.id)}
             onDelete={() => onDelete(t.id)}
             onSave={(updates) => onSave(t.id, updates)}

@@ -5,14 +5,15 @@ import SortChips from '../common/SortChips';
 import FilterSelect from '../common/FilterSelect';
 import { useSession } from '../../context/SessionContext';
 import { taskCompare } from '../../lib/selectors';
-import { isOwnerRole } from '../../lib/permissions';
+import { isOwnerRole, canOfferOwnTask } from '../../lib/permissions';
 
 export default function OverviewTaskList({
   staff, roles, tasks, onToggleDone, onOpenPersonal,
-  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
+  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool, onConvertToRequest,
 }) {
   const { loggedInUserKey } = useSession();
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
+  const canConvertToRequest = loggedInUserKey && canOfferOwnTask(staff, roles, loggedInUserKey);
   const [roleFilter, setRoleFilter] = useState('all');
   const [storeFilter, setStoreFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -27,7 +28,7 @@ export default function OverviewTaskList({
       if (!role?.show_in_overview) return;
       if (roleFilter !== 'all' && s.role !== roleFilter) return;
       if (storeFilter !== 'all' && !s.stores.includes(storeFilter)) return;
-      tasks.filter((t) => t.staff_key === s.key).forEach((t) => {
+      tasks.filter((t) => t.staff_key === s.key && !t.pending_approval).forEach((t) => {
         let pass = true;
         if (statusFilter === 'open' && t.done) pass = false;
         else if (statusFilter === 'done' && !t.done) pass = false;
@@ -74,6 +75,8 @@ export default function OverviewTaskList({
             staffName={s.name}
             onOpenStaff={() => onOpenPersonal(s.key)}
             isOwner={loggedInUserKey === s.key || viewerIsOwner}
+            canConvertToRequest={canConvertToRequest}
+            onConvertToRequest={() => onConvertToRequest(t)}
             onToggleDone={() => onToggleDone(s.key, t.id)}
             onDelete={() => onDeleteTask(t.id)}
             onSave={(updates) => onSaveTaskEdit(t.id, updates)}

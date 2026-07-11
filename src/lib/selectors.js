@@ -36,7 +36,11 @@ export function sortTasks(tasks, criterion = 'deadline') {
 }
 
 export function tasksForStaff(tasks, staffKey, criterion = 'deadline') {
-  return sortTasks(tasks.filter((t) => t.staff_key === staffKey), criterion);
+  return sortTasks(tasks.filter((t) => t.staff_key === staffKey && !t.pending_approval), criterion);
+}
+
+export function pendingOffersForStaff(tasks, staffKey) {
+  return tasks.filter((t) => t.staff_key === staffKey && t.pending_approval);
 }
 
 export function goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey) {
@@ -107,7 +111,7 @@ export function monthlyEvalRecordsForStaff(monthlyEvalRecords, staffKey) {
 
 export function computeMonthlyStats(tasks, goals, goalInitiatives, goalMilestones, staffKey, ym) {
   const { start, end, nextStart, nextEnd } = monthKeyRange(ym);
-  const staffTasks = tasks.filter((t) => t.staff_key === staffKey);
+  const staffTasks = tasks.filter((t) => t.staff_key === staffKey && !t.pending_approval);
 
   const completedTasks = staffTasks.filter(
     (t) => t.done && t.done_date && t.done_date >= start && t.done_date <= end
@@ -138,7 +142,7 @@ export function computeMonthlyStats(tasks, goals, goalInitiatives, goalMilestone
 }
 
 export function computeSummary(tasks, goals, goalInitiatives, goalMilestones, staffKey, monthAgo, monthStart) {
-  const staffTasks = tasks.filter((t) => t.staff_key === staffKey);
+  const staffTasks = tasks.filter((t) => t.staff_key === staffKey && !t.pending_approval);
   const total = staffTasks.length;
   const doneThisMonth = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthStart).length;
   const recent = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthAgo && t.deadline);
@@ -156,7 +160,7 @@ export function ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives,
   return staff
     .filter((s) => !findRole(roles, s.role)?.is_owner)
     .map((s) => {
-      const staffTasks = tasks.filter((t) => t.staff_key === s.key);
+      const staffTasks = tasks.filter((t) => t.staff_key === s.key && !t.pending_approval);
       const poolDoneCount = staffTasks.filter((t) => t.done && t.from_pool).length;
       const recent = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthAgo && t.deadline);
       const onTimePct = recent.length ? Math.round((recent.filter((t) => t.done_date <= t.deadline).length / recent.length) * 100) : null;

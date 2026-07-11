@@ -31,7 +31,7 @@ export default function CalendarModal({ open, onClose, staff, roles, tasks, onOp
   const tasksByDay = {};
   tasks.forEach((t) => {
     const d = t[dateField];
-    if (!d || !scopedStaffKeys.has(t.staff_key)) return;
+    if (!d || t.pending_approval || !scopedStaffKeys.has(t.staff_key)) return;
     const [y, m] = d.split('-').map(Number);
     if (y !== year || m !== month + 1) return;
     (tasksByDay[d] ||= []).push(t);
