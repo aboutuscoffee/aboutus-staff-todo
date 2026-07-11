@@ -4,7 +4,7 @@ import SwipeRow from '../common/SwipeRow';
 import GoalInitiativeCard from './GoalInitiativeCard';
 import { editedLabel } from '../../utils';
 
-export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilestone, onRename, onDelete, onAddInitiative, onRenameInitiative, onDeleteInitiative }) {
+export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onRename, onDelete, onAddInitiative, onRenameInitiative, onDeleteInitiative }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(goal.title);
   const [text, setText] = useState('');
@@ -70,6 +70,8 @@ export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilest
               isOwner={isOwner}
               onToggleMilestone={onToggleMilestone}
               onAddMilestone={(text) => onAddMilestone(i.id, text)}
+              onRenameMilestone={onRenameMilestone}
+              onDeleteMilestone={onDeleteMilestone}
               onRename={(text) => onRenameInitiative(i.id, text)}
               onDelete={() => onDeleteInitiative(i.id)}
             />

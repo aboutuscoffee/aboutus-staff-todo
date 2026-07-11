@@ -189,6 +189,7 @@ function AppShell({ data, setData }) {
   const removeStoreTodoRow = removeFrom('storeTodos', 'store_todos', 'id');
   const removeGoalRow = removeFrom('goals', 'goals', 'id');
   const removeInitiativeRow = removeFrom('goalInitiatives', 'goal_initiatives', 'id');
+  const removeMilestoneRow = removeFrom('goalMilestones', 'goal_milestones', 'id');
 
   // --- ナビゲーション ---
   const goView = (v) => { setView(v); setCollapsed(true); };
@@ -426,6 +427,22 @@ function AppShell({ data, setData }) {
     const m = goalMilestones.find((x) => x.id === milestoneId);
     if (m) upsertMilestone({ ...m, done: !m.done });
   };
+  const onRenameMilestone = (milestoneId, text) => {
+    const m = goalMilestones.find((x) => x.id === milestoneId);
+    if (!m || text === m.text) return;
+    upsertMilestone({ ...m, text });
+  };
+  const onDeleteMilestone = (milestoneId) => {
+    const m = goalMilestones.find((x) => x.id === milestoneId);
+    if (!m) return;
+    const i = goalInitiatives.find((x) => x.id === m.initiative_id);
+    const g = i ? goals.find((x) => x.id === i.goal_id) : null;
+    const staffName = g ? staff.find((s) => s.key === g.staff_key)?.name || '' : '';
+    removeMilestoneRow(milestoneId).then(() => {
+      showToast();
+      notifyAdmins(`${staffName}さんのマイルストーン「${m.text}」が削除されました`);
+    });
+  };
 
   // --- 個人ページ：評価 ---
   const onSaveProfile = (fields) => {
@@ -544,6 +561,7 @@ function AppShell({ data, setData }) {
               onAddGoal={onAddGoal} onRenameGoal={onRenameGoal} onDeleteGoal={onDeleteGoal}
               onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
               onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}
+              onRenameMilestone={onRenameMilestone} onDeleteMilestone={onDeleteMilestone}
               onSaveProfile={onSaveProfile} onCreateRecord={onCreateRecord} onSaveRecord={onSaveRecord} onPrint={onPrint}
               onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
             />

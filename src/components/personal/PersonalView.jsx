@@ -14,7 +14,8 @@ export default function PersonalView({
   staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords,
   initialTab,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
-  onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative, onAddMilestone, onToggleMilestone,
+  onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
+  onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
 }) {
   const [pTab, setPTab] = useState('tasks');
@@ -78,6 +79,8 @@ export default function PersonalView({
           isOwner={isOwner}
           onToggleMilestone={onToggleMilestone}
           onAddMilestone={onAddMilestone}
+          onRenameMilestone={onRenameMilestone}
+          onDeleteMilestone={onDeleteMilestone}
           onAddGoal={(title) => onAddGoal(staffKey, title)}
           onRenameGoal={onRenameGoal}
           onDeleteGoal={onDeleteGoal}

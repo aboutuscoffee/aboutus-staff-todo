@@ -3,7 +3,7 @@ import GoalCard from './GoalCard';
 
 export default function GoalPanel({
   goals, isOwner,
-  onToggleMilestone, onAddMilestone, onAddGoal, onRenameGoal, onDeleteGoal,
+  onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onAddGoal, onRenameGoal, onDeleteGoal,
   onAddInitiative, onRenameInitiative, onDeleteInitiative,
 }) {
   const [title, setTitle] = useState('');
@@ -24,6 +24,8 @@ export default function GoalPanel({
           isOwner={isOwner}
           onToggleMilestone={onToggleMilestone}
           onAddMilestone={onAddMilestone}
+          onRenameMilestone={onRenameMilestone}
+          onDeleteMilestone={onDeleteMilestone}
           onRename={(title) => onRenameGoal(g.id, title)}
           onDelete={() => onDeleteGoal(g.id)}
           onAddInitiative={(text) => onAddInitiative(g.id, text)}
