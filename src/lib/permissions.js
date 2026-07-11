@@ -43,9 +43,10 @@ export function canRestrictTask(staff, roles, key) {
 
 export function canViewTask(staff, roles, viewerKey, task) {
   if (!task.restricted || viewerKey === task.staff_key) return true;
-  const ownerRole = findRole(roles, staff.find((s) => s.key === task.staff_key)?.role);
-  if (ownerRole?.key === 'SM') return isAdminRole(staff, roles, viewerKey);
-  if (ownerRole?.key === 'GM') return isOwnerRole(staff, roles, viewerKey);
+  const ownerRoleKey = staff.find((s) => s.key === task.staff_key)?.role;
+  const viewerRoleKey = staff.find((s) => s.key === viewerKey)?.role;
+  if (ownerRoleKey === 'SM') return viewerRoleKey === 'SM' || isAdminRole(staff, roles, viewerKey);
+  if (ownerRoleKey === 'GM') return viewerRoleKey === 'GM' || isOwnerRole(staff, roles, viewerKey);
   return true;
 }
 
