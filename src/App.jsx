@@ -68,8 +68,9 @@ function Gate({ data, setData }) {
 function AppShell({ data, setData }) {
   const { loggedInUserKey, logout } = useSession();
   const [collapsed, setCollapsed] = useState(true);
-  const [view, setView] = useState(() => (loggedInUserKey && isOwnerRole(data.staff, data.roles, loggedInUserKey) ? 'owner' : 'overview'));
-  const [si, setSi] = useState(null);
+  const isOwnerLogin = loggedInUserKey && isOwnerRole(data.staff, data.roles, loggedInUserKey);
+  const [view, setView] = useState(isOwnerLogin ? 'personal' : 'overview');
+  const [si, setSi] = useState(isOwnerLogin ? loggedInUserKey : null);
   const [personalTab, setPersonalTab] = useState(null);
   const [printData, setPrintData] = useState(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
