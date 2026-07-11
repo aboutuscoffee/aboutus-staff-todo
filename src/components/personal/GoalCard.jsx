@@ -33,7 +33,7 @@ export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilest
 
   return (
     <div className="rounded-2xl border border-stone-100 bg-white mb-2 overflow-hidden">
-      <SwipeRow canEdit={isOwner} onEdit={() => { setDraft(goal.title); setEditing(true); }} onDelete={handleDelete}>
+      <SwipeRow canEdit={isOwner} onEdit={() => { setDraft(goal.title); setEditing(true); }}>
         <div className="p-[14px_16px]">
           {editing ? (
             <div className="flex gap-1.5 mb-1.5">
@@ -47,6 +47,7 @@ export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilest
               />
               <button type="button" onClick={saveRename} className="px-3 py-1.5 rounded-md bg-stone-900 text-white text-[13px]">保存</button>
               <button type="button" onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-md border border-stone-300 bg-white text-[13px]">キャンセル</button>
+              <button type="button" onClick={handleDelete} className="px-3 py-1.5 rounded-md border border-stone-300 bg-white text-[13px] text-[#A32D2D]">削除</button>
             </div>
           ) : (
             <div className="flex items-center justify-between mb-1.5">
@@ -55,10 +56,7 @@ export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilest
                 {goal.edited_at && <span className="text-[9px] text-stone-300">{editedLabel(goal.edited_at)}</span>}
                 <span className="text-xs text-stone-500">{pct}%</span>
                 {isOwner && (
-                  <>
-                    <button type="button" onClick={() => { setDraft(goal.title); setEditing(true); }} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm">✏️</button>
-                    <button type="button" onClick={handleDelete} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-[#A32D2D] px-[4px] py-[2px] rounded text-sm">🗑️</button>
-                  </>
+                  <button type="button" onClick={() => { setDraft(goal.title); setEditing(true); }} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm">✏️</button>
                 )}
               </div>
             </div>

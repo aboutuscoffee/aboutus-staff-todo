@@ -1,9 +1,8 @@
 import { useRef, useState } from 'react';
-import TrashIcon from './TrashIcon';
 
-const SWIPE_OPEN = -112;
+const SWIPE_OPEN = -56;
 
-export default function SwipeRow({ canEdit, onEdit, onDelete, bgClassName = 'bg-white', children }) {
+export default function SwipeRow({ canEdit, onEdit, bgClassName = 'bg-white', children }) {
   const [offset, setOffset] = useState(0);
   const touch = useRef(null);
 
@@ -41,11 +40,6 @@ export default function SwipeRow({ canEdit, onEdit, onDelete, bgClassName = 'bg-
             onClick={() => { setOffset(0); onEdit(); }}
             className="w-14 flex items-center justify-center bg-stone-200 text-stone-700 text-lg"
           >✏️</button>
-          <button
-            type="button"
-            onClick={() => { setOffset(0); onDelete(); }}
-            className="w-14 flex items-center justify-center bg-[#E24B4A] text-white text-lg"
-          ><TrashIcon size={18} /></button>
         </div>
       )}
       <div
