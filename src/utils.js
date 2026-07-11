@@ -80,6 +80,11 @@ export function dlLabel(d) {
   return d.slice(5).replace('-', '/');
 }
 
+export function editedLabel(isoTimestamp) {
+  if (!isoTimestamp) return '';
+  return `${dlLabel(isoDate(new Date(isoTimestamp)))}編集`;
+}
+
 export async function sha256(text) {
   const data = new TextEncoder().encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);

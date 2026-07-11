@@ -11,10 +11,10 @@ import { isOwnerRole } from '../../lib/permissions';
 import { useSession } from '../../context/SessionContext';
 
 export default function PersonalView({
-  staffKey, staff, roles, tasks, goals, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords,
+  staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords,
   initialTab,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
-  onAddGoal, onAddMilestone, onToggleMilestone,
+  onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative, onAddMilestone, onToggleMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
 }) {
   const [pTab, setPTab] = useState('tasks');
@@ -29,9 +29,9 @@ export default function PersonalView({
 
   const isOwner = loggedInUserKey === staffKey || isOwnerRole(staff, roles, loggedInUserKey);
 
-  const summary = computeSummary(tasks, goals, goalMilestones, staffKey, monthAgo, monthStart);
+  const summary = computeSummary(tasks, goals, goalInitiatives, goalMilestones, staffKey, monthAgo, monthStart);
   const myTasks = tasksForStaff(tasks, staffKey);
-  const myGoals = goalsForStaff(goals, goalMilestones, staffKey);
+  const myGoals = goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey);
   const otherStaff = staff.filter((s) => s.key !== staffKey);
 
   return (
@@ -75,9 +75,15 @@ export default function PersonalView({
       {pTab === 'goals' && (
         <GoalPanel
           goals={myGoals}
+          isOwner={isOwner}
           onToggleMilestone={onToggleMilestone}
           onAddMilestone={onAddMilestone}
           onAddGoal={(title) => onAddGoal(staffKey, title)}
+          onRenameGoal={onRenameGoal}
+          onDeleteGoal={onDeleteGoal}
+          onAddInitiative={onAddInitiative}
+          onRenameInitiative={onRenameInitiative}
+          onDeleteInitiative={onDeleteInitiative}
         />
       )}
       {pTab === 'eval' && (

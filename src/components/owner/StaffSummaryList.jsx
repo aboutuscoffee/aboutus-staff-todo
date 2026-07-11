@@ -1,8 +1,8 @@
 import { ownerStaffSummaries } from '../../lib/selectors';
 import { monthAgo, isHtmlEmpty } from '../../utils';
 
-export default function StaffSummaryList({ staff, roles, tasks, goals, goalMilestones, onGoPersonalEval }) {
-  const summaries = ownerStaffSummaries(staff, roles, tasks, goals, goalMilestones, monthAgo);
+export default function StaffSummaryList({ staff, roles, tasks, goals, goalInitiatives, goalMilestones, onGoPersonalEval }) {
+  const summaries = ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives, goalMilestones, monthAgo);
 
   return (
     <div className="flex flex-col gap-3">

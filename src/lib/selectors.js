@@ -39,13 +39,25 @@ export function tasksForStaff(tasks, staffKey, criterion = 'deadline') {
   return sortTasks(tasks.filter((t) => t.staff_key === staffKey), criterion);
 }
 
-export function goalsForStaff(goals, goalMilestones, staffKey) {
+export function goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey) {
   return goals
     .filter((g) => g.staff_key === staffKey)
     .map((g) => ({
       ...g,
-      milestones: goalMilestones.filter((m) => m.goal_id === g.id).sort((a, b) => a.sort_order - b.sort_order),
+      initiatives: goalInitiatives
+        .filter((i) => i.goal_id === g.id)
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((i) => ({
+          ...i,
+          milestones: goalMilestones.filter((m) => m.initiative_id === i.id).sort((a, b) => a.sort_order - b.sort_order),
+        })),
     }));
+}
+
+export function milestonesForStaffGoals(goals, goalInitiatives, goalMilestones, staffKey) {
+  const staffGoalIds = new Set(goals.filter((g) => g.staff_key === staffKey).map((g) => g.id));
+  const staffInitiativeIds = new Set(goalInitiatives.filter((i) => staffGoalIds.has(i.goal_id)).map((i) => i.id));
+  return goalMilestones.filter((m) => staffInitiativeIds.has(m.initiative_id));
 }
 
 export function evalRecordsForStaff(evalRecords, staffKey) {
@@ -93,7 +105,7 @@ export function monthlyEvalRecordsForStaff(monthlyEvalRecords, staffKey) {
     .sort((a, b) => (a.year_month < b.year_month ? 1 : -1));
 }
 
-export function computeMonthlyStats(tasks, goals, goalMilestones, staffKey, ym) {
+export function computeMonthlyStats(tasks, goals, goalInitiatives, goalMilestones, staffKey, ym) {
   const { start, end, nextStart, nextEnd } = monthKeyRange(ym);
   const staffTasks = tasks.filter((t) => t.staff_key === staffKey);
 
@@ -119,19 +131,19 @@ export function computeMonthlyStats(tasks, goals, goalMilestones, staffKey, ym) 
     ? Math.round((onTimeBucket.filter((t) => t.done && t.done_date && t.done_date <= t.deadline).length / onTimeBucket.length) * 100)
     : null;
 
-  const milestones = goalMilestones.filter((m) => goals.some((g) => g.staff_key === staffKey && g.id === m.goal_id));
+  const milestones = milestonesForStaffGoals(goals, goalInitiatives, goalMilestones, staffKey);
   const goalPct = milestones.length ? Math.round((milestones.filter((m) => m.done).length / milestones.length) * 100) : 0;
 
   return { totalTasks, completedTasks, onTimePct, goalPct };
 }
 
-export function computeSummary(tasks, goals, goalMilestones, staffKey, monthAgo, monthStart) {
+export function computeSummary(tasks, goals, goalInitiatives, goalMilestones, staffKey, monthAgo, monthStart) {
   const staffTasks = tasks.filter((t) => t.staff_key === staffKey);
   const total = staffTasks.length;
   const doneThisMonth = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthStart).length;
   const recent = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthAgo && t.deadline);
   const onTimePct = recent.length ? Math.round((recent.filter((t) => t.done_date <= t.deadline).length / recent.length) * 100) : null;
-  const milestones = goalMilestones.filter((m) => goals.some((g) => g.staff_key === staffKey && g.id === m.goal_id));
+  const milestones = milestonesForStaffGoals(goals, goalInitiatives, goalMilestones, staffKey);
   const goalPct = milestones.length ? Math.round((milestones.filter((m) => m.done).length / milestones.length) * 100) : 0;
   return { total, doneThisMonth, onTimePct, goalPct };
 }
@@ -140,7 +152,7 @@ export function pendingReviewTasks(tasks, criterion = 'deadline') {
   return tasks.filter((t) => t.status === 'review' && !t.done).sort(taskCompare(criterion));
 }
 
-export function ownerStaffSummaries(staff, roles, tasks, goals, goalMilestones, monthAgo) {
+export function ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives, goalMilestones, monthAgo) {
   return staff
     .filter((s) => !findRole(roles, s.role)?.is_owner)
     .map((s) => {
@@ -148,7 +160,7 @@ export function ownerStaffSummaries(staff, roles, tasks, goals, goalMilestones, 
       const poolDoneCount = staffTasks.filter((t) => t.done && t.from_pool).length;
       const recent = staffTasks.filter((t) => t.done && t.done_date && t.done_date >= monthAgo && t.deadline);
       const onTimePct = recent.length ? Math.round((recent.filter((t) => t.done_date <= t.deadline).length / recent.length) * 100) : null;
-      const milestones = goalMilestones.filter((m) => goals.some((g) => g.staff_key === s.key && g.id === m.goal_id));
+      const milestones = milestonesForStaffGoals(goals, goalInitiatives, goalMilestones, s.key);
       const goalPct = milestones.length ? Math.round((milestones.filter((m) => m.done).length / milestones.length) * 100) : 0;
       return { key: s.key, name: s.name, duties: s.duties || [], overallEvalHtml: s.overall_eval_html, goalPct, poolDoneCount, onTimePct };
     });

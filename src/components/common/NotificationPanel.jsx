@@ -11,6 +11,7 @@ const TYPE_ICON = {
   store_comment: '🏪',
   eval_comment: '🗒️',
   memo_sent: '📤',
+  goal_deleted: '🗑️',
 };
 
 const SWIPE_OPEN = -56;

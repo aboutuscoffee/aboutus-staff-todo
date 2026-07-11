@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchAll, upsertItem, deleteItem, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications } from './lib/db';
+import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications } from './lib/db';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner } from './lib/permissions';
@@ -78,7 +78,7 @@ function AppShell({ data, setData }) {
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
 
-  const { staff, roles, tasks, poolTasks, goals, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes } = data;
+  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -96,7 +96,7 @@ function AppShell({ data, setData }) {
     pastMonthKeys(3).filter((ym) => ym >= MONTHLY_EVAL_START_YM).forEach((ym) => {
       staff.forEach((s) => {
         if (monthlyEvalRecords.some((r) => r.staff_key === s.key && r.year_month === ym)) return;
-        const stats = computeMonthlyStats(tasks, goals, goalMilestones, s.key, ym);
+        const stats = computeMonthlyStats(tasks, goals, goalInitiatives, goalMilestones, s.key, ym);
         missing.push({
           staff_key: s.key,
           year_month: ym,
@@ -175,6 +175,7 @@ function AppShell({ data, setData }) {
   const upsertTask = upsertInto('tasks', 'tasks', 'id');
   const upsertPool = upsertInto('poolTasks', 'pool_tasks', 'id');
   const upsertGoal = upsertInto('goals', 'goals', 'id');
+  const upsertInitiative = upsertInto('goalInitiatives', 'goal_initiatives', 'id');
   const upsertMilestone = upsertInto('goalMilestones', 'goal_milestones', 'id');
   const upsertStoreTodo = upsertInto('storeTodos', 'store_todos', 'id');
   const upsertEvalRecord = upsertInto('evalRecords', 'eval_records', 'id');
@@ -186,6 +187,8 @@ function AppShell({ data, setData }) {
   const removeStaffRow = removeFrom('staff', 'staff', 'key');
   const removeRoleRow = removeFrom('roles', 'roles', 'key');
   const removeStoreTodoRow = removeFrom('storeTodos', 'store_todos', 'id');
+  const removeGoalRow = removeFrom('goals', 'goals', 'id');
+  const removeInitiativeRow = removeFrom('goalInitiatives', 'goal_initiatives', 'id');
 
   // --- ナビゲーション ---
   const goView = (v) => { setView(v); setCollapsed(true); };
@@ -362,15 +365,64 @@ function AppShell({ data, setData }) {
   };
 
   // --- 個人ページ：成長目標 ---
+  const notifyAdmins = (message) => {
+    staff
+      .filter((s) => s.key !== loggedInUserKey && isAdminRole(staff, roles, s.key))
+      .forEach((s) => notify(s.key, 'goal_deleted', message));
+  };
   const onAddGoal = (staffKey, title) => {
     const order = goals.filter((g) => g.staff_key === staffKey).length;
     upsertGoal({ staff_key: staffKey, title, sort_order: order });
   };
-  const onAddMilestone = (goalId, text) => {
-    const order = goalMilestones.filter((m) => m.goal_id === goalId).length;
-    upsertMilestone({ goal_id: goalId, text, done: false, sort_order: order });
+  const onRenameGoal = (goalId, title) => {
+    const g = goals.find((x) => x.id === goalId);
+    if (!g || title === g.title) return;
+    renameWithTimestamp('goals', goalId, { title }).then((saved) => {
+      setData((d) => ({ ...d, goals: d.goals.map((x) => (x.id === goalId ? saved : x)) }));
+    });
   };
-  const onToggleMilestone = (goalId, milestoneId) => {
+  const onDeleteGoal = (goalId) => {
+    const g = goals.find((x) => x.id === goalId);
+    if (!g) return;
+    const staffName = staff.find((s) => s.key === g.staff_key)?.name || '';
+    const removedInitiativeIds = goalInitiatives.filter((i) => i.goal_id === goalId).map((i) => i.id);
+    removeGoalRow(goalId).then(() => {
+      setData((d) => ({
+        ...d,
+        goalInitiatives: d.goalInitiatives.filter((i) => i.goal_id !== goalId),
+        goalMilestones: d.goalMilestones.filter((m) => !removedInitiativeIds.includes(m.initiative_id)),
+      }));
+      showToast();
+      notifyAdmins(`${staffName}さんの目標「${g.title}」が削除されました`);
+    });
+  };
+  const onAddInitiative = (goalId, text) => {
+    const order = goalInitiatives.filter((i) => i.goal_id === goalId).length;
+    upsertInitiative({ goal_id: goalId, text, sort_order: order });
+  };
+  const onRenameInitiative = (initiativeId, text) => {
+    const i = goalInitiatives.find((x) => x.id === initiativeId);
+    if (!i || text === i.text) return;
+    renameWithTimestamp('goal_initiatives', initiativeId, { text }).then((saved) => {
+      setData((d) => ({ ...d, goalInitiatives: d.goalInitiatives.map((x) => (x.id === initiativeId ? saved : x)) }));
+    });
+  };
+  const onDeleteInitiative = (initiativeId) => {
+    const i = goalInitiatives.find((x) => x.id === initiativeId);
+    if (!i) return;
+    const g = goals.find((x) => x.id === i.goal_id);
+    const staffName = g ? staff.find((s) => s.key === g.staff_key)?.name || '' : '';
+    removeInitiativeRow(initiativeId).then(() => {
+      setData((d) => ({ ...d, goalMilestones: d.goalMilestones.filter((m) => m.initiative_id !== initiativeId) }));
+      showToast();
+      notifyAdmins(`${staffName}さんの取り組み「${i.text}」が削除されました`);
+    });
+  };
+  const onAddMilestone = (initiativeId, text) => {
+    const order = goalMilestones.filter((m) => m.initiative_id === initiativeId).length;
+    upsertMilestone({ initiative_id: initiativeId, text, done: false, sort_order: order });
+  };
+  const onToggleMilestone = (milestoneId) => {
     const m = goalMilestones.find((x) => x.id === milestoneId);
     if (m) upsertMilestone({ ...m, done: !m.done });
   };
@@ -475,7 +527,7 @@ function AppShell({ data, setData }) {
           {view === 'owner' && (
             viewerIsOwner ? (
               <OwnerView
-                staff={staff} roles={roles} tasks={tasks} goals={goals} goalMilestones={goalMilestones}
+                staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
                 onGoPersonalEval={goPersonalEval}
                 onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit}
                 onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
@@ -484,12 +536,14 @@ function AppShell({ data, setData }) {
           )}
           {view === 'personal' && si && (
             <PersonalView
-              staffKey={si} staff={staff} roles={roles} tasks={tasks} goals={goals} goalMilestones={goalMilestones}
+              staffKey={si} staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
               storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords}
               initialTab={personalTab}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
               onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
-              onAddGoal={onAddGoal} onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}
+              onAddGoal={onAddGoal} onRenameGoal={onRenameGoal} onDeleteGoal={onDeleteGoal}
+              onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
+              onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}
               onSaveProfile={onSaveProfile} onCreateRecord={onCreateRecord} onSaveRecord={onSaveRecord} onPrint={onPrint}
               onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
             />

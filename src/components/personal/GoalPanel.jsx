@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import GoalCard from './GoalCard';
 
-export default function GoalPanel({ goals, onToggleMilestone, onAddMilestone, onAddGoal }) {
+export default function GoalPanel({
+  goals, isOwner,
+  onToggleMilestone, onAddMilestone, onAddGoal, onRenameGoal, onDeleteGoal,
+  onAddInitiative, onRenameInitiative, onDeleteInitiative,
+}) {
   const [title, setTitle] = useState('');
 
   const submit = () => {
@@ -17,8 +21,14 @@ export default function GoalPanel({ goals, onToggleMilestone, onAddMilestone, on
         <GoalCard
           key={g.id}
           goal={g}
-          onToggleMilestone={(mid) => onToggleMilestone(g.id, mid)}
-          onAddMilestone={(text) => onAddMilestone(g.id, text)}
+          isOwner={isOwner}
+          onToggleMilestone={onToggleMilestone}
+          onAddMilestone={onAddMilestone}
+          onRename={(title) => onRenameGoal(g.id, title)}
+          onDelete={() => onDeleteGoal(g.id)}
+          onAddInitiative={(text) => onAddInitiative(g.id, text)}
+          onRenameInitiative={onRenameInitiative}
+          onDeleteInitiative={onDeleteInitiative}
         />
       ))}
       <div className="flex gap-1.5 mt-1.5">
@@ -27,7 +37,7 @@ export default function GoalPanel({ goals, onToggleMilestone, onAddMilestone, on
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
-          placeholder="新しい目標..."
+          placeholder="新しいテーマ..."
           className="flex-1 px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px]"
         />
         <button type="button" onClick={submit} className="px-3 py-1.5 rounded-md border border-stone-300 bg-white text-[13px]">＋ 追加</button>

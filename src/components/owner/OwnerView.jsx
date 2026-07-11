@@ -3,7 +3,7 @@ import ConfirmationQueue from './ConfirmationQueue';
 import StaffSummaryList from './StaffSummaryList';
 
 export default function OwnerView({
-  staff, roles, tasks, goals, goalMilestones,
+  staff, roles, tasks, goals, goalInitiatives, goalMilestones,
   onGoPersonalEval,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
 }) {
@@ -35,6 +35,7 @@ export default function OwnerView({
           roles={roles}
           tasks={tasks}
           goals={goals}
+          goalInitiatives={goalInitiatives}
           goalMilestones={goalMilestones}
           onGoPersonalEval={onGoPersonalEval}
         />
