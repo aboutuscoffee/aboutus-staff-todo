@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import SwipeRow from '../common/SwipeRow';
 import { editedLabel } from '../../utils';
 
-export default function GoalInitiativeCard({ initiative, isOwner, onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onRename, onDelete }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(initiative.text);
+export default function GoalInitiativeCard({ initiative, editing, onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onRename, onDelete }) {
   const [text, setText] = useState('');
 
   const submit = () => {
@@ -14,10 +11,9 @@ export default function GoalInitiativeCard({ initiative, isOwner, onToggleMilest
     setText('');
   };
 
-  const saveRename = () => {
-    const trimmed = draft.trim();
-    if (trimmed) onRename(trimmed);
-    setEditing(false);
+  const commitText = (value) => {
+    const trimmed = value.trim();
+    if (trimmed && trimmed !== initiative.text) onRename(trimmed);
   };
 
   const handleDelete = () => {
@@ -34,66 +30,54 @@ export default function GoalInitiativeCard({ initiative, isOwner, onToggleMilest
   };
 
   return (
-    <div className="mb-1.5">
-      <SwipeRow canEdit={isOwner} bgClassName="bg-[#F5F3EE]" onEdit={() => { setDraft(initiative.text); setEditing(true); }}>
-      <div className="p-[10px_12px]">
-        {editing ? (
-          <div className="flex gap-1.5 mb-1.5">
-            <input
-              type="text"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && saveRename()}
-              className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs"
-              autoFocus
-            />
-            <button type="button" onClick={saveRename} className="px-2.5 py-1 rounded-md bg-stone-900 text-white text-xs">保存</button>
-            <button type="button" onClick={() => setEditing(false)} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">キャンセル</button>
-            <button type="button" onClick={handleDelete} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs text-[#A32D2D]">削除</button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between gap-1.5 mb-1">
-            <span className="text-xs font-medium">{initiative.text}</span>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {initiative.edited_at && <span className="text-[9px] text-stone-400">{editedLabel(initiative.edited_at)}</span>}
-              {isOwner && (
-                <button type="button" onClick={() => { setDraft(initiative.text); setEditing(true); }} className="hidden md:inline-block text-stone-400 hover:bg-stone-200 hover:text-stone-900 px-[3px] py-[1px] rounded text-xs">✏️</button>
-              )}
-            </div>
-          </div>
-        )}
-        {initiative.milestones.map((m) => (
-          editing ? (
-            <div key={`${m.id}-edit`} className="flex items-center gap-1.5 mb-1">
-              <input
-                type="text"
-                defaultValue={m.text}
-                onBlur={(e) => commitMilestoneText(m, e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}
-                className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs bg-white"
-              />
-              <button type="button" onClick={() => handleDeleteMilestone(m)} className="text-stone-400 hover:text-[#A32D2D] px-1 text-xs flex-shrink-0">✕</button>
-            </div>
-          ) : (
-            <div key={`${m.id}-view`} className="flex items-center gap-[7px] text-xs text-stone-500 mb-1">
-              <input type="checkbox" checked={m.done} onChange={() => onToggleMilestone(m.id)} className="w-[13px] h-[13px] cursor-pointer accent-[#1D9E75] flex-shrink-0" />
-              <span className={m.done ? 'line-through text-stone-400' : ''}>{m.text}</span>
-            </div>
-          )
-        ))}
-        <div className="flex gap-1.5 mt-1.5">
+    <div className="rounded-md bg-[#F5F3EE] p-[10px_12px] mb-1.5">
+      {editing ? (
+        <div className="flex items-center gap-1.5 mb-1.5">
           <input
             type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
-            placeholder="マイルストーンを追加..."
+            defaultValue={initiative.text}
+            onBlur={(e) => commitText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}
             className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs bg-white"
           />
-          <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
+          <button type="button" onClick={handleDelete} className="text-stone-400 hover:text-[#A32D2D] px-1 text-xs flex-shrink-0">✕</button>
         </div>
+      ) : (
+        <div className="flex items-center justify-between gap-1.5 mb-1">
+          <span className="text-xs font-medium">{initiative.text}</span>
+          {initiative.edited_at && <span className="text-[9px] text-stone-400">{editedLabel(initiative.edited_at)}</span>}
+        </div>
+      )}
+      {initiative.milestones.map((m) => (
+        editing ? (
+          <div key={`${m.id}-edit`} className="flex items-center gap-1.5 mb-1">
+            <input
+              type="text"
+              defaultValue={m.text}
+              onBlur={(e) => commitMilestoneText(m, e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}
+              className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs bg-white"
+            />
+            <button type="button" onClick={() => handleDeleteMilestone(m)} className="text-stone-400 hover:text-[#A32D2D] px-1 text-xs flex-shrink-0">✕</button>
+          </div>
+        ) : (
+          <div key={`${m.id}-view`} className="flex items-center gap-[7px] text-xs text-stone-500 mb-1">
+            <input type="checkbox" checked={m.done} onChange={() => onToggleMilestone(m.id)} className="w-[13px] h-[13px] cursor-pointer accent-[#1D9E75] flex-shrink-0" />
+            <span className={m.done ? 'line-through text-stone-400' : ''}>{m.text}</span>
+          </div>
+        )
+      ))}
+      <div className="flex gap-1.5 mt-1.5">
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
+          placeholder="マイルストーンを追加..."
+          className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs bg-white"
+        />
+        <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
       </div>
-      </SwipeRow>
     </div>
   );
 }
