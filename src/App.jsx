@@ -388,8 +388,11 @@ function AppShell({ data, setData }) {
   const onTaskStatusChange = (id, status) => {
     const t = tasks.find((x) => x.id === id);
     if (t) {
-      upsertTask({ ...t, status });
-      if (status === 'review' && t.status !== 'review') {
+      const becameReview = status === 'review' && t.status !== 'review';
+      upsertTask({ ...t, status }).then(() => {
+        if (becameReview) showToast('オーナーに確認依頼を通知しました');
+      });
+      if (becameReview) {
         notify(t.staff_key, 'status_review', `「${t.text}」を確認待ちにしました`);
         const staffName = staff.find((x) => x.key === t.staff_key)?.name || '';
         staff.filter((o) => o.key !== t.staff_key && isOwnerRole(staff, roles, o.key))
