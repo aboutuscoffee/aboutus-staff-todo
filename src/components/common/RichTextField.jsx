@@ -1,60 +1,25 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 const FONT_SIZES = [
-  { v: '', l: 'サイズ' },
   { v: '12px', l: '小' },
   { v: '14px', l: '標準' },
   { v: '18px', l: '大' },
   { v: '22px', l: '特大' },
 ];
 
-function toggleInlineTag(rootEl, tagName) {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-  const range = sel.getRangeAt(0);
-  if (!rootEl.contains(range.commonAncestorContainer)) return;
-
-  let container = range.commonAncestorContainer;
-  if (container.nodeType === 3) container = container.parentElement;
-  const closest = container.closest ? container.closest(tagName) : null;
-
-  if (closest && rootEl.contains(closest)) {
-    const parent = closest.parentNode;
-    while (closest.firstChild) parent.insertBefore(closest.firstChild, closest);
-    parent.removeChild(closest);
-  } else {
-    const wrapper = document.createElement(tagName);
-    try {
-      range.surroundContents(wrapper);
-    } catch {
-      const frag = range.extractContents();
-      wrapper.appendChild(frag);
-      range.insertNode(wrapper);
-    }
-  }
-  sel.removeAllRanges();
-}
-
-function wrapFontSize(rootEl, size) {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-  const range = sel.getRangeAt(0);
-  if (!rootEl.contains(range.commonAncestorContainer)) return;
-  const wrapper = document.createElement('span');
-  wrapper.style.fontSize = size;
-  try {
-    range.surroundContents(wrapper);
-  } catch {
-    const frag = range.extractContents();
-    wrapper.appendChild(frag);
-    range.insertNode(wrapper);
-  }
-  sel.removeAllRanges();
+function applyFontSize(rootEl, px) {
+  document.execCommand('fontSize', false, '7');
+  rootEl.querySelectorAll('font[size="7"]').forEach((f) => {
+    const span = document.createElement('span');
+    span.style.fontSize = px;
+    while (f.firstChild) span.appendChild(f.firstChild);
+    f.parentNode.replaceChild(span, f);
+  });
 }
 
 const RichTextField = forwardRef(function RichTextField({ label, defaultValue, placeholder }, ref) {
   const editableRef = useRef(null);
-  const savedRangeRef = useRef(null);
+  const [sizeMenuOpen, setSizeMenuOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({
     getHTML: () => editableRef.current?.innerHTML.trim() ?? '',
@@ -62,29 +27,12 @@ const RichTextField = forwardRef(function RichTextField({ label, defaultValue, p
 
   const focusEditor = () => editableRef.current?.focus();
 
-  const saveSelection = () => {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-    const range = sel.getRangeAt(0);
-    if (editableRef.current?.contains(range.commonAncestorContainer)) {
-      savedRangeRef.current = range.cloneRange();
-    }
-  };
-
-  const restoreSelection = () => {
-    if (!savedRangeRef.current) return;
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(savedRangeRef.current);
-    savedRangeRef.current = null;
-  };
-
-  const btn = (label2, tag) => (
+  const toolbarBtn = (label2, onClick, active) => (
     <button
       type="button"
-      className="w-6 h-6 rounded text-stone-500 hover:bg-white hover:text-stone-900 text-xs flex items-center justify-center"
+      className={`w-6 h-6 rounded text-xs flex items-center justify-center ${active ? 'bg-white text-stone-900' : 'text-stone-500 hover:bg-white hover:text-stone-900'}`}
       onMouseDown={(e) => e.preventDefault()}
-      onClick={() => { focusEditor(); toggleInlineTag(editableRef.current, tag); }}
+      onClick={() => { focusEditor(); onClick(); }}
     >
       {label2}
     </button>
@@ -93,19 +41,31 @@ const RichTextField = forwardRef(function RichTextField({ label, defaultValue, p
   return (
     <div className="flex flex-col gap-1">
       {label && <div className="text-[11px] font-medium text-stone-500">{label}</div>}
-      <div className="flex gap-0.5 p-1 bg-stone-100 rounded-t-md border border-stone-300 border-b-0">
-        <select
-          className="h-6 border-none bg-transparent text-[11px] text-stone-500 cursor-pointer rounded"
-          onMouseDown={saveSelection}
-          onChange={(e) => { const size = e.target.value; focusEditor(); restoreSelection(); wrapFontSize(editableRef.current, size); e.target.value = ''; }}
-        >
-          {FONT_SIZES.map((f) => <option key={f.v} value={f.v}>{f.l}</option>)}
-        </select>
+      <div className="flex gap-0.5 p-1 bg-stone-100 rounded-t-md border border-stone-300 border-b-0 relative">
+        <button
+          type="button"
+          className="h-6 px-1.5 rounded text-stone-500 hover:bg-white hover:text-stone-900 text-[11px] flex items-center gap-0.5"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setSizeMenuOpen((o) => !o)}
+        >サイズ ▾</button>
+        {sizeMenuOpen && (
+          <div className="absolute left-0 top-full mt-0.5 bg-white border border-stone-300 rounded-md shadow-lg z-10 py-0.5 min-w-[64px]">
+            {FONT_SIZES.map((f) => (
+              <button
+                key={f.v}
+                type="button"
+                className="block w-full text-left px-2 py-1 text-[11px] text-stone-600 hover:bg-stone-100"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => { focusEditor(); applyFontSize(editableRef.current, f.v); setSizeMenuOpen(false); }}
+              >{f.l}</button>
+            ))}
+          </div>
+        )}
         <span className="w-px bg-stone-300 mx-0.5" />
-        {btn(<b>B</b>, 'b')}
-        {btn(<i>I</i>, 'i')}
-        {btn(<u>U</u>, 'u')}
-        {btn(<s>S</s>, 's')}
+        {toolbarBtn(<b>B</b>, () => document.execCommand('bold'))}
+        {toolbarBtn(<i>I</i>, () => document.execCommand('italic'))}
+        {toolbarBtn(<u>U</u>, () => document.execCommand('underline'))}
+        {toolbarBtn(<s>S</s>, () => document.execCommand('strikeThrough'))}
       </div>
       <div
         ref={editableRef}
