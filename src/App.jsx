@@ -239,7 +239,7 @@ function AppShell({ data, setData }) {
     const t = tasks.find((x) => x.id === taskId);
     if (!t) return;
     const newStaffName = staff.find((s) => s.key === newStaffKey)?.name || '';
-    upsertTask({ ...t, staff_key: newStaffKey, pending_approval: true }).then(() => {
+    upsertTask({ ...t, staff_key: newStaffKey, pending_approval: true, handed_off_by: loggedInUserKey }).then(() => {
       showToast();
       notify(newStaffKey, 'task_offered', `${loggedInStaff?.name}さんから「${t.text}」の依頼が届きました`, loggedInUserKey);
       if (t.offered_by) notify(t.offered_by, 'task_offer_handoff', `「${t.text}」の依頼が${newStaffName}さんに振り替えられました`);
@@ -273,7 +273,16 @@ function AppShell({ data, setData }) {
     if (!t) return;
     const done = !t.done;
     await upsertTask({ ...t, done, done_date: done ? today : null, status: done ? '' : t.status });
-    if (done) notify(staffKey, 'task_done', `「${t.text}」を完了しました`);
+    if (done) {
+      notify(staffKey, 'task_done', `「${t.text}」を完了しました`);
+      if (t.offered_by) {
+        const staffName = staff.find((s) => s.key === staffKey)?.name || '';
+        notify(t.offered_by, 'task_offer_done', `${staffName}さんが依頼タスク「${t.text}」を完了しました`);
+        if (t.handed_off_by && t.handed_off_by !== t.offered_by) {
+          notify(t.handed_off_by, 'task_offer_done', `${staffName}さんが依頼タスク「${t.text}」を完了しました`);
+        }
+      }
+    }
   };
 
   // --- 店舗月次目標 ---

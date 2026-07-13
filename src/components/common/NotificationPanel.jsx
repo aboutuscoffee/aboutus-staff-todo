@@ -13,6 +13,7 @@ const TYPE_ICON = {
   goal_deleted: '🗑️',
   task_offered: '📨',
   task_offer_handoff: '🔁',
+  task_offer_done: '✅',
 };
 
 const SWIPE_OPEN = -56;
