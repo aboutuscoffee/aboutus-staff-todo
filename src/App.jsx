@@ -402,7 +402,7 @@ function AppShell({ data, setData }) {
         if (becameReview) showToast('オーナーに確認依頼を通知しました');
       });
       if (becameReview) {
-        notify(t.staff_key, 'status_review', `「${t.text}」を確認待ちにしました`);
+        notify(t.staff_key, 'status_review', `「${t.text}」の確認願いをオーナーに通知しました`);
         const staffName = staff.find((x) => x.key === t.staff_key)?.name || '';
         staff.filter((o) => o.key !== t.staff_key && isOwnerRole(staff, roles, o.key))
           .forEach((o) => notify(o.key, 'review_owner', `${staffName}さんが「${t.text}」を確認待ちにしました`));
