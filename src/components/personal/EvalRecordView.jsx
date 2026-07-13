@@ -65,9 +65,8 @@ export default function EvalRecordView({ records, selectedId, onSelectId, canEdi
       <div className="h-px bg-stone-100 my-[18px]" />
       <div className="bg-stone-100 rounded-2xl p-[14px_16px] mb-[18px]">
         <div className="text-[10px] font-bold text-stone-400 uppercase mb-2.5">目標アクションプラン</div>
-        <ActionRow label="短期アクション（1〜2週間）" value={r.short_html} />
-        <ActionRow label="中期アクション（1ヶ月）" value={r.mid_html} />
-        <ActionRow label="習慣化のポイント" value={r.habit_html} />
+        <ActionRow label="TO DO" value={r.todo_html} />
+        <ActionRow label="アクションプラン" value={r.action_plan_html} />
       </div>
       <div className="h-px bg-stone-100 my-[18px]" />
       <StaticSec label="この回についての総評" value={r.eval_html} />

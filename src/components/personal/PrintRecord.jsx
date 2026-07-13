@@ -37,9 +37,8 @@ export default function PrintRecord({ data, onDone }) {
       <Sec label="その他" value={r.other_html} />
       <div className="border-t border-[#ccc] my-[18px]" />
       <div className="text-xs font-semibold text-[#555] mb-2">目標アクションプラン</div>
-      <Sec label="短期アクション（1〜2週間）" value={r.short_html} />
-      <Sec label="中期アクション（1ヶ月）" value={r.mid_html} />
-      <Sec label="習慣化のポイント" value={r.habit_html} />
+      <Sec label="TO DO" value={r.todo_html} />
+      <Sec label="アクションプラン" value={r.action_plan_html} />
       <div className="border-t border-[#ccc] my-[18px]" />
       <Sec label="この回についての総評" value={r.eval_html} />
       <div className="text-[11px] text-[#888] mt-6">作成日：{r.created_at}　最終編集日：{r.updated_at}</div>

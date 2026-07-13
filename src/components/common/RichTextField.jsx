@@ -54,12 +54,30 @@ function wrapFontSize(rootEl, size) {
 
 const RichTextField = forwardRef(function RichTextField({ label, defaultValue, placeholder }, ref) {
   const editableRef = useRef(null);
+  const savedRangeRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     getHTML: () => editableRef.current?.innerHTML.trim() ?? '',
   }));
 
   const focusEditor = () => editableRef.current?.focus();
+
+  const saveSelection = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    if (editableRef.current?.contains(range.commonAncestorContainer)) {
+      savedRangeRef.current = range.cloneRange();
+    }
+  };
+
+  const restoreSelection = () => {
+    if (!savedRangeRef.current) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRangeRef.current);
+    savedRangeRef.current = null;
+  };
 
   const btn = (label2, tag) => (
     <button
@@ -78,8 +96,8 @@ const RichTextField = forwardRef(function RichTextField({ label, defaultValue, p
       <div className="flex gap-0.5 p-1 bg-stone-100 rounded-t-md border border-stone-300 border-b-0">
         <select
           className="h-6 border-none bg-transparent text-[11px] text-stone-500 cursor-pointer rounded"
-          onMouseDown={(e) => e.preventDefault()}
-          onChange={(e) => { focusEditor(); wrapFontSize(editableRef.current, e.target.value); e.target.value = ''; }}
+          onMouseDown={saveSelection}
+          onChange={(e) => { const size = e.target.value; focusEditor(); restoreSelection(); wrapFontSize(editableRef.current, size); e.target.value = ''; }}
         >
           {FONT_SIZES.map((f) => <option key={f.v} value={f.v}>{f.l}</option>)}
         </select>

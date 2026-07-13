@@ -8,7 +8,7 @@ export default function EvalRecordForm({ record, interviewerOptions, onSave, onC
   const [byName, setByName] = useState(record?.by_name || interviewerOptions[0] || '');
   const refs = {
     motivation: useRef(null), review: useRef(null), goal: useRef(null), team: useRef(null), other: useRef(null),
-    short: useRef(null), mid: useRef(null), habit: useRef(null), eval: useRef(null),
+    todo: useRef(null), actionPlan: useRef(null), eval: useRef(null),
   };
 
   const save = () => {
@@ -21,9 +21,8 @@ export default function EvalRecordForm({ record, interviewerOptions, onSave, onC
       goal_html: refs.goal.current.getHTML(),
       team_html: refs.team.current.getHTML(),
       other_html: refs.other.current.getHTML(),
-      short_html: refs.short.current.getHTML(),
-      mid_html: refs.mid.current.getHTML(),
-      habit_html: refs.habit.current.getHTML(),
+      todo_html: refs.todo.current.getHTML(),
+      action_plan_html: refs.actionPlan.current.getHTML(),
       eval_html: refs.eval.current.getHTML(),
     });
   };
@@ -49,9 +48,8 @@ export default function EvalRecordForm({ record, interviewerOptions, onSave, onC
       <RichTextField ref={refs.team} label="チーム・会社・働き方" defaultValue={record?.team_html} />
       <RichTextField ref={refs.other} label="その他" defaultValue={record?.other_html} />
       <div className="text-[11px] font-semibold text-stone-500 mt-1.5">目標アクションプラン</div>
-      <RichTextField ref={refs.short} label="短期アクション（1〜2週間）" defaultValue={record?.short_html} />
-      <RichTextField ref={refs.mid} label="中期アクション（1ヶ月）" defaultValue={record?.mid_html} />
-      <RichTextField ref={refs.habit} label="習慣化のポイント" defaultValue={record?.habit_html} />
+      <RichTextField ref={refs.todo} label="TO DO" defaultValue={record?.todo_html} />
+      <RichTextField ref={refs.actionPlan} label="アクションプラン" defaultValue={record?.action_plan_html} />
       <div className="text-[11px] font-semibold text-stone-500 mt-1.5">この回についての総評</div>
       <RichTextField ref={refs.eval} defaultValue={record?.eval_html} />
       <div className="flex gap-2 mt-1.5">
