@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications } from './lib/db';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
-import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask } from './lib/permissions';
+import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
 import { STORE_INFO } from './constants';
 import Sidebar from './components/common/Sidebar';
@@ -82,7 +82,7 @@ function AppShell({ data, setData }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissedOfferIds, setDismissedOfferIds] = useState([]);
 
-  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes } = data;
+  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -188,6 +188,7 @@ function AppShell({ data, setData }) {
   const upsertEvalRecord = upsertInto('evalRecords', 'eval_records', 'id');
   const upsertStoreMonthNote = upsertInto('storeMonthNotes', 'store_month_notes', 'id');
   const upsertMonthlyEvalRecord = upsertInto('monthlyEvalRecords', 'monthly_eval_records', 'id');
+  const upsertTrainingProgress = upsertInto('trainingProgress', 'training_progress', 'id');
 
   const removeTask = removeFrom('tasks', 'tasks', 'id');
   const removePool = removeFrom('poolTasks', 'pool_tasks', 'id');
@@ -524,6 +525,26 @@ function AppShell({ data, setData }) {
     });
   };
 
+  // --- 個人ページ：新人研修 ---
+  const onStartTraining = (staffKey) => {
+    const s = staff.find((x) => x.key === staffKey);
+    if (!s || s.training_started_at) return;
+    upsertStaff({ ...s, training_started_at: new Date().toISOString() }).then(() => {
+      upsertGoal({ staff_key: staffKey, title: '研修を完了する', is_training: true, sort_order: 0 }).then(() => {
+        notify(staffKey, 'training_started', '新人研修が開始されました');
+        showToast();
+      });
+    });
+  };
+  const onToggleTrainingItem = (staffKey, itemId, field) => {
+    if (field === 'can' && !canConfirmTraining(staff, roles, loggedInUserKey)) return;
+    const existing = trainingProgress.find((p) => p.staff_key === staffKey && p.item_id === itemId);
+    const base = existing || { staff_key: staffKey, item_id: itemId, taught: false, can: false };
+    const updated = { ...base, [field]: !base[field] };
+    if (field === 'taught' && !updated.taught) updated.can = false;
+    upsertTrainingProgress(updated);
+  };
+
   const topbarTitle = view === 'personal' ? (staff.find((s) => s.key === si)?.name ?? '') : (VIEW_TITLES[view] || view);
 
   return (
@@ -613,7 +634,7 @@ function AppShell({ data, setData }) {
           {view === 'personal' && si && canViewPersonal(si) && (
             <PersonalView
               staffKey={si} staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
-              storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords}
+              storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords} trainingProgress={trainingProgress}
               initialTab={personalTab}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
               onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
@@ -624,6 +645,7 @@ function AppShell({ data, setData }) {
               onRenameMilestone={onRenameMilestone} onDeleteMilestone={onDeleteMilestone}
               onSaveProfile={onSaveProfile} onCreateRecord={onCreateRecord} onSaveRecord={onSaveRecord} onPrint={onPrint}
               onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
+              onStartTraining={onStartTraining} onToggleTrainingItem={onToggleTrainingItem}
             />
           )}
         </div>

@@ -7,7 +7,7 @@ function stripMeta(obj) {
 }
 
 export async function fetchAll() {
-  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes] = await Promise.all([
+  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress] = await Promise.all([
     supabase.from('staff').select('*').order('sort_order'),
     supabase.from('roles').select('*'),
     supabase.from('tasks').select('*'),
@@ -19,9 +19,10 @@ export async function fetchAll() {
     supabase.from('eval_records').select('*').order('date'),
     supabase.from('monthly_eval_records').select('*'),
     supabase.from('store_month_notes').select('*'),
+    supabase.from('training_progress').select('*'),
   ]);
 
-  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes]) {
+  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress]) {
     if (res.error) throw new Error(res.error.message);
   }
 
@@ -46,6 +47,7 @@ export async function fetchAll() {
     evalRecords: evalRecords.data ?? [],
     monthlyEvalRecords: monthlyEvalRecords.data ?? [],
     storeMonthNotes: storeMonthNotes.data ?? [],
+    trainingProgress: trainingProgress.data ?? [],
   };
 }
 

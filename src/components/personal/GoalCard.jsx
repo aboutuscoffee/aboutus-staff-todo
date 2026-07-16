@@ -4,7 +4,7 @@ import SwipeRow from '../common/SwipeRow';
 import GoalInitiativeCard from './GoalInitiativeCard';
 import { editedLabel } from '../../utils';
 
-export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onRename, onDelete, onAddInitiative, onRenameInitiative, onDeleteInitiative }) {
+export default function GoalCard({ goal, isOwner, trainingPct, onOpenTraining, onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onRename, onDelete, onAddInitiative, onRenameInitiative, onDeleteInitiative }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(goal.title);
   const [text, setText] = useState('');
@@ -12,7 +12,7 @@ export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilest
   const allMilestones = goal.initiatives.flatMap((i) => i.milestones);
   const total = allMilestones.length;
   const done = allMilestones.filter((m) => m.done).length;
-  const pct = total ? Math.round((done / total) * 100) : 0;
+  const pct = goal.is_training ? (trainingPct ?? 0) : (total ? Math.round((done / total) * 100) : 0);
 
   const submit = () => {
     const trimmed = text.trim();
@@ -63,31 +63,41 @@ export default function GoalCard({ goal, isOwner, onToggleMilestone, onAddMilest
           )}
           <ProgressBar pct={pct} />
 
-          {goal.initiatives.map((i) => (
-            <GoalInitiativeCard
-              key={i.id}
-              initiative={i}
-              editing={editing && isOwner}
-              onToggleMilestone={onToggleMilestone}
-              onAddMilestone={(text) => onAddMilestone(i.id, text)}
-              onRenameMilestone={onRenameMilestone}
-              onDeleteMilestone={onDeleteMilestone}
-              onRename={(text) => onRenameInitiative(i.id, text)}
-              onDelete={() => onDeleteInitiative(i.id)}
-            />
-          ))}
+          {goal.is_training ? (
+            <button
+              type="button"
+              onClick={onOpenTraining}
+              className="w-full mt-1 px-3 py-1.5 rounded-md border border-stone-300 bg-white text-xs text-left hover:bg-stone-50"
+            >🎓 研修チェックシートを開く</button>
+          ) : (
+            <>
+              {goal.initiatives.map((i) => (
+                <GoalInitiativeCard
+                  key={i.id}
+                  initiative={i}
+                  editing={editing && isOwner}
+                  onToggleMilestone={onToggleMilestone}
+                  onAddMilestone={(text) => onAddMilestone(i.id, text)}
+                  onRenameMilestone={onRenameMilestone}
+                  onDeleteMilestone={onDeleteMilestone}
+                  onRename={(text) => onRenameInitiative(i.id, text)}
+                  onDelete={() => onDeleteInitiative(i.id)}
+                />
+              ))}
 
-          <div className="flex gap-1.5 mt-1.5">
-            <input
-              type="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
-              placeholder="取り組みを追加..."
-              className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs"
-            />
-            <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
-          </div>
+              <div className="flex gap-1.5 mt-1.5">
+                <input
+                  type="text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
+                  placeholder="取り組みを追加..."
+                  className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs"
+                />
+                <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
+              </div>
+            </>
+          )}
         </div>
       </SwipeRow>
     </div>

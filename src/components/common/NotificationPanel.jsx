@@ -14,6 +14,7 @@ const TYPE_ICON = {
   task_offered: '📨',
   task_offer_handoff: '🔁',
   task_offer_done: '✅',
+  training_started: '🎓',
 };
 
 const SWIPE_OPEN = -56;

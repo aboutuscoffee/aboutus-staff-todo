@@ -8,7 +8,7 @@ import EvalRecordView from './EvalRecordView';
 import EvalRecordForm from './EvalRecordForm';
 import MonthlyEvalView from './MonthlyEvalView';
 
-export default function EvalPanel({ targetStaff, staff, roles, evalRecords, monthlyEvalRecords, onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment }) {
+export default function EvalPanel({ targetStaff, staff, roles, evalRecords, monthlyEvalRecords, onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment, onStartTraining }) {
   const { loggedInUserKey, openLoginModal } = useSession();
   const isSelf = loggedInUserKey === targetStaff.key;
   const canAccess = loggedInUserKey && canAccessEval(staff, roles, loggedInUserKey, targetStaff.key);
@@ -76,7 +76,7 @@ export default function EvalPanel({ targetStaff, staff, roles, evalRecords, mont
       {subTab === 'profile' && canAccess && (
         editingProfile
           ? <EvalProfileForm staffMember={targetStaff} onSave={(fields) => { onSaveProfile(fields); setEditingProfile(false); }} onCancel={() => setEditingProfile(false)} />
-          : <EvalProfileView staffMember={targetStaff} canEdit={canEdit} onEdit={() => setEditingProfile(true)} />
+          : <EvalProfileView staffMember={targetStaff} canEdit={canEdit} onEdit={() => setEditingProfile(true)} onStartTraining={() => onStartTraining(targetStaff.key)} />
       )}
 
       {subTab === 'record' && canAccess && (

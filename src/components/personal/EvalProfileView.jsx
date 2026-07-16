@@ -21,8 +21,13 @@ function Block({ title, html }) {
   );
 }
 
-export default function EvalProfileView({ staffMember, canEdit, onEdit }) {
+export default function EvalProfileView({ staffMember, canEdit, onEdit, onStartTraining }) {
   const p = staffMember;
+
+  const handleStartTraining = () => {
+    if (window.confirm(`${p.name}さんの新人研修を開始します。成長目標に「研修を完了する」が追加されます。よろしいですか？`)) onStartTraining();
+  };
+
   return (
     <div>
       <div className="flex justify-between items-baseline mb-0.5">
@@ -40,7 +45,10 @@ export default function EvalProfileView({ staffMember, canEdit, onEdit }) {
         {isHtmlEmpty(p.overall_eval_html) ? <div className="text-[13px] text-stone-400 italic">未記入</div> : <div className="text-sm leading-loose break-words" dangerouslySetInnerHTML={{ __html: p.overall_eval_html }} />}
       </div>
       {canEdit && (
-        <div className="mt-6 pt-3 border-t border-stone-100 flex justify-end">
+        <div className="mt-6 pt-3 border-t border-stone-100 flex justify-end gap-2">
+          {!p.training_started_at && (
+            <button type="button" onClick={handleStartTraining} className="flex items-center gap-1 px-3.5 py-1.5 rounded-md border border-stone-300 bg-white text-xs">🎓 新人研修を始める</button>
+          )}
           <button type="button" onClick={onEdit} className="flex items-center gap-1 px-3.5 py-1.5 rounded-md border border-stone-300 bg-white text-xs">✎ プロファイルを編集</button>
         </div>
       )}

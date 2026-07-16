@@ -2,7 +2,7 @@ import { useState } from 'react';
 import GoalCard from './GoalCard';
 
 export default function GoalPanel({
-  goals, isOwner,
+  goals, isOwner, trainingPct, onOpenTraining,
   onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onAddGoal, onRenameGoal, onDeleteGoal,
   onAddInitiative, onRenameInitiative, onDeleteInitiative,
 }) {
@@ -22,6 +22,8 @@ export default function GoalPanel({
           key={g.id}
           goal={g}
           isOwner={isOwner}
+          trainingPct={trainingPct}
+          onOpenTraining={onOpenTraining}
           onToggleMilestone={onToggleMilestone}
           onAddMilestone={onAddMilestone}
           onRenameMilestone={onRenameMilestone}

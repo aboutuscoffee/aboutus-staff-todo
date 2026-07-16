@@ -4,21 +4,23 @@ import GoalSummary from './GoalSummary';
 import TaskPanel from './TaskPanel';
 import GoalPanel from './GoalPanel';
 import EvalPanel from './EvalPanel';
+import TrainingPanel from './TrainingPanel';
 import StoreCard from '../storetodos/StoreCard';
 import TaskOfferCard from './TaskOfferCard';
-import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff } from '../../lib/selectors';
+import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff, trainingPctForStaff } from '../../lib/selectors';
 import { monthAgo, monthStart, monthKey, monthLabel } from '../../utils';
-import { isOwnerRole, isAdminRole, canOfferOwnTask, canViewTask } from '../../lib/permissions';
+import { isOwnerRole, isAdminRole, canOfferOwnTask, canViewTask, canConfirmTraining } from '../../lib/permissions';
 import { useSession } from '../../context/SessionContext';
 
 export default function PersonalView({
-  staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords,
+  staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, trainingProgress,
   initialTab,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
   onApproveTaskOffer, onHandOffTaskOffer, onConvertToRequest,
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
+  onStartTraining, onToggleTrainingItem,
 }) {
   const [pTab, setPTab] = useState('tasks');
   const { loggedInUserKey } = useSession();
@@ -40,6 +42,8 @@ export default function PersonalView({
   const myOffers = isSelf ? pendingOffersForStaff(tasks, staffKey) : [];
   const myGoals = goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey);
   const otherStaff = staff.filter((s) => s.key !== staffKey);
+  const myTrainingProgress = trainingProgress.filter((p) => p.staff_key === staffKey);
+  const canConfirm = canConfirmTraining(staff, roles, loggedInUserKey);
 
   return (
     <div>
@@ -63,6 +67,9 @@ export default function PersonalView({
         <button type="button" onClick={() => setPTab('tasks')} className={`px-3 py-1.5 rounded-md border border-stone-300 text-xs ${pTab === 'tasks' ? 'bg-stone-100 font-medium' : 'bg-transparent text-stone-500'}`}>📋 日次タスク</button>
         <button type="button" onClick={() => setPTab('goals')} className={`px-3 py-1.5 rounded-md border border-stone-300 text-xs ${pTab === 'goals' ? 'bg-stone-100 font-medium' : 'bg-transparent text-stone-500'}`}>🌱 成長目標</button>
         <button type="button" onClick={() => setPTab('eval')} className={`px-3 py-1.5 rounded-md border border-stone-300 text-xs ${pTab === 'eval' ? 'bg-stone-100 font-medium' : 'bg-transparent text-stone-500'}`}>🔒 評価ページ</button>
+        {staffMember.training_started_at && (
+          <button type="button" onClick={() => setPTab('training')} className={`px-3 py-1.5 rounded-md border border-stone-300 text-xs ${pTab === 'training' ? 'bg-stone-100 font-medium' : 'bg-transparent text-stone-500'}`}>🎓 研修</button>
+        )}
       </div>
 
       {pTab === 'tasks' && (
@@ -102,6 +109,8 @@ export default function PersonalView({
         <GoalPanel
           goals={myGoals}
           isOwner={isOwner}
+          trainingPct={trainingPctForStaff(trainingProgress, staffKey)}
+          onOpenTraining={() => setPTab('training')}
           onToggleMilestone={onToggleMilestone}
           onAddMilestone={onAddMilestone}
           onRenameMilestone={onRenameMilestone}
@@ -126,6 +135,14 @@ export default function PersonalView({
           onSaveRecord={onSaveRecord}
           onPrint={onPrint}
           onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
+          onStartTraining={onStartTraining}
+        />
+      )}
+      {pTab === 'training' && staffMember.training_started_at && (
+        <TrainingPanel
+          trainingProgress={myTrainingProgress}
+          canConfirm={canConfirm}
+          onToggleItem={(itemId, field) => onToggleTrainingItem(staffKey, itemId, field)}
         />
       )}
     </div>
