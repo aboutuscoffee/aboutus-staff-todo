@@ -18,6 +18,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
   const [poolKind, setPoolKind] = useState('todo');
   const [poolDeadline, setPoolDeadline] = useState('');
   const [targetKeys, setTargetKeys] = useState([]);
+  const [broadcastAll, setBroadcastAll] = useState(false);
   const [memoTo, setMemoTo] = useState(loggedInUserKey);
   const [memoText, setMemoText] = useState('');
 
@@ -35,6 +36,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
       setPoolKind('todo');
       setPoolDeadline(prefill?.deadline || '');
       setTargetKeys([]);
+      setBroadcastAll(false);
       setMemoTo(loggedInUserKey);
       setMemoText('');
     }
@@ -70,7 +72,7 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
         showErrorToast('タスク名を入力してください');
         return;
       }
-      onAddPool(trimmed, poolKind, poolKind === 'assign' ? null : (poolDeadline || null), priority, targetKeys);
+      onAddPool(trimmed, poolKind, poolKind === 'assign' ? null : (poolDeadline || null), priority, targetKeys, poolKind === 'todo' && targetKeys.length === 0 && broadcastAll);
     }
     onClose();
   };
@@ -176,15 +178,21 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
                     <button
                       key={s.key}
                       type="button"
-                      onClick={() => setTargetKeys((keys) => (selected ? keys.filter((k) => k !== s.key) : [...keys, s.key]))}
+                      onClick={() => { setTargetKeys((keys) => (selected ? keys.filter((k) => k !== s.key) : [...keys, s.key])); setBroadcastAll(false); }}
                       className={`text-xs px-[10px] py-1 rounded-full border ${selected ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-500 border-stone-300'}`}
                     >{s.name}</button>
                   );
                 })}
               </div>
+              {poolKind === 'todo' && targetKeys.length === 0 && (
+                <div className="flex border border-stone-300 rounded-md overflow-hidden mt-1.5 w-fit">
+                  <button type="button" onClick={() => setBroadcastAll(false)} className={`px-[9px] py-[3px] text-xs ${!broadcastAll ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>早い者勝ち</button>
+                  <button type="button" onClick={() => setBroadcastAll(true)} className={`px-[9px] py-[3px] text-xs ${broadcastAll ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>全員がやる</button>
+                </div>
+              )}
               <div className="text-[11px] text-stone-400 mt-1.5">
                 {targetKeys.length === 0
-                  ? '誰でも受け取れる募集ボックスに表示されます'
+                  ? (broadcastAll ? '全員それぞれのタスクとして配布されます' : '誰でも受け取れる募集ボックスに表示されます')
                   : targetKeys.length === 1
                   ? `${recipients.find((s) => s.key === targetKeys[0])?.name}さんだけが受け取れます`
                   : `選択した${targetKeys.length}人の中で早い者勝ちになります`}

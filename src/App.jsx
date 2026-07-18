@@ -206,8 +206,21 @@ function AppShell({ data, setData }) {
   const trySettings = () => { setCollapsed(true); setView('settings'); };
 
   // --- 全員一覧・担当者募集プール ---
-  const onAddPool = (text, kind, deadline, priority, targetKeys) => {
+  const onAddPool = (text, kind, deadline, priority, targetKeys, broadcastAll) => {
     if (kind === 'assign' && !isAdminRole(staff, roles, loggedInUserKey)) return;
+    if (kind === 'todo' && broadcastAll && (!targetKeys || !targetKeys.length)) {
+      const recipientKeys = staff.filter((s) => s.key !== loggedInUserKey).map((s) => s.key);
+      Promise.all(recipientKeys.map((key) => upsertTask({
+        staff_key: key, text, duty: 'その他', priority: priority || 'mid', status: '',
+        done: false, done_date: null, deadline: deadline || today, workdate: today, minutes: null,
+        from_pool: true,
+      }))).then(() => {
+        showToast();
+        notify(loggedInUserKey, 'pool_posted', `「${text}」を全員のタスクとして配布しました`);
+        recipientKeys.forEach((key) => notify(key, 'pool_available', `新しい依頼タスク「${text}」が届きました`));
+      });
+      return;
+    }
     if (kind === 'todo' && targetKeys && targetKeys.length === 1) {
       const recipientKey = targetKeys[0];
       const recipientName = staff.find((s) => s.key === recipientKey)?.name || '';
@@ -658,8 +671,8 @@ function AppShell({ data, setData }) {
         staff={staff}
         duties={loggedInStaff?.duties || []}
         onAddTask={(fields) => onAddTask(loggedInUserKey, fields)}
-        onAddPool={(text, kind, deadline, priority, targetKeys) => {
-          onAddPool(text, kind, deadline, priority, targetKeys);
+        onAddPool={(text, kind, deadline, priority, targetKeys, broadcastAll) => {
+          onAddPool(text, kind, deadline, priority, targetKeys, broadcastAll);
           if (quickAddPrefill?.sourceTaskId) removeTask(quickAddPrefill.sourceTaskId);
           setQuickAddPrefill(null);
         }}
