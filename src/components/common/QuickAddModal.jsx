@@ -4,7 +4,7 @@ import { showErrorToast } from './Toast';
 import { PRIORITY_OPTIONS } from '../../constants';
 import { useSession } from '../../context/SessionContext';
 
-export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode, prefill, canRestrictTask }) {
+export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode, prefill, canRestrictTask, canPostAssignPool }) {
   const { loggedInUserKey } = useSession();
   const [mode, setMode] = useState('task');
   const [text, setText] = useState('');
@@ -150,7 +150,9 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
           <div className="flex flex-wrap gap-1.5 mb-3 items-center">
             <div className="flex border border-stone-300 rounded-md overflow-hidden">
               <button type="button" onClick={() => setPoolKind('todo')} className={`px-[9px] py-[3px] text-xs ${poolKind === 'todo' ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>ToDo</button>
-              <button type="button" onClick={() => setPoolKind('assign')} className={`px-[9px] py-[3px] text-xs ${poolKind === 'assign' ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>担当</button>
+              {canPostAssignPool && (
+                <button type="button" onClick={() => setPoolKind('assign')} className={`px-[9px] py-[3px] text-xs ${poolKind === 'assign' ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>担当</button>
+              )}
             </div>
             {poolKind !== 'assign' && (
               <>

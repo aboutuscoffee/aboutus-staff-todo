@@ -207,6 +207,7 @@ function AppShell({ data, setData }) {
 
   // --- 全員一覧・担当者募集プール ---
   const onAddPool = (text, kind, deadline, priority, targetKeys) => {
+    if (kind === 'assign' && !isAdminRole(staff, roles, loggedInUserKey)) return;
     if (kind === 'todo' && targetKeys && targetKeys.length === 1) {
       const recipientKey = targetKeys[0];
       const recipientName = staff.find((s) => s.key === recipientKey)?.name || '';
@@ -666,6 +667,7 @@ function AppShell({ data, setData }) {
         initialMode={quickAddMode}
         prefill={quickAddPrefill}
         canRestrictTask={loggedInUserKey ? canRestrictTask(staff, roles, loggedInUserKey) : false}
+        canPostAssignPool={loggedInUserKey ? isAdminRole(staff, roles, loggedInUserKey) : false}
       />
       <TaskOfferModal
         offers={offersToPopup}
