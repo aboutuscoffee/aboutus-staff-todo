@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ProgressBar from '../common/ProgressBar';
 import { TRAINING_DATA, trainingItemId } from '../../lib/trainingData';
 
-const GROUP_ICON = { service: '🔔', coffee: '☕', espresso: '🥤' };
+const GROUP_ICON = { service: '🔔', coffee: '☕', espresso: '🥤', management: '🗂️' };
 
 function itemState(trainingProgress, itemId) {
   const row = trainingProgress.find((p) => p.item_id === itemId);
