@@ -1,7 +1,7 @@
 import { monthKeyRange } from '../utils';
 import { findRole } from './permissions';
 import { STORE_KEYS } from '../constants';
-import { TRAINING_TOTAL, ONLINE_STORE_MODULE } from './trainingData';
+import { TRAINING_TOTAL, ONLINE_STORE_MODULE, ADVANCED_TRAINING_TOTAL } from './trainingData';
 
 const PRIORITY_RANK = { high: 0, mid: 1, low: 2 };
 
@@ -65,10 +65,24 @@ export function milestonesForStaffGoals(goals, goalInitiatives, goalMilestones, 
   return goalMilestones.filter((m) => staffInitiativeIds.has(m.initiative_id));
 }
 
+// item_id は `${groupIndex}-${subcategoryIndex}-${itemIndex}`。追加スキルアップ研修は
+// 常に TRAINING_DATA の4グループの直後（groupIndex === 4）に位置するため、
+// 通常研修の達成率からは除外し、追加研修側の集計にのみ含める。
+const ADVANCED_GROUP_INDEX = 4;
+
 export function trainingPctForStaff(trainingProgress, staffKey, hasOnlineStore) {
   const total = TRAINING_TOTAL + (hasOnlineStore ? ONLINE_STORE_MODULE.items.length : 0);
-  const done = trainingProgress.filter((p) => p.staff_key === staffKey && p.can).length;
+  const done = trainingProgress.filter(
+    (p) => p.staff_key === staffKey && p.can && Number(p.item_id.split('-')[0]) !== ADVANCED_GROUP_INDEX
+  ).length;
   return total ? Math.round((done / total) * 100) : 0;
+}
+
+export function advancedTrainingPctForStaff(trainingProgress, staffKey) {
+  const done = trainingProgress.filter(
+    (p) => p.staff_key === staffKey && p.can && Number(p.item_id.split('-')[0]) === ADVANCED_GROUP_INDEX
+  ).length;
+  return ADVANCED_TRAINING_TOTAL ? Math.round((done / ADVANCED_TRAINING_TOTAL) * 100) : 0;
 }
 
 export function evalRecordsForStaff(evalRecords, staffKey) {

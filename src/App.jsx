@@ -544,7 +544,7 @@ function AppShell({ data, setData }) {
     const s = staff.find((x) => x.key === staffKey);
     if (!s || s.training_started_at) return;
     upsertStaff({ ...s, training_started_at: new Date().toISOString() }).then(() => {
-      upsertGoal({ staff_key: staffKey, title: '研修を完了する', is_training: true, sort_order: 0 }).then(() => {
+      upsertGoal({ staff_key: staffKey, title: '研修を完了する', is_training: true, training_kind: 'base', sort_order: 0 }).then(() => {
         notify(staffKey, 'training_started', '新人研修が開始されました');
         showToast();
       });
@@ -563,6 +563,17 @@ function AppShell({ data, setData }) {
     const s = staff.find((x) => x.key === staffKey);
     if (!s || s.training_online_store) return;
     upsertStaff({ ...s, training_online_store: true }).then(() => showToast());
+  };
+  const onStartAdvancedTraining = (staffKey) => {
+    if (!canConfirmTraining(staff, roles, loggedInUserKey)) return;
+    const s = staff.find((x) => x.key === staffKey);
+    if (!s || s.advanced_training_started_at) return;
+    upsertStaff({ ...s, advanced_training_started_at: new Date().toISOString() }).then(() => {
+      upsertGoal({ staff_key: staffKey, title: 'スキルアップ研修を完了する', is_training: true, training_kind: 'advanced', sort_order: 1 }).then(() => {
+        notify(staffKey, 'training_started', '追加スキルアップ研修が開始されました');
+        showToast();
+      });
+    });
   };
 
   const topbarTitle = view === 'personal' ? (staff.find((s) => s.key === si)?.name ?? '') : (VIEW_TITLES[view] || view);
@@ -666,6 +677,7 @@ function AppShell({ data, setData }) {
               onSaveProfile={onSaveProfile} onCreateRecord={onCreateRecord} onSaveRecord={onSaveRecord} onPrint={onPrint}
               onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
               onStartTraining={onStartTraining} onToggleTrainingItem={onToggleTrainingItem} onAddOnlineStoreModule={onAddOnlineStoreModule}
+              onStartAdvancedTraining={onStartAdvancedTraining}
             />
           )}
         </div>

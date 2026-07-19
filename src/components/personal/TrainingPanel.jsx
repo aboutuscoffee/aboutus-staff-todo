@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import ProgressBar from '../common/ProgressBar';
-import { TRAINING_DATA, ONLINE_STORE_MODULE, trainingItemId } from '../../lib/trainingData';
+import { TRAINING_DATA, ONLINE_STORE_MODULE, ADVANCED_TRAINING_GROUP, trainingItemId } from '../../lib/trainingData';
 
-const GROUP_ICON = { service: '🔔', coffee: '☕', espresso: '🥤', management: '🗂️' };
+const GROUP_ICON = { service: '🔔', coffee: '☕', espresso: '🥤', management: '🗂️', advanced: '🚀' };
 
 function itemState(trainingProgress, itemId) {
   const row = trainingProgress.find((p) => p.item_id === itemId);
@@ -142,20 +142,26 @@ function GroupDetail({ grp, gi, hasOnlineStore, trainingProgress, canConfirm, on
   );
 }
 
-export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineStore, onToggleItem, onAddOnlineStore }) {
+export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineStore, hasAdvancedTraining, onToggleItem, onAddOnlineStore, onStartAdvancedTraining }) {
   const [activeGroup, setActiveGroup] = useState(null);
 
-  const allItems = TRAINING_DATA.flatMap((grp, gi) =>
+  const baseItems = TRAINING_DATA.flatMap((grp, gi) =>
+    effectiveSubcategories(grp, hasOnlineStore).flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)))
+  );
+  const baseComplete = baseItems.length > 0 && baseItems.every((id) => itemState(trainingProgress, id).can);
+
+  const groups = hasAdvancedTraining ? [...TRAINING_DATA, ADVANCED_TRAINING_GROUP] : TRAINING_DATA;
+  const allItems = groups.flatMap((grp, gi) =>
     effectiveSubcategories(grp, hasOnlineStore).flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)))
   );
   const totalTaught = allItems.filter((id) => itemState(trainingProgress, id).taught).length;
   const totalCan = allItems.filter((id) => itemState(trainingProgress, id).can).length;
 
   if (activeGroup !== null) {
-    const gi = TRAINING_DATA.findIndex((g) => g.icon === activeGroup);
+    const gi = groups.findIndex((g) => g.icon === activeGroup);
     return (
       <GroupDetail
-        grp={TRAINING_DATA[gi]}
+        grp={groups[gi]}
         gi={gi}
         hasOnlineStore={hasOnlineStore}
         trainingProgress={trainingProgress}
@@ -179,9 +185,16 @@ export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineS
       {!canConfirm && (
         <div className="text-[11px] text-stone-400 mb-3 px-1">「できる」のチェックはSM・GMのみ操作できます</div>
       )}
-      {TRAINING_DATA.map((grp, gi) => (
+      {groups.map((grp, gi) => (
         <GroupCard key={grp.icon} grp={grp} gi={gi} hasOnlineStore={hasOnlineStore} trainingProgress={trainingProgress} onOpen={() => setActiveGroup(grp.icon)} />
       ))}
+      {!hasAdvancedTraining && baseComplete && canConfirm && (
+        <button
+          type="button"
+          onClick={onStartAdvancedTraining}
+          className="w-full text-left rounded-2xl border border-dashed border-stone-300 text-stone-500 p-4 mt-2 text-[13px] hover:border-stone-400 hover:text-stone-700"
+        >＋ 追加研修を始める</button>
+      )}
     </div>
   );
 }

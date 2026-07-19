@@ -4,7 +4,7 @@ import SwipeRow from '../common/SwipeRow';
 import GoalInitiativeCard from './GoalInitiativeCard';
 import { editedLabel } from '../../utils';
 
-export default function GoalCard({ goal, isOwner, trainingPct, onOpenTraining, onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onRename, onDelete, onAddInitiative, onRenameInitiative, onDeleteInitiative }) {
+export default function GoalCard({ goal, isOwner, trainingPctByKind, onOpenTraining, onToggleMilestone, onAddMilestone, onRenameMilestone, onDeleteMilestone, onRename, onDelete, onAddInitiative, onRenameInitiative, onDeleteInitiative }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(goal.title);
   const [text, setText] = useState('');
@@ -12,7 +12,7 @@ export default function GoalCard({ goal, isOwner, trainingPct, onOpenTraining, o
   const allMilestones = goal.initiatives.flatMap((i) => i.milestones);
   const total = allMilestones.length;
   const done = allMilestones.filter((m) => m.done).length;
-  const pct = goal.is_training ? (trainingPct ?? 0) : (total ? Math.round((done / total) * 100) : 0);
+  const pct = goal.is_training ? (trainingPctByKind?.[goal.training_kind || 'base'] ?? 0) : (total ? Math.round((done / total) * 100) : 0);
 
   const submit = () => {
     const trimmed = text.trim();

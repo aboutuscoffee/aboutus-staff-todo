@@ -7,7 +7,7 @@ import EvalPanel from './EvalPanel';
 import TrainingPanel from './TrainingPanel';
 import StoreCard from '../storetodos/StoreCard';
 import TaskOfferCard from './TaskOfferCard';
-import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff, trainingPctForStaff } from '../../lib/selectors';
+import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff, trainingPctForStaff, advancedTrainingPctForStaff } from '../../lib/selectors';
 import { monthAgo, monthStart, monthKey, monthLabel } from '../../utils';
 import { isOwnerRole, isAdminRole, canOfferOwnTask, canViewTask, canConfirmTraining } from '../../lib/permissions';
 import { useSession } from '../../context/SessionContext';
@@ -20,7 +20,7 @@ export default function PersonalView({
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
-  onStartTraining, onToggleTrainingItem, onAddOnlineStoreModule,
+  onStartTraining, onToggleTrainingItem, onAddOnlineStoreModule, onStartAdvancedTraining,
 }) {
   const [pTab, setPTab] = useState('tasks');
   const { loggedInUserKey } = useSession();
@@ -109,7 +109,10 @@ export default function PersonalView({
         <GoalPanel
           goals={myGoals}
           isOwner={isOwner}
-          trainingPct={trainingPctForStaff(trainingProgress, staffKey, staffMember.training_online_store)}
+          trainingPctByKind={{
+            base: trainingPctForStaff(trainingProgress, staffKey, staffMember.training_online_store),
+            advanced: advancedTrainingPctForStaff(trainingProgress, staffKey),
+          }}
           onOpenTraining={() => setPTab('training')}
           onToggleMilestone={onToggleMilestone}
           onAddMilestone={onAddMilestone}
@@ -143,8 +146,10 @@ export default function PersonalView({
           trainingProgress={myTrainingProgress}
           canConfirm={canConfirm}
           hasOnlineStore={!!staffMember.training_online_store}
+          hasAdvancedTraining={!!staffMember.advanced_training_started_at}
           onToggleItem={(itemId, field) => onToggleTrainingItem(staffKey, itemId, field)}
           onAddOnlineStore={() => onAddOnlineStoreModule(staffKey)}
+          onStartAdvancedTraining={() => onStartAdvancedTraining(staffKey)}
         />
       )}
     </div>
