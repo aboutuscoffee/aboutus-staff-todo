@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ProgressBar from '../common/ProgressBar';
-import { TRAINING_DATA, trainingItemId } from '../../lib/trainingData';
+import { TRAINING_DATA, ONLINE_STORE_MODULE, trainingItemId } from '../../lib/trainingData';
 
 const GROUP_ICON = { service: '🔔', coffee: '☕', espresso: '🥤', management: '🗂️' };
 
@@ -9,8 +9,14 @@ function itemState(trainingProgress, itemId) {
   return { taught: !!row?.taught, can: !!row?.can };
 }
 
-function GroupCard({ grp, gi, trainingProgress, onOpen }) {
-  const items = grp.subcategories.flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)));
+function effectiveSubcategories(grp, hasOnlineStore) {
+  if (grp.icon === 'management' && hasOnlineStore) return [...grp.subcategories, ONLINE_STORE_MODULE];
+  return grp.subcategories;
+}
+
+function GroupCard({ grp, gi, hasOnlineStore, trainingProgress, onOpen }) {
+  const subcategories = effectiveSubcategories(grp, hasOnlineStore);
+  const items = subcategories.flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)));
   const taughtN = items.filter((id) => itemState(trainingProgress, id).taught).length;
   const canN = items.filter((id) => itemState(trainingProgress, id).can).length;
 
@@ -69,8 +75,9 @@ function ItemRow({ text, note, itemId, taught, can, canConfirm, onToggleItem }) 
   );
 }
 
-function GroupDetail({ grp, gi, trainingProgress, canConfirm, onToggleItem, onBack }) {
-  const items = grp.subcategories.flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)));
+function GroupDetail({ grp, gi, hasOnlineStore, trainingProgress, canConfirm, onToggleItem, onAddOnlineStore, onBack }) {
+  const subcategories = effectiveSubcategories(grp, hasOnlineStore);
+  const items = subcategories.flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)));
   const taughtN = items.filter((id) => itemState(trainingProgress, id).taught).length;
   const canN = items.filter((id) => itemState(trainingProgress, id).can).length;
 
@@ -94,7 +101,7 @@ function GroupDetail({ grp, gi, trainingProgress, canConfirm, onToggleItem, onBa
         <ProgressBar pct={items.length ? Math.round((canN / items.length) * 100) : 0} />
       </div>
 
-      {grp.subcategories.map((sc, si) => (
+      {subcategories.map((sc, si) => (
         <div key={si} className="mb-4">
           <div className="flex items-baseline justify-between px-1 mb-1.5">
             <span className="text-[11px] font-bold text-stone-500 tracking-wide">{sc.title}</span>
@@ -122,16 +129,24 @@ function GroupDetail({ grp, gi, trainingProgress, canConfirm, onToggleItem, onBa
         </div>
       ))}
 
+      {grp.icon === 'management' && !hasOnlineStore && canConfirm && (
+        <button
+          type="button"
+          onClick={onAddOnlineStore}
+          className="w-full text-left rounded-2xl border border-dashed border-stone-300 text-stone-500 p-3.5 mb-4 text-[13px] hover:border-stone-400 hover:text-stone-700"
+        >＋ オンラインストア業務研修を追加</button>
+      )}
+
       <button type="button" onClick={onBack} className="text-[12px] text-stone-500 hover:text-stone-900 mt-2">← 戻る</button>
     </div>
   );
 }
 
-export default function TrainingPanel({ trainingProgress, canConfirm, onToggleItem }) {
+export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineStore, onToggleItem, onAddOnlineStore }) {
   const [activeGroup, setActiveGroup] = useState(null);
 
   const allItems = TRAINING_DATA.flatMap((grp, gi) =>
-    grp.subcategories.flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)))
+    effectiveSubcategories(grp, hasOnlineStore).flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)))
   );
   const totalTaught = allItems.filter((id) => itemState(trainingProgress, id).taught).length;
   const totalCan = allItems.filter((id) => itemState(trainingProgress, id).can).length;
@@ -142,9 +157,11 @@ export default function TrainingPanel({ trainingProgress, canConfirm, onToggleIt
       <GroupDetail
         grp={TRAINING_DATA[gi]}
         gi={gi}
+        hasOnlineStore={hasOnlineStore}
         trainingProgress={trainingProgress}
         canConfirm={canConfirm}
         onToggleItem={onToggleItem}
+        onAddOnlineStore={onAddOnlineStore}
         onBack={() => setActiveGroup(null)}
       />
     );
@@ -163,7 +180,7 @@ export default function TrainingPanel({ trainingProgress, canConfirm, onToggleIt
         <div className="text-[11px] text-stone-400 mb-3 px-1">「できる」のチェックはSM・GMのみ操作できます</div>
       )}
       {TRAINING_DATA.map((grp, gi) => (
-        <GroupCard key={grp.icon} grp={grp} gi={gi} trainingProgress={trainingProgress} onOpen={() => setActiveGroup(grp.icon)} />
+        <GroupCard key={grp.icon} grp={grp} gi={gi} hasOnlineStore={hasOnlineStore} trainingProgress={trainingProgress} onOpen={() => setActiveGroup(grp.icon)} />
       ))}
     </div>
   );

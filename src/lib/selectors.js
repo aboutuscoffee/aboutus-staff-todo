@@ -1,7 +1,7 @@
 import { monthKeyRange } from '../utils';
 import { findRole } from './permissions';
 import { STORE_KEYS } from '../constants';
-import { TRAINING_TOTAL } from './trainingData';
+import { TRAINING_TOTAL, ONLINE_STORE_MODULE } from './trainingData';
 
 const PRIORITY_RANK = { high: 0, mid: 1, low: 2 };
 
@@ -65,9 +65,10 @@ export function milestonesForStaffGoals(goals, goalInitiatives, goalMilestones, 
   return goalMilestones.filter((m) => staffInitiativeIds.has(m.initiative_id));
 }
 
-export function trainingPctForStaff(trainingProgress, staffKey) {
+export function trainingPctForStaff(trainingProgress, staffKey, hasOnlineStore) {
+  const total = TRAINING_TOTAL + (hasOnlineStore ? ONLINE_STORE_MODULE.items.length : 0);
   const done = trainingProgress.filter((p) => p.staff_key === staffKey && p.can).length;
-  return TRAINING_TOTAL ? Math.round((done / TRAINING_TOTAL) * 100) : 0;
+  return total ? Math.round((done / total) * 100) : 0;
 }
 
 export function evalRecordsForStaff(evalRecords, staffKey) {

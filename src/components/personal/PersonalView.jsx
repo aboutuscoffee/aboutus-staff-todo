@@ -20,7 +20,7 @@ export default function PersonalView({
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
-  onStartTraining, onToggleTrainingItem,
+  onStartTraining, onToggleTrainingItem, onAddOnlineStoreModule,
 }) {
   const [pTab, setPTab] = useState('tasks');
   const { loggedInUserKey } = useSession();
@@ -109,7 +109,7 @@ export default function PersonalView({
         <GoalPanel
           goals={myGoals}
           isOwner={isOwner}
-          trainingPct={trainingPctForStaff(trainingProgress, staffKey)}
+          trainingPct={trainingPctForStaff(trainingProgress, staffKey, staffMember.training_online_store)}
           onOpenTraining={() => setPTab('training')}
           onToggleMilestone={onToggleMilestone}
           onAddMilestone={onAddMilestone}
@@ -142,7 +142,9 @@ export default function PersonalView({
         <TrainingPanel
           trainingProgress={myTrainingProgress}
           canConfirm={canConfirm}
+          hasOnlineStore={!!staffMember.training_online_store}
           onToggleItem={(itemId, field) => onToggleTrainingItem(staffKey, itemId, field)}
+          onAddOnlineStore={() => onAddOnlineStoreModule(staffKey)}
         />
       )}
     </div>

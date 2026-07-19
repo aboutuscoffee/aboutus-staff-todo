@@ -558,6 +558,12 @@ function AppShell({ data, setData }) {
     if (field === 'taught' && !updated.taught) updated.can = false;
     upsertTrainingProgress(updated);
   };
+  const onAddOnlineStoreModule = (staffKey) => {
+    if (!canConfirmTraining(staff, roles, loggedInUserKey)) return;
+    const s = staff.find((x) => x.key === staffKey);
+    if (!s || s.training_online_store) return;
+    upsertStaff({ ...s, training_online_store: true }).then(() => showToast());
+  };
 
   const topbarTitle = view === 'personal' ? (staff.find((s) => s.key === si)?.name ?? '') : (VIEW_TITLES[view] || view);
 
@@ -659,7 +665,7 @@ function AppShell({ data, setData }) {
               onRenameMilestone={onRenameMilestone} onDeleteMilestone={onDeleteMilestone}
               onSaveProfile={onSaveProfile} onCreateRecord={onCreateRecord} onSaveRecord={onSaveRecord} onPrint={onPrint}
               onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
-              onStartTraining={onStartTraining} onToggleTrainingItem={onToggleTrainingItem}
+              onStartTraining={onStartTraining} onToggleTrainingItem={onToggleTrainingItem} onAddOnlineStoreModule={onAddOnlineStoreModule}
             />
           )}
         </div>
