@@ -123,10 +123,11 @@ function AppShell({ data, setData }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const notify = useCallback((staffKey, type, message, fromKey) => {
-    upsertItem('notifications', { staff_key: staffKey, type, message, from_key: fromKey || null, read: false }, 'id')
+  const notify = useCallback((staffKey, type, message, fromKey, relatedId) => {
+    return upsertItem('notifications', { staff_key: staffKey, type, message, from_key: fromKey || null, related_id: relatedId || null, read: false }, 'id')
       .then((saved) => {
         if (staffKey === loggedInUserKey) setNotifications((n) => [saved, ...n]);
+        return saved;
       })
       .catch(() => {});
   }, [loggedInUserKey]);
@@ -147,14 +148,21 @@ function AppShell({ data, setData }) {
       return;
     }
     const toName = staff.find((s) => s.key === toKey)?.name || '';
-    notify(toKey, 'memo', `${loggedInStaff?.name}さんからのメモ: ${text}`, loggedInUserKey);
-    notify(loggedInUserKey, 'memo_sent', `${toName}さんへメモを送信しました: ${text}`, loggedInUserKey);
+    notify(toKey, 'memo', `${loggedInStaff?.name}さんからのメモ: ${text}`, loggedInUserKey).then((saved) => {
+      notify(loggedInUserKey, 'memo_sent', `${toName}さんへメモを送信しました: ${text}`, loggedInUserKey, saved?.id);
+    });
     showToast('メモを送信しました');
   };
 
   const onDeleteNotification = (id) => {
     setNotifications((n) => n.filter((x) => x.id !== id));
     deleteNotification(id).catch(() => {});
+  };
+
+  const onRetractMemo = (notificationId, relatedId) => {
+    if (relatedId) deleteNotification(relatedId).catch(() => {});
+    onDeleteNotification(notificationId);
+    showToast('メモを取り消しました');
   };
 
   const onClearNotifications = () => {
@@ -719,6 +727,7 @@ function AppShell({ data, setData }) {
         onClose={() => setNotifOpen(false)}
         notifications={notifications}
         onDeleteNotification={onDeleteNotification}
+        onRetractMemo={onRetractMemo}
         onClearNotifications={onClearNotifications}
         onOpenMemoCompose={() => { setNotifOpen(false); setQuickAddMode('memo'); setQuickAddOpen(true); }}
       />

@@ -27,15 +27,21 @@ function fmtTime(iso) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function MemoRow({ n, onDelete }) {
+function MemoRow({ n, onDelete, onRetract }) {
+  const isSent = n.type === 'memo_sent';
+  const canRetract = isSent && n.related_id;
   return (
     <div className="px-4 py-2.5 border-b border-stone-50 flex gap-2 items-start">
-      <span className="text-sm flex-shrink-0">💬</span>
+      <span className="text-sm flex-shrink-0">{isSent ? '📤' : '💬'}</span>
       <div className="min-w-0 flex-1">
         <p className="text-[12px] text-stone-700 break-words">{n.message}</p>
         <p className="text-[10px] text-stone-400 mt-0.5">{fmtTime(n.created_at)}</p>
       </div>
-      <button type="button" onClick={onDelete} className="text-stone-300 hover:text-[#E24B4A] px-1 text-xs flex-shrink-0">✕</button>
+      {canRetract ? (
+        <button type="button" onClick={onRetract} className="text-stone-300 hover:text-[#E24B4A] px-1 text-[10px] flex-shrink-0 whitespace-nowrap">取り消す</button>
+      ) : (
+        <button type="button" onClick={onDelete} className="text-stone-300 hover:text-[#E24B4A] px-1 text-xs flex-shrink-0">✕</button>
+      )}
     </div>
   );
 }
@@ -96,11 +102,15 @@ function NotificationRow({ n, onDelete }) {
   );
 }
 
-export default function NotificationPanel({ open, onClose, notifications, onDeleteNotification, onClearNotifications, onOpenMemoCompose }) {
+export default function NotificationPanel({ open, onClose, notifications, onDeleteNotification, onClearNotifications, onOpenMemoCompose, onRetractMemo }) {
   if (!open) return null;
 
-  const memos = notifications.filter((n) => n.type === 'memo');
-  const alerts = notifications.filter((n) => n.type !== 'memo');
+  const memos = notifications.filter((n) => n.type === 'memo' || n.type === 'memo_sent');
+  const alerts = notifications.filter((n) => n.type !== 'memo' && n.type !== 'memo_sent');
+
+  const retract = (n) => {
+    if (window.confirm('このメモを取り消しますか？相手の通知からも削除されます。')) onRetractMemo(n.id, n.related_id);
+  };
 
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
@@ -121,7 +131,7 @@ export default function NotificationPanel({ open, onClose, notifications, onDele
           </div>
           {memos.length === 0 ? (
             <p className="text-xs text-stone-400 text-center py-4">メモはありません</p>
-          ) : memos.map((n) => <MemoRow key={n.id} n={n} onDelete={() => onDeleteNotification(n.id)} />)}
+          ) : memos.map((n) => <MemoRow key={n.id} n={n} onDelete={() => onDeleteNotification(n.id)} onRetract={() => retract(n)} />)}
 
           <div className="px-4 py-2 bg-stone-50 flex items-center justify-between flex-shrink-0">
             <span className="text-[11px] font-medium text-stone-500">🔔 通知</span>
