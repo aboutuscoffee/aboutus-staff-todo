@@ -4,6 +4,7 @@ import { sha256, today, pastMonthKeys, monthKey, monthLabel } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
+import { ADVANCED_GROUP_INDEX } from './lib/trainingData';
 import { STORE_INFO } from './constants';
 import Sidebar from './components/common/Sidebar';
 import LoginModal from './components/common/LoginModal';
@@ -551,7 +552,12 @@ function AppShell({ data, setData }) {
     });
   };
   const onToggleTrainingItem = (staffKey, itemId, field) => {
-    if (field === 'can' && !canConfirmTraining(staff, roles, loggedInUserKey)) return;
+    // 追加スキルアップ研修の項目チェックは本人が自由に操作できるが、
+    // カテゴリ単位の最終チェック（item_idの末尾が"final"）は常にSM・GM限定。
+    // 新人研修側の「できる」チェックも従来通りSM・GM限定。
+    const isAdvancedGroupItem = Number(itemId.split('-')[0]) === ADVANCED_GROUP_INDEX && !itemId.endsWith('-final');
+    const needsConfirm = !isAdvancedGroupItem && field === 'can';
+    if (needsConfirm && !canConfirmTraining(staff, roles, loggedInUserKey)) return;
     const existing = trainingProgress.find((p) => p.staff_key === staffKey && p.item_id === itemId);
     const base = existing || { staff_key: staffKey, item_id: itemId, taught: false, can: false };
     const updated = { ...base, [field]: !base[field] };

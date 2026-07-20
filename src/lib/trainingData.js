@@ -324,6 +324,9 @@ export const ADVANCED_TRAINING_TOTAL = ADVANCED_TRAINING_GROUP.subcategories.red
   (s, sc) => s + sc.items.length, 0
 );
 
+// 追加スキルアップ研修は常に TRAINING_DATA の4グループの直後に位置する。
+export const ADVANCED_GROUP_INDEX = TRAINING_DATA.length;
+
 export const TRAINING_TOTAL = TRAINING_DATA.reduce(
   (sum, grp) => sum + grp.subcategories.reduce((s, sc) => s + sc.items.length, 0),
   0
@@ -331,4 +334,10 @@ export const TRAINING_TOTAL = TRAINING_DATA.reduce(
 
 export function trainingItemId(gi, si, ii) {
   return `${gi}-${si}-${ii}`;
+}
+
+// スキルアップ研修は項目ごとの本人チェックとは別に、サブカテゴリ単位で
+// SM・GMの最終チェックを持つ。item_id と衝突しないよう末尾を "final" にする。
+export function advancedFinalCheckId(si) {
+  return `${ADVANCED_GROUP_INDEX}-${si}-final`;
 }
