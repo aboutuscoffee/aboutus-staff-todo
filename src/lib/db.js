@@ -117,8 +117,15 @@ export async function clearNotifications(staffKey) {
   if (error) throw new Error(error.message);
 }
 
+// Supabase Storage rejects object keys containing non-ASCII characters (e.g. Japanese filenames),
+// so the storage path uses only the file extension; the original name is kept separately for display.
+function safeExt(filename) {
+  const m = /\.[a-zA-Z0-9]+$/.exec(filename);
+  return m ? m[0].toLowerCase() : '';
+}
+
 export async function uploadMeetingPdf(storeKey, ym, file) {
-  const path = `${storeKey}/${ym}-${Date.now()}-${file.name}`;
+  const path = `${storeKey}/${ym}-${Date.now()}${safeExt(file.name)}`;
   const { error } = await supabase.storage.from('meeting-records').upload(path, file);
   if (error) throw new Error(error.message);
   const { data } = supabase.storage.from('meeting-records').getPublicUrl(path);
@@ -126,7 +133,7 @@ export async function uploadMeetingPdf(storeKey, ym, file) {
 }
 
 export async function uploadManualPdf(categoryId, file) {
-  const path = `${categoryId}/${Date.now()}-${file.name}`;
+  const path = `${categoryId}/${Date.now()}${safeExt(file.name)}`;
   const { error } = await supabase.storage.from('manuals').upload(path, file);
   if (error) throw new Error(error.message);
   const { data } = supabase.storage.from('manuals').getPublicUrl(path);
