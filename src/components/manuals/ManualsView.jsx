@@ -159,7 +159,7 @@ export default function ManualsView({ staff, roles, manualCategories, manuals, o
 
   return (
     <div>
-      <div className="text-[15px] font-semibold mb-3">📚 マニュアル格納庫</div>
+      <div className="text-[15px] font-semibold mb-3">📚 マニュアル一覧</div>
 
       {sortedCategories.length === 0 && !canEdit && (
         <p className="text-xs text-stone-400">マニュアルはまだありません</p>

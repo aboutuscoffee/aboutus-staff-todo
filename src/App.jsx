@@ -22,7 +22,7 @@ import PersonalView from './components/personal/PersonalView';
 import OwnerView from './components/owner/OwnerView';
 import PrintRecord from './components/personal/PrintRecord';
 
-const VIEW_TITLES = { overview: '全員一覧', storetodos: '店舗月次目標', manuals: 'マニュアル格納庫', settings: '設定', owner: 'オーナーページ' };
+const VIEW_TITLES = { overview: '全員一覧', storetodos: '店舗月次目標', manuals: 'マニュアル一覧', settings: '設定', owner: 'オーナーページ' };
 const MONTHLY_EVAL_START_YM = '2026-07';
 
 export default function App() {
@@ -346,7 +346,7 @@ function AppShell({ data, setData }) {
     }).catch(() => showToast('アップロードに失敗しました'));
   };
 
-  // --- マニュアル格納庫 ---
+  // --- マニュアル一覧 ---
   const onAddManualCategory = (name) => {
     const order = manualCategories.length;
     upsertManualCategory({ name, sort_order: order });
