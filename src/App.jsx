@@ -538,6 +538,19 @@ function AppShell({ data, setData }) {
     const r = evalRecords.find((x) => x.id === id);
     if (r) upsertEvalRecord({ ...r, ...fields, updated_at: today }).then(() => showToast());
   };
+  const onPublishRecord = (id) => {
+    const r = evalRecords.find((x) => x.id === id);
+    if (!r) return;
+    const published = !r.published;
+    upsertEvalRecord({ ...r, published }).then(() => {
+      if (published) {
+        notify(r.staff_key, 'eval_published', '面談記録が公開されました');
+        showToast('面談記録を公開しました');
+      } else {
+        showToast('公開を取り消しました');
+      }
+    });
+  };
   const onPrint = (staffName, record) => setPrintData({ staffName, record });
   const onSaveMonthlyEvalComment = (recordId, comment) => {
     const r = monthlyEvalRecords.find((x) => x.id === recordId);
@@ -688,7 +701,7 @@ function AppShell({ data, setData }) {
               onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
               onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}
               onRenameMilestone={onRenameMilestone} onDeleteMilestone={onDeleteMilestone}
-              onSaveProfile={onSaveProfile} onCreateRecord={onCreateRecord} onSaveRecord={onSaveRecord} onPrint={onPrint}
+              onSaveProfile={onSaveProfile} onCreateRecord={onCreateRecord} onSaveRecord={onSaveRecord} onPublishRecord={onPublishRecord} onPrint={onPrint}
               onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
               onStartTraining={onStartTraining} onToggleTrainingItem={onToggleTrainingItem} onAddOnlineStoreModule={onAddOnlineStoreModule}
               onStartAdvancedTraining={onStartAdvancedTraining}

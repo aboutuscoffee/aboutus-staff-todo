@@ -8,19 +8,21 @@ import EvalRecordView from './EvalRecordView';
 import EvalRecordForm from './EvalRecordForm';
 import MonthlyEvalView from './MonthlyEvalView';
 
-export default function EvalPanel({ targetStaff, staff, roles, evalRecords, monthlyEvalRecords, onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment, onStartTraining }) {
+export default function EvalPanel({ targetStaff, staff, roles, evalRecords, monthlyEvalRecords, onSaveProfile, onCreateRecord, onSaveRecord, onPublishRecord, onPrint, onSaveMonthlyEvalComment, onStartTraining }) {
   const { loggedInUserKey, openLoginModal } = useSession();
   const isSelf = loggedInUserKey === targetStaff.key;
   const canAccess = loggedInUserKey && canAccessEval(staff, roles, loggedInUserKey, targetStaff.key);
   const canEdit = loggedInUserKey && canEditEval(staff, roles, loggedInUserKey, targetStaff.key);
   const canViewMonthly = canAccess || isSelf;
+  const canViewRecordTab = canAccess || isSelf;
 
   const [subTab, setSubTab] = useState(canAccess ? 'profile' : 'monthly');
   const [editingProfile, setEditingProfile] = useState(false);
   const [editingRecordId, setEditingRecordId] = useState(null); // null | 'new' | id
   const [selectedRecordId, setSelectedRecordId] = useState(null);
 
-  const records = evalRecordsForStaff(evalRecords, targetStaff.key);
+  const allRecords = evalRecordsForStaff(evalRecords, targetStaff.key);
+  const records = canAccess ? allRecords : allRecords.filter((r) => r.published);
   const monthlyRecords = monthlyEvalRecordsForStaff(monthlyEvalRecords, targetStaff.key);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function EvalPanel({ targetStaff, staff, roles, evalRecords, mont
             onClick={() => { setSubTab('profile'); setEditingProfile(false); }}
           >プロファイル・総評</div>
         )}
-        {canAccess && (
+        {canViewRecordTab && (
           <div
             className={`px-2.5 py-1.5 rounded-md border border-stone-300 text-[11px] cursor-pointer ${subTab === 'record' ? 'bg-stone-100 font-medium' : 'bg-white'}`}
             onClick={() => { setSubTab('record'); setEditingRecordId(null); }}
@@ -79,8 +81,8 @@ export default function EvalPanel({ targetStaff, staff, roles, evalRecords, mont
           : <EvalProfileView staffMember={targetStaff} canEdit={canEdit} onEdit={() => setEditingProfile(true)} onStartTraining={() => onStartTraining(targetStaff.key)} />
       )}
 
-      {subTab === 'record' && canAccess && (
-        editingRecordId !== null
+      {subTab === 'record' && canViewRecordTab && (
+        editingRecordId !== null && canEdit
           ? (
             <EvalRecordForm
               record={editingRecordId === 'new' ? null : records.find((r) => r.id === editingRecordId)}
@@ -104,6 +106,7 @@ export default function EvalPanel({ targetStaff, staff, roles, evalRecords, mont
               onSelectId={setSelectedRecordId}
               canEdit={canEdit}
               onEdit={(id) => setEditingRecordId(id)}
+              onPublish={canEdit ? (id) => onPublishRecord(id) : undefined}
               onPrint={(id) => onPrint(targetStaff.name, records.find((r) => r.id === id))}
             />
           )

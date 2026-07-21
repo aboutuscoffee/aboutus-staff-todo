@@ -20,7 +20,7 @@ function ActionRow({ label, value }) {
   );
 }
 
-export default function EvalRecordView({ records, selectedId, onSelectId, canEdit, onEdit, onPrint }) {
+export default function EvalRecordView({ records, selectedId, onSelectId, canEdit, onEdit, onPublish, onPrint }) {
   const r = records.find((x) => x.id === selectedId);
   const pills = records.slice().reverse().map((rec) => (
     <span
@@ -55,7 +55,16 @@ export default function EvalRecordView({ records, selectedId, onSelectId, canEdi
             <div className="text-[13px] font-medium">{r.by_name}</div>
           </div>
         </div>
-        <button type="button" onClick={() => onPrint(r.id)} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-[11px]">PDF出力</button>
+        <div className="flex gap-1.5 items-center flex-shrink-0">
+          {onPublish && (
+            <button
+              type="button"
+              onClick={() => onPublish(r.id)}
+              className={`px-2.5 py-1 rounded-md border text-[11px] ${r.published ? 'border-[#1D9E75] text-[#0F5C42] bg-[#E3F3EC]' : 'border-stone-300 bg-white text-stone-500'}`}
+            >{r.published ? '公開済み' : '公開する'}</button>
+          )}
+          <button type="button" onClick={() => onPrint(r.id)} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-[11px]">PDF出力</button>
+        </div>
       </div>
       <StaticSec label="最近の状態・モチベーション" value={r.motivation_html} />
       <StaticSec label="前回の目標・振り返り" value={r.review_html} />

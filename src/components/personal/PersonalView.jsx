@@ -19,7 +19,7 @@ export default function PersonalView({
   onApproveTaskOffer, onHandOffTaskOffer, onConvertToRequest,
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
-  onSaveProfile, onCreateRecord, onSaveRecord, onPrint, onSaveMonthlyEvalComment,
+  onSaveProfile, onCreateRecord, onSaveRecord, onPublishRecord, onPrint, onSaveMonthlyEvalComment,
   onStartTraining, onToggleTrainingItem, onAddOnlineStoreModule, onStartAdvancedTraining,
 }) {
   const [pTab, setPTab] = useState('tasks');
@@ -136,6 +136,7 @@ export default function PersonalView({
           onSaveProfile={onSaveProfile}
           onCreateRecord={onCreateRecord}
           onSaveRecord={onSaveRecord}
+          onPublishRecord={onPublishRecord}
           onPrint={onPrint}
           onSaveMonthlyEvalComment={onSaveMonthlyEvalComment}
           onStartTraining={onStartTraining}
