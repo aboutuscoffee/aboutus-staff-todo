@@ -7,7 +7,7 @@ function stripMeta(obj) {
 }
 
 export async function fetchAll() {
-  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress] = await Promise.all([
+  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals] = await Promise.all([
     supabase.from('staff').select('*').order('sort_order'),
     supabase.from('roles').select('*'),
     supabase.from('tasks').select('*'),
@@ -20,9 +20,11 @@ export async function fetchAll() {
     supabase.from('monthly_eval_records').select('*'),
     supabase.from('store_month_notes').select('*'),
     supabase.from('training_progress').select('*'),
+    supabase.from('manual_categories').select('*').order('sort_order'),
+    supabase.from('manuals').select('*').order('sort_order'),
   ]);
 
-  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress]) {
+  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals]) {
     if (res.error) throw new Error(res.error.message);
   }
 
@@ -48,6 +50,8 @@ export async function fetchAll() {
     monthlyEvalRecords: monthlyEvalRecords.data ?? [],
     storeMonthNotes: storeMonthNotes.data ?? [],
     trainingProgress: trainingProgress.data ?? [],
+    manualCategories: manualCategories.data ?? [],
+    manuals: manuals.data ?? [],
   };
 }
 
@@ -119,4 +123,12 @@ export async function uploadMeetingPdf(storeKey, ym, file) {
   if (error) throw new Error(error.message);
   const { data } = supabase.storage.from('meeting-records').getPublicUrl(path);
   return { url: data.publicUrl, name: file.name };
+}
+
+export async function uploadManualPdf(categoryId, file) {
+  const path = `${categoryId}/${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from('manuals').upload(path, file);
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from('manuals').getPublicUrl(path);
+  return data.publicUrl;
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf } from './lib/db';
+import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf, uploadManualPdf } from './lib/db';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
@@ -16,12 +16,13 @@ import TaskOfferModal from './components/common/TaskOfferModal';
 import Toast, { showToast } from './components/common/Toast';
 import OverviewView from './components/overview/OverviewView';
 import StoreTodosView from './components/storetodos/StoreTodosView';
+import ManualsView from './components/manuals/ManualsView';
 import SettingsView from './components/settings/SettingsView';
 import PersonalView from './components/personal/PersonalView';
 import OwnerView from './components/owner/OwnerView';
 import PrintRecord from './components/personal/PrintRecord';
 
-const VIEW_TITLES = { overview: '全員一覧', storetodos: '店舗月次目標', settings: '設定', owner: 'オーナーページ' };
+const VIEW_TITLES = { overview: '全員一覧', storetodos: '店舗月次目標', manuals: 'マニュアル格納庫', settings: '設定', owner: 'オーナーページ' };
 const MONTHLY_EVAL_START_YM = '2026-07';
 
 export default function App() {
@@ -83,7 +84,7 @@ function AppShell({ data, setData }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissedOfferIds, setDismissedOfferIds] = useState([]);
 
-  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress } = data;
+  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -198,6 +199,8 @@ function AppShell({ data, setData }) {
   const upsertStoreMonthNote = upsertInto('storeMonthNotes', 'store_month_notes', 'id');
   const upsertMonthlyEvalRecord = upsertInto('monthlyEvalRecords', 'monthly_eval_records', 'id');
   const upsertTrainingProgress = upsertInto('trainingProgress', 'training_progress', 'id');
+  const upsertManualCategory = upsertInto('manualCategories', 'manual_categories', 'id');
+  const upsertManual = upsertInto('manuals', 'manuals', 'id');
 
   const removeTask = removeFrom('tasks', 'tasks', 'id');
   const removePool = removeFrom('poolTasks', 'pool_tasks', 'id');
@@ -207,6 +210,8 @@ function AppShell({ data, setData }) {
   const removeGoalRow = removeFrom('goals', 'goals', 'id');
   const removeInitiativeRow = removeFrom('goalInitiatives', 'goal_initiatives', 'id');
   const removeMilestoneRow = removeFrom('goalMilestones', 'goal_milestones', 'id');
+  const removeManualCategoryRow = removeFrom('manualCategories', 'manual_categories', 'id');
+  const removeManualRow = removeFrom('manuals', 'manuals', 'id');
 
   // --- ナビゲーション ---
   const goView = (v) => { setView(v); setCollapsed(true); };
@@ -340,6 +345,36 @@ function AppShell({ data, setData }) {
         .forEach((s) => notify(s.key, 'store_comment', `${STORE_INFO[storeKey].label}の${monthLabel(ym)}目標にミーティング記録が届きました`));
     }).catch(() => showToast('アップロードに失敗しました'));
   };
+
+  // --- マニュアル格納庫 ---
+  const onAddManualCategory = (name) => {
+    const order = manualCategories.length;
+    upsertManualCategory({ name, sort_order: order });
+  };
+  const onRenameManualCategory = (id, name) => {
+    const c = manualCategories.find((x) => x.id === id);
+    if (!c || name === c.name) return;
+    renameWithTimestamp('manual_categories', id, { name }).then((saved) => {
+      setData((d) => ({ ...d, manualCategories: d.manualCategories.map((x) => (x.id === id ? saved : x)) }));
+    });
+  };
+  const onDeleteManualCategory = (id) => {
+    removeManualCategoryRow(id).then(() => {
+      setData((d) => ({ ...d, manuals: d.manuals.filter((m) => m.category_id !== id) }));
+      showToast();
+    });
+  };
+  const onAddManualLink = (categoryId, title, url) => {
+    const order = manuals.filter((m) => m.category_id === categoryId).length;
+    upsertManual({ category_id: categoryId, title, type: 'link', url, sort_order: order }).then(() => showToast('マニュアルを追加しました'));
+  };
+  const onUploadManualPdf = (categoryId, title, file) => {
+    uploadManualPdf(categoryId, file).then((url) => {
+      const order = manuals.filter((m) => m.category_id === categoryId).length;
+      return upsertManual({ category_id: categoryId, title, type: 'pdf', url, sort_order: order });
+    }).then(() => showToast('マニュアルをアップロードしました')).catch(() => showToast('アップロードに失敗しました'));
+  };
+  const onDeleteManual = (id) => removeManualRow(id);
 
   // --- 設定 ---
   const onReorderStaff = (newOrderArr) => {
@@ -679,6 +714,13 @@ function AppShell({ data, setData }) {
               onAdd={onAddStoreTodo} onToggle={onToggleStoreTodo} onDelete={onDeleteStoreTodo}
               onSaveComment={onSaveStoreMonthComment}
               onUploadPdf={onUploadMeetingPdf}
+            />
+          )}
+          {view === 'manuals' && (
+            <ManualsView
+              staff={staff} roles={roles} manualCategories={manualCategories} manuals={manuals}
+              onAddCategory={onAddManualCategory} onRenameCategory={onRenameManualCategory} onDeleteCategory={onDeleteManualCategory}
+              onAddLink={onAddManualLink} onUploadPdf={onUploadManualPdf} onDeleteManual={onDeleteManual}
             />
           )}
           {view === 'settings' && loggedInUserKey && (

@@ -66,6 +66,10 @@ export default function Sidebar({ collapsed, staff, roles, view, si, onGoView, o
             onClick={() => onGoView('storetodos')}
           >🏪 店舗月次目標</div>
           <div
+            className={`px-[14px] py-[6px] cursor-pointer text-[13px] ${view === 'manuals' ? 'bg-white text-stone-900 font-medium' : 'text-stone-500 hover:bg-white hover:text-stone-900'}`}
+            onClick={() => onGoView('manuals')}
+          >📚 マニュアル格納庫</div>
+          <div
             className={`px-[14px] py-[6px] cursor-pointer text-[13px] ${view === 'settings' ? 'bg-white text-stone-900 font-medium' : 'text-stone-500 hover:bg-white hover:text-stone-900'}`}
             onClick={onTrySettings}
           >⚙️ 設定</div>
