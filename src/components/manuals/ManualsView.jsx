@@ -97,14 +97,15 @@ function CategoryCard({ category, items, canEdit, onRename, onDelete, onAddLink,
             />
             <button type="button" onClick={saveRename} className="px-2 py-0.5 rounded-md bg-stone-900 text-white text-[11px]">保存</button>
             <button type="button" onClick={() => { setNameDraft(category.name); setRenaming(false); }} className="px-2 py-0.5 rounded-md border border-stone-300 bg-white text-[11px]">キャンセル</button>
+            <button type="button" onClick={deleteCategory} className="px-2 py-0.5 rounded-md border border-[#E24B4A] text-[#E24B4A] text-[11px]">削除</button>
           </div>
         ) : (
           <>
             <span className="text-[13px] font-semibold">{category.name}</span>
             {canEdit && (
-              <div className="flex gap-2.5 flex-shrink-0">
+              <div className="flex gap-2.5 flex-shrink-0 items-center">
+                <button type="button" onClick={() => setAddingManual((v) => !v)} className="text-stone-400 hover:text-stone-900 text-base leading-none" aria-label="マニュアルを追加">＋</button>
                 <button type="button" onClick={() => setRenaming(true)} className="text-stone-400 hover:text-stone-900 text-xs">✎</button>
-                <button type="button" onClick={deleteCategory} className="text-stone-400 hover:text-[#E24B4A] text-xs">✕</button>
               </div>
             )}
           </>
@@ -124,16 +125,8 @@ function CategoryCard({ category, items, canEdit, onRename, onDelete, onAddLink,
         </div>
       ))}
 
-      {canEdit && (
-        addingManual ? (
-          <AddManualForm onAddLink={onAddLink} onUploadPdf={onUploadPdf} onCancel={() => setAddingManual(false)} />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setAddingManual(true)}
-            className="w-full text-left rounded-md border border-dashed border-stone-300 text-stone-500 px-3 py-1.5 mt-1.5 text-[11px] hover:border-stone-400 hover:text-stone-700"
-          >＋ マニュアルを追加</button>
-        )
+      {canEdit && addingManual && (
+        <AddManualForm onAddLink={onAddLink} onUploadPdf={onUploadPdf} onCancel={() => setAddingManual(false)} />
       )}
     </div>
   );
