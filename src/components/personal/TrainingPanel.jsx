@@ -23,7 +23,7 @@ function advancedStats(grp, gi, trainingProgress) {
   return { selfN, totalItems: items.length, finalN, totalCategories: grp.subcategories.length };
 }
 
-function GroupCard({ grp, gi, hasOnlineStore, trainingProgress, onOpen }) {
+function GroupCard({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingProgress, onOpen }) {
   if (grp.icon === 'advanced') {
     const { selfN, totalItems, finalN, totalCategories } = advancedStats(grp, gi, trainingProgress);
     return (
@@ -38,6 +38,9 @@ function GroupCard({ grp, gi, hasOnlineStore, trainingProgress, onOpen }) {
             <div className="text-[10px] tracking-wide text-stone-400">{grp.eyebrow}</div>
             <div className="text-sm font-semibold">{grp.title}</div>
           </div>
+          {!hasAdvancedTraining && (
+            <span className="text-[10px] text-[#B4700B] bg-[#FDF6E9] rounded-full px-2 py-0.5 flex-shrink-0">プレビュー</span>
+          )}
           <span className="text-[11px] text-stone-400 flex-shrink-0">{totalItems}項目</span>
           <span className="text-stone-300 flex-shrink-0">›</span>
         </div>
@@ -109,19 +112,20 @@ function ItemRow({ text, note, itemId, taught, can, canConfirm, onToggleItem }) 
   );
 }
 
-function SelfCheckItemRow({ text, note, itemId, can, onToggleItem }) {
+function SelfCheckItemRow({ text, note, itemId, can, enabled, onToggleItem }) {
   return (
     <div className="flex items-start justify-between gap-2 py-2.5 px-3 border-b border-stone-100 last:border-b-0">
       <div className="flex-1 min-w-0">
         <div className="text-[13px] leading-snug">{text}</div>
         {note && <div className="text-[11px] text-stone-400 mt-0.5">{note}</div>}
       </div>
-      <label className="flex flex-col items-center gap-0.5 text-[9px] text-stone-400 cursor-pointer flex-shrink-0 pl-2">
+      <label className={`flex flex-col items-center gap-0.5 text-[9px] flex-shrink-0 pl-2 ${enabled ? 'text-stone-400 cursor-pointer' : 'text-stone-300'}`}>
         <input
           type="checkbox"
           checked={can}
+          disabled={!enabled}
           onChange={() => onToggleItem(itemId, 'can')}
-          className="w-[15px] h-[15px] cursor-pointer accent-[#1D9E75]"
+          className="w-[15px] h-[15px] accent-[#1D9E75] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         />
         できる
       </label>
@@ -146,9 +150,10 @@ function FinalCheckRow({ itemId, checked, canConfirm, onToggleItem }) {
   );
 }
 
-function GroupDetail({ grp, gi, hasOnlineStore, trainingProgress, canConfirm, onToggleItem, onAddOnlineStore, onBack }) {
+function GroupDetail({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingProgress, canConfirm, onToggleItem, onAddOnlineStore, onBack }) {
   if (grp.icon === 'advanced') {
     const { selfN, totalItems, finalN, totalCategories } = advancedStats(grp, gi, trainingProgress);
+    const started = hasAdvancedTraining;
     return (
       <div>
         <button type="button" onClick={onBack} className="text-[12px] text-stone-500 hover:text-stone-900 mb-3">← 戻る</button>
@@ -168,7 +173,11 @@ function GroupDetail({ grp, gi, hasOnlineStore, trainingProgress, canConfirm, on
           </div>
           <ProgressBar pct={totalCategories ? Math.round((finalN / totalCategories) * 100) : 0} />
         </div>
-        <div className="text-[11px] text-stone-400 mb-3 px-1">各項目は本人の「できる」チェック、カテゴリごとの最終チェックはSM・GMのみ操作できます。目標の達成率は最終チェックの完了率で決まります。</div>
+        <div className="text-[11px] text-stone-400 mb-3 px-1">
+          {started
+            ? '各項目は本人の「できる」チェック、カテゴリごとの最終チェックはSM・GMのみ操作できます。目標の達成率は最終チェックの完了率で決まります。'
+            : '内容の確認のみできます。新人研修が完了すると「＋ 追加研修を始める」からチェックを開始できます。'}
+        </div>
 
         {grp.subcategories.map((sc, si) => {
           const finalId = advancedFinalCheckId(si);
@@ -191,11 +200,12 @@ function GroupDetail({ grp, gi, hasOnlineStore, trainingProgress, canConfirm, on
                       note={item.note}
                       itemId={itemId}
                       can={s.can}
+                      enabled={started}
                       onToggleItem={onToggleItem}
                     />
                   );
                 })}
-                <FinalCheckRow itemId={finalId} checked={finalChecked} canConfirm={canConfirm} onToggleItem={onToggleItem} />
+                <FinalCheckRow itemId={finalId} checked={finalChecked} canConfirm={canConfirm && started} onToggleItem={onToggleItem} />
               </div>
             </div>
           );
@@ -280,8 +290,9 @@ export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineS
   );
   const baseComplete = baseItems.length > 0 && baseItems.every((id) => itemState(trainingProgress, id).can);
 
-  const groups = hasAdvancedTraining ? [...TRAINING_DATA, ADVANCED_TRAINING_GROUP] : TRAINING_DATA;
-  const allItems = groups.flatMap((grp, gi) =>
+  const groups = [...TRAINING_DATA, ADVANCED_TRAINING_GROUP];
+  const summaryGroups = hasAdvancedTraining ? groups : TRAINING_DATA;
+  const allItems = summaryGroups.flatMap((grp, gi) =>
     effectiveSubcategories(grp, hasOnlineStore).flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)))
   );
   const totalTaught = allItems.filter((id) => itemState(trainingProgress, id).taught).length;
@@ -294,6 +305,7 @@ export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineS
         grp={groups[gi]}
         gi={gi}
         hasOnlineStore={hasOnlineStore}
+        hasAdvancedTraining={hasAdvancedTraining}
         trainingProgress={trainingProgress}
         canConfirm={canConfirm}
         onToggleItem={onToggleItem}
@@ -316,7 +328,7 @@ export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineS
         <div className="text-[11px] text-stone-400 mb-3 px-1">「できる」のチェックはSM・GMのみ操作できます</div>
       )}
       {groups.map((grp, gi) => (
-        <GroupCard key={grp.icon} grp={grp} gi={gi} hasOnlineStore={hasOnlineStore} trainingProgress={trainingProgress} onOpen={() => setActiveGroup(grp.icon)} />
+        <GroupCard key={grp.icon} grp={grp} gi={gi} hasOnlineStore={hasOnlineStore} hasAdvancedTraining={hasAdvancedTraining} trainingProgress={trainingProgress} onOpen={() => setActiveGroup(grp.icon)} />
       ))}
       {!hasAdvancedTraining && baseComplete && canConfirm && (
         <button
