@@ -73,7 +73,7 @@ export default function StoreCard({
         </div>
       )}
 
-      {onSaveComment && (
+      {onSaveComment && (comment || canComment) && (
         <div className="mt-2.5 pt-2 border-t border-stone-200/70">
           <div className="text-[10px] text-stone-500 mb-1">SMコメント</div>
           {editingComment ? (
@@ -89,26 +89,24 @@ export default function StoreCard({
                 <button type="button" onClick={saveComment} className="px-2 py-0.5 rounded-md bg-stone-900 text-white text-[11px]">保存</button>
               </div>
             </div>
-          ) : (
+          ) : comment ? (
             <div className="flex items-start gap-1.5">
-              <p className="text-xs text-stone-600 flex-1 whitespace-pre-wrap">{comment || (canComment ? '' : 'コメントはありません')}</p>
+              <p className="text-xs text-stone-600 flex-1 whitespace-pre-wrap">{comment}</p>
               {canComment && (
                 <button type="button" onClick={() => { setCommentDraft(comment); setEditingComment(true); }} className="text-stone-400 hover:text-stone-900 text-xs flex-shrink-0">✎</button>
               )}
             </div>
+          ) : (
+            <button type="button" onClick={() => { setCommentDraft(''); setEditingComment(true); }} className="text-[11px] px-2 py-0.5 rounded-md border border-stone-300 bg-white text-stone-600">＋ コメントを追加</button>
           )}
         </div>
       )}
 
-      {onUploadPdf && (
+      {onUploadPdf && (pdfName || canComment) && (
         <div className="mt-2.5 pt-2 border-t border-stone-200/70">
           <div className="text-[10px] text-stone-500 mb-1">ミーティング記録（PDF）</div>
           <div className="flex items-center gap-1.5">
-            {pdfName ? (
-              <span className="text-xs text-stone-600 flex-1 truncate">📄 {pdfName}</span>
-            ) : (
-              <span className="text-xs text-stone-400 flex-1">ファイルはありません</span>
-            )}
+            {pdfName && <span className="text-xs text-stone-600 flex-1 truncate">📄 {pdfName}</span>}
             {pdfUrl && (
               <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-[11px] px-2 py-0.5 rounded-md border border-stone-300 bg-white text-stone-600 flex-shrink-0">閲覧する</a>
             )}
@@ -119,7 +117,7 @@ export default function StoreCard({
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                   className="text-[11px] px-2 py-0.5 rounded-md border border-stone-300 bg-white text-stone-600 flex-shrink-0 disabled:opacity-50"
-                >{uploading ? 'アップロード中…' : pdfName ? '再アップロード' : 'アップロード'}</button>
+                >{uploading ? 'アップロード中…' : pdfName ? '再アップロード' : '＋ PDFアップロード'}</button>
                 <input type="file" ref={fileInputRef} accept="application/pdf" className="hidden" onChange={handleFileChange} />
               </>
             )}
