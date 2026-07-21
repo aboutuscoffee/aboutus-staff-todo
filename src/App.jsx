@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications } from './lib/db';
+import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf } from './lib/db';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
@@ -328,6 +328,17 @@ function AppShell({ data, setData }) {
         .filter((s) => s.stores.includes(storeKey) && s.key !== loggedInUserKey)
         .forEach((s) => notify(s.key, 'store_comment', `${STORE_INFO[storeKey].label}の${monthLabel(ym)}目標にコメントが届きました`));
     });
+  };
+  const onUploadMeetingPdf = (storeKey, ym, file) => {
+    uploadMeetingPdf(storeKey, ym, file).then(({ url, name }) => {
+      const existing = storeMonthNotes.find((n) => n.store_key === storeKey && n.year_month === ym);
+      return upsertStoreMonthNote(existing ? { ...existing, pdf_url: url, pdf_name: name } : { store_key: storeKey, year_month: ym, pdf_url: url, pdf_name: name });
+    }).then(() => {
+      showToast('ミーティング記録をアップロードしました');
+      staff
+        .filter((s) => s.stores.includes(storeKey) && s.key !== loggedInUserKey)
+        .forEach((s) => notify(s.key, 'store_comment', `${STORE_INFO[storeKey].label}の${monthLabel(ym)}目標にミーティング記録が届きました`));
+    }).catch(() => showToast('アップロードに失敗しました'));
   };
 
   // --- 設定 ---
@@ -667,6 +678,7 @@ function AppShell({ data, setData }) {
               staff={staff} roles={roles} storeTodos={storeTodos} storeMonthNotes={storeMonthNotes}
               onAdd={onAddStoreTodo} onToggle={onToggleStoreTodo} onDelete={onDeleteStoreTodo}
               onSaveComment={onSaveStoreMonthComment}
+              onUploadPdf={onUploadMeetingPdf}
             />
           )}
           {view === 'settings' && loggedInUserKey && (

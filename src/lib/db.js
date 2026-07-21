@@ -112,3 +112,11 @@ export async function clearNotifications(staffKey) {
   const { error } = await supabase.from('notifications').delete().eq('staff_key', staffKey).neq('type', 'memo');
   if (error) throw new Error(error.message);
 }
+
+export async function uploadMeetingPdf(storeKey, ym, file) {
+  const path = `${storeKey}/${ym}-${Date.now()}-${file.name}`;
+  const { error } = await supabase.storage.from('meeting-records').upload(path, file);
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from('meeting-records').getPublicUrl(path);
+  return { url: data.publicUrl, name: file.name };
+}

@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { STORE_INFO } from '../../constants';
 
 export default function StoreCard({
   storeKey, items, monthText, readonly, historical, hideHeader,
   comment = '', canComment, onSaveComment,
+  pdfUrl = '', pdfName = '', onUploadPdf,
   onAdd, onToggle, onDelete,
 }) {
   const [text, setText] = useState('');
   const [editingComment, setEditingComment] = useState(false);
   const [commentDraft, setCommentDraft] = useState(comment);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const itemsInteractive = !readonly && !historical;
 
@@ -22,6 +25,14 @@ export default function StoreCard({
   const saveComment = () => {
     onSaveComment(commentDraft.trim());
     setEditingComment(false);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    Promise.resolve(onUploadPdf(file)).finally(() => setUploading(false));
   };
 
   return (
@@ -86,6 +97,33 @@ export default function StoreCard({
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {onUploadPdf && (
+        <div className="mt-2.5 pt-2 border-t border-stone-200/70">
+          <div className="text-[10px] text-stone-500 mb-1">ミーティング記録（PDF）</div>
+          <div className="flex items-center gap-1.5">
+            {pdfName ? (
+              <span className="text-xs text-stone-600 flex-1 truncate">📄 {pdfName}</span>
+            ) : (
+              <span className="text-xs text-stone-400 flex-1">ファイルはありません</span>
+            )}
+            {pdfUrl && (
+              <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-[11px] px-2 py-0.5 rounded-md border border-stone-300 bg-white text-stone-600 flex-shrink-0">閲覧する</a>
+            )}
+            {canComment && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="text-[11px] px-2 py-0.5 rounded-md border border-stone-300 bg-white text-stone-600 flex-shrink-0 disabled:opacity-50"
+                >{uploading ? 'アップロード中…' : pdfName ? '再アップロード' : 'アップロード'}</button>
+                <input type="file" ref={fileInputRef} accept="application/pdf" className="hidden" onChange={handleFileChange} />
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

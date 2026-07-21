@@ -6,7 +6,7 @@ import { monthKey, monthLabel } from '../../utils';
 import { useSession } from '../../context/SessionContext';
 import StoreCard from './StoreCard';
 
-export default function StoreTodosView({ staff, roles, storeTodos, storeMonthNotes, onAdd, onToggle, onDelete, onSaveComment }) {
+export default function StoreTodosView({ staff, roles, storeTodos, storeMonthNotes, onAdd, onToggle, onDelete, onSaveComment, onUploadPdf }) {
   const { loggedInUserKey } = useSession();
   const [openKey, setOpenKey] = useState(null);
   const currentYm = monthKey();
@@ -32,6 +32,9 @@ export default function StoreTodosView({ staff, roles, storeTodos, storeMonthNot
             comment={storeMonthNoteFor(storeMonthNotes, sk, currentYm)?.comment || ''}
             canComment={canComment}
             onSaveComment={(text) => onSaveComment(sk, currentYm, text)}
+            pdfUrl={storeMonthNoteFor(storeMonthNotes, sk, currentYm)?.pdf_url || ''}
+            pdfName={storeMonthNoteFor(storeMonthNotes, sk, currentYm)?.pdf_name || ''}
+            onUploadPdf={(file) => onUploadPdf(sk, currentYm, file)}
           />
         ))}
       </div>
@@ -63,6 +66,9 @@ export default function StoreTodosView({ staff, roles, storeTodos, storeMonthNot
                         comment={storeMonthNoteFor(storeMonthNotes, storeKey, yearMonth)?.comment || ''}
                         canComment={canComment}
                         onSaveComment={(text) => onSaveComment(storeKey, yearMonth, text)}
+                        pdfUrl={storeMonthNoteFor(storeMonthNotes, storeKey, yearMonth)?.pdf_url || ''}
+                        pdfName={storeMonthNoteFor(storeMonthNotes, storeKey, yearMonth)?.pdf_name || ''}
+                        onUploadPdf={(file) => onUploadPdf(storeKey, yearMonth, file)}
                       />
                     </div>
                   )}
