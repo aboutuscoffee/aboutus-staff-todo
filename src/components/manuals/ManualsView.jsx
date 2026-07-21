@@ -82,6 +82,10 @@ function CategoryCard({ category, items, canEdit, onRename, onDelete, onAddLink,
     if (window.confirm(`「${category.name}」を削除しますか？中のマニュアルもすべて削除されます。`)) onDelete();
   };
 
+  const deleteManual = (m) => {
+    if (window.confirm(`「${m.title}」を削除しますか？`)) onDeleteManual(m.id);
+  };
+
   return (
     <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-3">
       <div className="flex justify-between items-center mb-2 gap-1.5">
@@ -119,8 +123,8 @@ function CategoryCard({ category, items, canEdit, onRename, onDelete, onAddLink,
             <span className="flex-shrink-0">{m.type === 'pdf' ? '📄' : '🔗'}</span>
             <span className="truncate underline decoration-stone-300">{m.title}</span>
           </a>
-          {canEdit && (
-            <button type="button" onClick={() => onDeleteManual(m.id)} className="text-stone-400 hover:text-[#E24B4A] text-[11px] px-0.5 flex-shrink-0">✕</button>
+          {canEdit && renaming && (
+            <button type="button" onClick={() => deleteManual(m)} className="text-stone-400 hover:text-[#E24B4A] text-[11px] px-0.5 flex-shrink-0">✕</button>
           )}
         </div>
       ))}
