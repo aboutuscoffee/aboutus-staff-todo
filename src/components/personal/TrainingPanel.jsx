@@ -88,7 +88,7 @@ function ItemRow({ text, note, itemId, taught, can, canConfirm, onToggleItem }) 
         {note && <div className="text-[11px] text-stone-400 mt-0.5">{note}</div>}
       </div>
       <div className="flex flex-shrink-0">
-        <div className="w-9 flex justify-center border-l border-stone-100">
+        <div className="w-9 flex justify-center">
           <input
             type="checkbox"
             checked={taught}
@@ -96,7 +96,7 @@ function ItemRow({ text, note, itemId, taught, can, canConfirm, onToggleItem }) 
             className="w-[15px] h-[15px] cursor-pointer accent-[#1D9E75]"
           />
         </div>
-        <div className="w-9 flex justify-center border-l border-stone-100">
+        <div className="w-9 flex justify-center">
           <input
             type="checkbox"
             checked={can}
@@ -241,14 +241,14 @@ function GroupDetail({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingPro
 
       {subcategories.map((sc, si) => (
         <div key={si} className="mb-4">
-          <div className="flex items-baseline justify-between px-1 mb-1.5">
+          <div className="flex items-baseline justify-between px-3 mb-1.5">
             <div className="flex items-baseline gap-1.5 min-w-0">
               <span className="text-[11px] font-bold text-stone-500 tracking-wide truncate">{sc.title}</span>
               <span className="text-[10px] text-stone-400 flex-shrink-0">{sc.items.length}項目</span>
             </div>
             <div className="flex flex-shrink-0">
-              <span className="w-9 text-center text-[10px] text-stone-400 font-medium border-l border-stone-200">できる</span>
-              <span className="w-9 text-center text-[10px] text-stone-400 font-medium border-l border-stone-200">確認</span>
+              <div className="w-9 flex justify-center text-[10px] text-stone-400 font-medium">できる</div>
+              <div className="w-9 flex justify-center text-[10px] text-stone-400 font-medium">確認</div>
             </div>
           </div>
           <div className="rounded-2xl border border-stone-100 bg-white overflow-hidden">
