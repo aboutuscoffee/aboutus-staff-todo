@@ -15,7 +15,7 @@ function effectiveSubcategories(grp, hasOnlineStore) {
 }
 
 // 追加スキルアップ研修は「本人のできるチェック」と「カテゴリ単位のSM・GM最終チェック」の
-// 2つの指標を持つため、他グループの教わった/できる集計とは別に計算する。
+// 2つの指標を持つため、他グループのできる/確認集計とは別に計算する。
 function advancedStats(grp, gi, trainingProgress) {
   const items = grp.subcategories.flatMap((sc, si) => sc.items.map((_, ii) => trainingItemId(gi, si, ii)));
   const selfN = items.filter((id) => itemState(trainingProgress, id).can).length;
@@ -73,8 +73,8 @@ function GroupCard({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingProgr
         <span className="text-stone-300 flex-shrink-0">›</span>
       </div>
       <div className="flex gap-4 mt-2.5 pt-2.5 border-t border-stone-100 text-[11px] text-stone-500">
-        <span>教えてもらった {taughtN}/{items.length}</span>
-        <span>できる {canN}/{items.length}</span>
+        <span>できる {taughtN}/{items.length}</span>
+        <span>確認 {canN}/{items.length}</span>
       </div>
     </button>
   );
@@ -82,22 +82,21 @@ function GroupCard({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingProgr
 
 function ItemRow({ text, note, itemId, taught, can, canConfirm, onToggleItem }) {
   return (
-    <div className="flex items-start justify-between gap-2 py-2.5 px-3 border-b border-stone-100 last:border-b-0">
+    <div className="flex items-center gap-2 py-2 px-3 border-b border-stone-100 last:border-b-0">
       <div className="flex-1 min-w-0">
         <div className="text-[13px] leading-snug">{text}</div>
         {note && <div className="text-[11px] text-stone-400 mt-0.5">{note}</div>}
       </div>
-      <div className="flex gap-3 flex-shrink-0 pl-2">
-        <label className="flex flex-col items-center gap-0.5 text-[9px] text-stone-400 cursor-pointer">
+      <div className="flex flex-shrink-0">
+        <div className="w-9 flex justify-center border-l border-stone-100">
           <input
             type="checkbox"
             checked={taught}
             onChange={() => onToggleItem(itemId, 'taught')}
-            className="w-[15px] h-[15px] cursor-pointer accent-[#B4700B]"
+            className="w-[15px] h-[15px] cursor-pointer accent-[#1D9E75]"
           />
-          教わった
-        </label>
-        <label className={`flex flex-col items-center gap-0.5 text-[9px] ${canConfirm ? 'text-stone-400 cursor-pointer' : 'text-stone-300'}`}>
+        </div>
+        <div className="w-9 flex justify-center border-l border-stone-100">
           <input
             type="checkbox"
             checked={can}
@@ -105,8 +104,7 @@ function ItemRow({ text, note, itemId, taught, can, canConfirm, onToggleItem }) 
             onChange={() => onToggleItem(itemId, 'can')}
             className="w-[15px] h-[15px] accent-[#1D9E75] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           />
-          できる
-        </label>
+        </div>
       </div>
     </div>
   );
@@ -235,8 +233,8 @@ function GroupDetail({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingPro
 
       <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-4">
         <div className="flex justify-between text-[11px] text-stone-500 mb-1">
-          <span>教えてもらった {taughtN}/{items.length}</span>
-          <span>できる {canN}/{items.length}</span>
+          <span>できる {taughtN}/{items.length}</span>
+          <span>確認 {canN}/{items.length}</span>
         </div>
         <ProgressBar pct={items.length ? Math.round((canN / items.length) * 100) : 0} />
       </div>
@@ -244,8 +242,14 @@ function GroupDetail({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingPro
       {subcategories.map((sc, si) => (
         <div key={si} className="mb-4">
           <div className="flex items-baseline justify-between px-1 mb-1.5">
-            <span className="text-[11px] font-bold text-stone-500 tracking-wide">{sc.title}</span>
-            <span className="text-[10px] text-stone-400">{sc.items.length}項目</span>
+            <div className="flex items-baseline gap-1.5 min-w-0">
+              <span className="text-[11px] font-bold text-stone-500 tracking-wide truncate">{sc.title}</span>
+              <span className="text-[10px] text-stone-400 flex-shrink-0">{sc.items.length}項目</span>
+            </div>
+            <div className="flex flex-shrink-0">
+              <span className="w-9 text-center text-[10px] text-stone-400 font-medium border-l border-stone-200">できる</span>
+              <span className="w-9 text-center text-[10px] text-stone-400 font-medium border-l border-stone-200">確認</span>
+            </div>
           </div>
           <div className="rounded-2xl border border-stone-100 bg-white overflow-hidden">
             {sc.items.map((raw, ii) => {
@@ -319,13 +323,13 @@ export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineS
     <div>
       <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-4">
         <div className="flex justify-between text-[11px] text-stone-500 mb-1">
-          <span>教えてもらった {totalTaught}/{allItems.length}</span>
-          <span>できる {totalCan}/{allItems.length}</span>
+          <span>できる {totalTaught}/{allItems.length}</span>
+          <span>確認 {totalCan}/{allItems.length}</span>
         </div>
         <ProgressBar pct={allItems.length ? Math.round((totalCan / allItems.length) * 100) : 0} />
       </div>
       {!canConfirm && (
-        <div className="text-[11px] text-stone-400 mb-3 px-1">「できる」のチェックはSM・GMのみ操作できます</div>
+        <div className="text-[11px] text-stone-400 mb-3 px-1">「確認」のチェックはSM・GMのみ操作できます</div>
       )}
       {groups.map((grp, gi) => (
         <GroupCard key={grp.icon} grp={grp} gi={gi} hasOnlineStore={hasOnlineStore} hasAdvancedTraining={hasAdvancedTraining} trainingProgress={trainingProgress} onOpen={() => setActiveGroup(grp.icon)} />
