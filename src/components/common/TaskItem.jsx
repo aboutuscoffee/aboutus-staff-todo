@@ -6,7 +6,7 @@ import PriorityBadge from './PriorityBadge';
 import ProgressSlider from './ProgressSlider';
 import StatusSelect from './StatusSelect';
 import TaskEditPanel from '../personal/TaskEditPanel';
-import { dlClass, today } from '../../utils';
+import { dlClass } from '../../utils';
 
 const SWIPE_OPEN = -112;
 
@@ -16,7 +16,6 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
   const [offset, setOffset] = useState(0);
   const touch = useRef(null);
   const dc = dlClass(task.deadline, task.done);
-  const wc = !task.done && task.workdate === today ? 'due-soon' : '';
 
   const commitComment = () => {
     if (comment !== (task.comment || '')) onSave({ comment: comment || null });
@@ -113,14 +112,13 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
                 className="relative z-20 bg-white border border-stone-300 rounded-md text-stone-900 text-xs font-medium px-2.5 py-1 hover:border-[#1D9E75] hover:text-[#1D9E75] flex-shrink-0"
               >{staffName}</button>
             )}
-            <StatusSelect value={task.status} onChange={onStatusChange} disabled={task.done} />
           </div>
 
           <div className="flex flex-wrap items-center gap-[7px] mt-2 pl-[26px]">
             <PriorityBadge priority={task.priority} />
             <DutyBadge duty={task.duty} />
             <TimeBadge minutes={task.minutes} />
-            <DateBadge date={task.workdate} prefix="作業" cls={wc} />
+            <DateBadge date={task.workdate} prefix="作業" />
             <DateBadge date={task.deadline} prefix="期限" cls={dc} />
           </div>
 
@@ -128,6 +126,7 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
             <div className="flex-1">
               <ProgressSlider value={task.progress} onCommit={(v) => onSave({ progress: v })} />
             </div>
+            <StatusSelect value={task.status} onChange={onStatusChange} disabled={task.done} />
             {isOwner && (
               <button type="button" onClick={() => setEditing((e) => !e)} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm flex-shrink-0">✎</button>
             )}

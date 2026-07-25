@@ -14,8 +14,8 @@ export const PRIORITY_OPTIONS = [
 export const PRIORITY_LABELS = { high: '高', mid: '中', low: '低' };
 export const PRIORITY_CLASSES = {
   high: 'bg-[#FCEBEB] text-[#A32D2D]',
-  mid: 'bg-[#FAEEDA] text-[#854F0B]',
-  low: 'bg-stone-100 text-stone-400',
+  mid: 'bg-stone-100 text-stone-500',
+  low: 'bg-stone-100 text-stone-500',
 };
 
 export const MAX_ATTEMPTS = 5;
