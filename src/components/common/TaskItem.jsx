@@ -7,10 +7,13 @@ import ProgressSlider from './ProgressSlider';
 import StatusSelect from './StatusSelect';
 import TaskEditPanel from '../personal/TaskEditPanel';
 import { dlClass } from '../../utils';
+import { useSession } from '../../context/SessionContext';
 
 const SWIPE_OPEN = -112;
 
 export default function TaskItem({ task, duties, otherStaff, staffName, onOpenStaff, isOwner = true, canConvertToRequest, onConvertToRequest, onToggleDone, onDelete, onSave, onStatusChange, onReassign, onReleaseToPool }) {
+  const { loggedInUserKey } = useSession();
+  const isTaskOwner = loggedInUserKey === task.staff_key;
   const [editing, setEditing] = useState(false);
   const [comment, setComment] = useState(task.comment || '');
   const [offset, setOffset] = useState(0);
@@ -90,16 +93,20 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
             />
             <div className="min-w-0 flex-1">
               <span className={`text-[16px] font-bold leading-snug break-words ${task.done ? 'line-through text-stone-500' : ''}`}>{task.text}</span>
-              <input
-                type="text"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                onBlur={commitComment}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}
-                placeholder="コメントを追加..."
-                className="block w-full mt-0.5 bg-transparent text-[12px] outline-none placeholder:text-stone-300"
-                style={{ color: '#78909c' }}
-              />
+              {isTaskOwner ? (
+                <input
+                  type="text"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  onBlur={commitComment}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.currentTarget.blur(); }}
+                  placeholder="コメントを追加..."
+                  className="block w-full mt-0.5 bg-transparent text-[12px] outline-none placeholder:text-stone-300"
+                  style={{ color: '#78909c' }}
+                />
+              ) : task.comment ? (
+                <span className="block w-full mt-0.5 text-[12px]" style={{ color: '#78909c' }}>{task.comment}</span>
+              ) : null}
             </div>
             {staffName && (
               <button
