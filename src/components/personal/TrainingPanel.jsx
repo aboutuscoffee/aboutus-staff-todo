@@ -153,7 +153,7 @@ function GroupDetail({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingPro
     const { selfN, totalItems, finalN, totalCategories } = advancedStats(grp, gi, trainingProgress);
     const started = hasAdvancedTraining;
     return (
-      <div>
+      <div className="bg-[#F5F3EE] rounded-2xl p-3">
         <button type="button" onClick={onBack} className="text-[12px] text-stone-500 hover:text-stone-900 mb-3">← 戻る</button>
         <div className="flex items-center gap-2.5 mb-3 pb-3 border-b-2 border-stone-900">
           <span className="text-lg flex-shrink-0">{GROUP_ICON[grp.icon]}</span>
@@ -220,7 +220,7 @@ function GroupDetail({ grp, gi, hasOnlineStore, hasAdvancedTraining, trainingPro
   const canN = items.filter((id) => itemState(trainingProgress, id).can).length;
 
   return (
-    <div>
+    <div className="bg-[#F5F3EE] rounded-2xl p-3">
       <button type="button" onClick={onBack} className="text-[12px] text-stone-500 hover:text-stone-900 mb-3">← 戻る</button>
       <div className="flex items-center gap-2.5 mb-3 pb-3 border-b-2 border-stone-900">
         <span className="text-lg flex-shrink-0">{GROUP_ICON[grp.icon]}</span>
@@ -320,7 +320,7 @@ export default function TrainingPanel({ trainingProgress, canConfirm, hasOnlineS
   }
 
   return (
-    <div>
+    <div className="bg-[#F5F3EE] rounded-2xl p-3">
       <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-4">
         <div className="flex justify-between text-[11px] text-stone-500 mb-1">
           <span>できる {totalTaught}/{allItems.length}</span>
