@@ -14,6 +14,7 @@ import NotificationPanel from './components/common/NotificationPanel';
 import CalendarModal from './components/common/CalendarModal';
 import TaskOfferModal from './components/common/TaskOfferModal';
 import Toast, { showToast } from './components/common/Toast';
+import HomeView from './components/home/HomeView';
 import OverviewView from './components/overview/OverviewView';
 import StoreTodosView from './components/storetodos/StoreTodosView';
 import ManualsView from './components/manuals/ManualsView';
@@ -72,7 +73,11 @@ function AppShell({ data, setData }) {
   const { loggedInUserKey, logout } = useSession();
   const [collapsed, setCollapsed] = useState(true);
   const isOwnerLogin = loggedInUserKey && isOwnerRole(data.staff, data.roles, loggedInUserKey);
-  const [view, setView] = useState(isOwnerLogin ? 'personal' : 'overview');
+  const [view, setView] = useState(() => {
+    if (isOwnerLogin) return 'personal';
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return 'home';
+    return 'overview';
+  });
   const [si, setSi] = useState(isOwnerLogin ? loggedInUserKey : null);
   const [personalTab, setPersonalTab] = useState(null);
   const [printData, setPrintData] = useState(null);
@@ -649,7 +654,9 @@ function AppShell({ data, setData }) {
     });
   };
 
-  const topbarTitle = view === 'personal' ? (staff.find((s) => s.key === si)?.name ?? '') : (VIEW_TITLES[view] || view);
+  const topbarTitle = view === 'personal' ? (staff.find((s) => s.key === si)?.name ?? '')
+    : view === 'home' ? (loggedInStaff?.name ?? '')
+    : (VIEW_TITLES[view] || view);
 
   return (
     <div className="flex h-screen overflow-hidden text-[14px] text-stone-900" style={{ fontFamily: 'inherit' }}>
@@ -699,6 +706,9 @@ function AppShell({ data, setData }) {
           )}
         </div>
         <div className="flex-1 overflow-y-auto p-4 bg-[#F5F3EE]">
+          {view === 'home' && (
+            <HomeView staff={staff} roles={roles} tasks={tasks} />
+          )}
           {view === 'overview' && (
             <OverviewView
               staff={staff} roles={roles} tasks={tasks} poolTasks={poolTasks}

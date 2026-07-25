@@ -58,6 +58,10 @@ export default function Sidebar({ collapsed, staff, roles, view, si, onGoView, o
         <div className="overflow-y-auto flex-1 py-2">
           <div className="text-[11px] font-semibold text-stone-500 tracking-wide px-[14px] pt-[10px] pb-1">全体</div>
           <div
+            className={`px-[14px] py-[6px] cursor-pointer text-[13px] ${view === 'home' ? 'bg-white text-stone-900 font-medium' : 'text-stone-500 hover:bg-white hover:text-stone-900'}`}
+            onClick={() => onGoView('home')}
+          >🏠 ホーム</div>
+          <div
             className={`px-[14px] py-[6px] cursor-pointer text-[13px] ${view === 'overview' ? 'bg-white text-stone-900 font-medium' : 'text-stone-500 hover:bg-white hover:text-stone-900'}`}
             onClick={() => onGoView('overview')}
           >📋 全員一覧</div>

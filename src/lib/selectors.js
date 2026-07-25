@@ -1,5 +1,5 @@
-import { monthKeyRange } from '../utils';
-import { findRole } from './permissions';
+import { monthKeyRange, today } from '../utils';
+import { findRole, canViewTask } from './permissions';
 import { STORE_KEYS } from '../constants';
 import { TRAINING_TOTAL, ONLINE_STORE_MODULE, ADVANCED_TRAINING_GROUP, ADVANCED_GROUP_INDEX, advancedFinalCheckId } from './trainingData';
 
@@ -187,4 +187,13 @@ export function ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives,
       const goalPct = milestones.length ? Math.round((milestones.filter((m) => m.done).length / milestones.length) * 100) : 0;
       return { key: s.key, name: s.name, duties: s.duties || [], overallEvalHtml: s.overall_eval_html, goalPct, poolDoneCount, onTimePct };
     });
+}
+
+export function todayHomeTasks(tasks, staff, roles, viewerKey, storeKey) {
+  const storeStaffKeys = new Set(staff.filter((s) => s.stores.includes(storeKey)).map((s) => s.key));
+  return tasks
+    .filter((t) => storeStaffKeys.has(t.staff_key) && !t.done && !t.pending_approval && (t.workdate === today || t.deadline === today))
+    .filter((t) => canViewTask(staff, roles, viewerKey, t))
+    .map((t) => ({ id: t.id, text: t.text, staffName: staff.find((s) => s.key === t.staff_key)?.name || '' }))
+    .sort((a, b) => a.staffName.localeCompare(b.staffName, 'ja'));
 }
