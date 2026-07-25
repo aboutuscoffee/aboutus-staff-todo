@@ -14,7 +14,7 @@ export default function SettingsView({
     return (
       <div>
         <div className="text-[15px] font-semibold mb-3.5">⚙️ 設定</div>
-        <div className="mb-7">
+        <div className="rounded-2xl border border-stone-100 bg-white p-4">
           <div className="text-xs font-semibold mb-2.5 pb-1.5 border-b border-stone-100">パスワード変更</div>
           <SelfPasswordForm onChangePassword={onChangeOwnPassword} />
         </div>
@@ -26,17 +26,17 @@ export default function SettingsView({
     <div>
       <div className="text-[15px] font-semibold mb-3.5">⚙️ 設定</div>
 
-      <div className="mb-7">
+      <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-3">
         <div className="text-xs font-semibold mb-2.5 pb-1.5 border-b border-stone-100">スタッフ管理</div>
         <StaffTable staff={staff} roles={roles} canAssignOwner={canAssignOwner} onReorder={onReorderStaff} onUpdateField={onUpdateStaffField} onDelete={onDeleteStaff} onAdd={onAddStaff} />
       </div>
 
-      <div className="mb-7">
+      <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-3">
         <div className="text-xs font-semibold mb-2.5 pb-1.5 border-b border-stone-100">役職・権限管理</div>
         <RoleTable roles={roles} staff={staff} onTogglePerm={onTogglePerm} onToggleViewScope={onToggleViewScope} onAddRole={onAddRole} onDeleteRole={onDeleteRole} />
       </div>
 
-      <div className="mb-7">
+      <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-3">
         <div className="text-xs font-semibold mb-2.5 pb-1.5 border-b border-stone-100">パスワード管理</div>
         <PasswordTable staff={loginableStaff(staff, roles)} roles={roles} onReset={onResetPassword} />
       </div>

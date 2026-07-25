@@ -698,7 +698,7 @@ function AppShell({ data, setData }) {
             <button type="button" onClick={logout} className="px-2 sm:px-2.5 py-1 rounded-md border border-stone-300 bg-white text-[11px] flex-shrink-0 whitespace-nowrap">ログアウト</button>
           )}
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 bg-[#F5F3EE]">
           {view === 'overview' && (
             <OverviewView
               staff={staff} roles={roles} tasks={tasks} poolTasks={poolTasks}

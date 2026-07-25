@@ -36,7 +36,7 @@ export default function StoreCard({
   };
 
   return (
-    <div className={`rounded-2xl p-[14px_16px] ${readonly ? 'border border-stone-100 bg-white' : 'bg-[#F5F3EE]'}`}>
+    <div className="rounded-2xl p-[14px_16px] border border-stone-100 bg-white">
       {!hideHeader && (
         <div className="flex justify-between items-center mb-2">
           <span className="text-[13px] font-semibold">{STORE_INFO[storeKey].label}</span>
