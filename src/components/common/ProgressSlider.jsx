@@ -16,7 +16,7 @@ export default function ProgressSlider({ value, onCommit, disabled }) {
   return (
     <div className="relative pt-[16px]">
       <div
-        className="absolute top-0 -translate-x-1/2 text-[10px] font-semibold text-[#5D4037] pointer-events-none whitespace-nowrap"
+        className="absolute top-0 -translate-x-1/2 text-[10px] font-semibold text-[#875C4F] pointer-events-none whitespace-nowrap"
         style={{ left: `calc(${local}% + ${thumbOffset}px)` }}
       >{local}%</div>
       <input
@@ -31,7 +31,7 @@ export default function ProgressSlider({ value, onCommit, disabled }) {
         onTouchEnd={commit}
         onKeyUp={commit}
         className="task-progress-slider w-full"
-        style={{ background: `linear-gradient(to right, #5D4037 ${local}%, #e7e5e4 ${local}%)` }}
+        style={{ background: `linear-gradient(to right, #875C4F ${local}%, #e7e5e4 ${local}%)` }}
       />
     </div>
   );
