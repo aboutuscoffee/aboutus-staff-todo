@@ -191,15 +191,16 @@ export function ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives,
 
 // 2店舗を掛け持ちするスタッフは「今日はどちらの店舗にいるか」を自己申告するまで、
 // どちらのTodayリストにもタスクを表示しない（誤って両方に出てしまうのを防ぐため）。
-function isStaffAtStoreToday(s, storeKey) {
+// この自己申告は「今日」の分しか持たないため、翌日分の判定では常に未確定として扱われる。
+function isStaffAtStoreOnDate(s, storeKey, dateStr) {
   if (s.stores.length <= 1) return s.stores.includes(storeKey);
-  return s.today_store === storeKey && s.today_store_date === today;
+  return s.today_store === storeKey && s.today_store_date === dateStr;
 }
 
-export function todayHomeTasks(tasks, staff, roles, viewerKey, storeKey) {
-  const storeStaffKeys = new Set(staff.filter((s) => isStaffAtStoreToday(s, storeKey)).map((s) => s.key));
+export function homeTasksForDate(tasks, staff, roles, viewerKey, storeKey, dateStr) {
+  const storeStaffKeys = new Set(staff.filter((s) => isStaffAtStoreOnDate(s, storeKey, dateStr)).map((s) => s.key));
   return tasks
-    .filter((t) => storeStaffKeys.has(t.staff_key) && !t.done && !t.pending_approval && (t.workdate === today || t.deadline === today))
+    .filter((t) => storeStaffKeys.has(t.staff_key) && !t.done && !t.pending_approval && (t.workdate === dateStr || t.deadline === dateStr))
     .filter((t) => canViewTask(staff, roles, viewerKey, t))
     .map((t) => ({ id: t.id, text: t.text, staffName: staff.find((s) => s.key === t.staff_key)?.name || '' }))
     .sort((a, b) => a.staffName.localeCompare(b.staffName, 'ja'));
