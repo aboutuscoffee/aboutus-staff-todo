@@ -189,8 +189,15 @@ export function ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives,
     });
 }
 
+// 2店舗を掛け持ちするスタッフは「今日はどちらの店舗にいるか」を自己申告するまで、
+// どちらのTodayリストにもタスクを表示しない（誤って両方に出てしまうのを防ぐため）。
+function isStaffAtStoreToday(s, storeKey) {
+  if (s.stores.length <= 1) return s.stores.includes(storeKey);
+  return s.today_store === storeKey && s.today_store_date === today;
+}
+
 export function todayHomeTasks(tasks, staff, roles, viewerKey, storeKey) {
-  const storeStaffKeys = new Set(staff.filter((s) => s.stores.includes(storeKey)).map((s) => s.key));
+  const storeStaffKeys = new Set(staff.filter((s) => isStaffAtStoreToday(s, storeKey)).map((s) => s.key));
   return tasks
     .filter((t) => storeStaffKeys.has(t.staff_key) && !t.done && !t.pending_approval && (t.workdate === today || t.deadline === today))
     .filter((t) => canViewTask(staff, roles, viewerKey, t))

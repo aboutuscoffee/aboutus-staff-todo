@@ -319,6 +319,13 @@ function AppShell({ data, setData }) {
     }
   };
 
+  // --- ホーム ---
+  const onSetTodayStore = (staffKey, storeKey) => {
+    const s = staff.find((x) => x.key === staffKey);
+    if (!s) return;
+    upsertStaff({ ...s, today_store: storeKey, today_store_date: today });
+  };
+
   // --- 店舗月次目標 ---
   const onAddStoreTodo = (storeKey, text) => {
     const ym = monthKey();
@@ -707,7 +714,7 @@ function AppShell({ data, setData }) {
         </div>
         <div className="flex-1 overflow-y-auto p-4 bg-[#F5F3EE]">
           {view === 'home' && (
-            <HomeView staff={staff} roles={roles} tasks={tasks} />
+            <HomeView staff={staff} roles={roles} tasks={tasks} onSetTodayStore={onSetTodayStore} />
           )}
           {view === 'overview' && (
             <OverviewView
