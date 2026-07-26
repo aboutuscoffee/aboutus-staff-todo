@@ -1,5 +1,5 @@
 import { monthKeyRange, today } from '../utils';
-import { findRole, canViewTask } from './permissions';
+import { findRole, canViewTask, isOwnerRole } from './permissions';
 import { STORE_KEYS } from '../constants';
 import { TRAINING_TOTAL, ONLINE_STORE_MODULE, ADVANCED_TRAINING_GROUP, ADVANCED_GROUP_INDEX, advancedFinalCheckId } from './trainingData';
 
@@ -197,10 +197,46 @@ function isStaffAtStoreOnDate(s, storeKey, dateStr) {
   return s.today_store === storeKey && s.today_store_date === dateStr;
 }
 
+// オーナーのto doは本人のみ、GMのto doは本人とオーナーのみに見える
+// （他スタッフのTodayカードにはGM・オーナーのto doを出さない）。
+function canSeeHomeTask(task, staff, roles, viewerKey) {
+  if (task.staff_key === viewerKey) return true;
+  const ownerRole = findRole(roles, staff.find((s) => s.key === task.staff_key)?.role);
+  if (ownerRole?.is_owner) return false;
+  if (ownerRole?.key === 'GM') return isOwnerRole(staff, roles, viewerKey);
+  return true;
+}
+
 export function homeTasksForDate(tasks, staff, roles, viewerKey, storeKey, dateStr) {
   const storeStaffKeys = new Set(staff.filter((s) => isStaffAtStoreOnDate(s, storeKey, dateStr)).map((s) => s.key));
   return tasks
     .filter((t) => storeStaffKeys.has(t.staff_key) && !t.done && !t.pending_approval && (t.workdate === dateStr || t.deadline === dateStr))
+    .filter((t) => canSeeHomeTask(t, staff, roles, viewerKey))
+    .filter((t) => canViewTask(staff, roles, viewerKey, t))
+    .map((t) => ({ id: t.id, text: t.text, staffName: staff.find((s) => s.key === t.staff_key)?.name || '' }))
+    .sort((a, b) => a.staffName.localeCompare(b.staffName, 'ja'));
+}
+
+// GM・オーナーは所属店舗を持たないため、店舗別ではなく本人の役職に基づいてTodayを表示する。
+// （一般スタッフの分は含めない。それは店舗別のhomeTasksForDateの役割）
+export function homeTasksForRoleView(tasks, staff, roles, viewerKey, dateStr) {
+  const viewerIsOwner = isOwnerRole(staff, roles, viewerKey);
+  return tasks
+    .filter((t) => !t.done && !t.pending_approval && (t.workdate === dateStr || t.deadline === dateStr))
+    .filter((t) => {
+      if (t.staff_key === viewerKey) return true;
+      if (!viewerIsOwner) return false;
+      return findRole(roles, staff.find((s) => s.key === t.staff_key)?.role)?.key === 'GM';
+    })
+    .filter((t) => canViewTask(staff, roles, viewerKey, t))
+    .map((t) => ({ id: t.id, text: t.text, staffName: staff.find((s) => s.key === t.staff_key)?.name || '' }))
+    .sort((a, b) => a.staffName.localeCompare(b.staffName, 'ja'));
+}
+
+// オーナーのTodayカード専用：スタッフの所属に関わらず、期限が今日の確認待ちタスクを一覧する。
+export function pendingReviewDueToday(tasks, staff, roles, viewerKey, dateStr) {
+  return tasks
+    .filter((t) => t.status === 'review' && !t.done && t.deadline === dateStr)
     .filter((t) => canViewTask(staff, roles, viewerKey, t))
     .map((t) => ({ id: t.id, text: t.text, staffName: staff.find((s) => s.key === t.staff_key)?.name || '' }))
     .sort((a, b) => a.staffName.localeCompare(b.staffName, 'ja'));

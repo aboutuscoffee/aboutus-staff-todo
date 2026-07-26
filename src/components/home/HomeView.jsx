@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { STORE_INFO } from '../../constants';
-import { homeTasksForDate } from '../../lib/selectors';
+import { homeTasksForDate, homeTasksForRoleView, pendingReviewDueToday } from '../../lib/selectors';
+import { findRole } from '../../lib/permissions';
 import { today, tomorrow } from '../../utils';
 import { useSession } from '../../context/SessionContext';
 
@@ -39,6 +40,8 @@ function DayPage({ day, items }) {
 export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
   const { loggedInUserKey } = useSession();
   const me = staff.find((s) => s.key === loggedInUserKey);
+  const meRole = findRole(roles, me?.role);
+  const isRoleView = !!(meRole?.is_owner || meRole?.key === 'GM');
   const myStores = me?.stores || [];
   const confirmedTodayStore = me?.today_store_date === today ? me.today_store : null;
   const [selectedStore, setSelectedStore] = useState(myStores.length === 1 ? myStores[0] : confirmedTodayStore);
@@ -46,7 +49,7 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
   const [dragOffset, setDragOffset] = useState(0);
   const touch = useRef(null);
 
-  const needsChoice = myStores.length > 1;
+  const needsChoice = !isRoleView && myStores.length > 1;
 
   const chooseStore = (sk) => {
     setSelectedStore(sk);
@@ -75,7 +78,9 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
     touch.current = null;
   };
 
-  if (!me || myStores.length === 0) {
+  if (!me) return null;
+
+  if (!isRoleView && myStores.length === 0) {
     return (
       <div className="rounded-2xl border border-stone-100 bg-white p-4">
         <div className="flex justify-between items-center mb-3">
@@ -86,6 +91,12 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
       </div>
     );
   }
+
+  const canShowDays = isRoleView || !!selectedStore;
+  const getItems = (dateStr) => (isRoleView
+    ? homeTasksForRoleView(tasks, staff, roles, loggedInUserKey, dateStr)
+    : homeTasksForDate(tasks, staff, roles, loggedInUserKey, selectedStore, dateStr));
+  const reviewToday = meRole?.is_owner ? pendingReviewDueToday(tasks, staff, roles, loggedInUserKey, today) : [];
 
   return (
     <div className="rounded-2xl border border-stone-100 bg-white p-4">
@@ -105,7 +116,7 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
         </div>
       )}
 
-      {selectedStore && (
+      {canShowDays && (
         <>
           <div className="overflow-hidden -mx-4">
             <div
@@ -116,7 +127,7 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
               onTouchEnd={onTouchEnd}
             >
               {DAYS.map((day) => (
-                <DayPage key={day.date} day={day} items={homeTasksForDate(tasks, staff, roles, loggedInUserKey, selectedStore, day.date)} />
+                <DayPage key={day.date} day={day} items={getItems(day.date)} />
               ))}
             </div>
           </div>
@@ -125,6 +136,25 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
               <span key={day.date} className={`w-1.5 h-1.5 rounded-full ${i === dayIndex ? 'bg-stone-900' : 'bg-stone-200'}`} />
             ))}
           </div>
+        </>
+      )}
+
+      {meRole?.is_owner && (
+        <>
+          <div className="h-px bg-stone-100 my-3" />
+          <div className="text-[11px] text-stone-400 mb-1.5">確認待ち（期限：今日）</div>
+          {reviewToday.length === 0 ? (
+            <p className="text-xs text-stone-400">該当するタスクはありません</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {reviewToday.map((item) => (
+                <div key={item.id} className="flex justify-between items-baseline gap-2 text-[13px]">
+                  <span className="min-w-0 truncate">・{item.text}</span>
+                  <span className="text-stone-500 flex-shrink-0">{item.staffName}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>
