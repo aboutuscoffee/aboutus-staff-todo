@@ -131,7 +131,7 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
             </div>
             <StatusSelect value={task.status} onChange={onStatusChange} disabled={task.done} />
             {isOwner && (
-              <button type="button" onClick={() => setEditing((e) => !e)} className="hidden md:inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm flex-shrink-0">✎</button>
+              <button type="button" onClick={() => setEditing((e) => !e)} className="inline-block text-stone-400 hover:bg-stone-100 hover:text-stone-900 px-[4px] py-[2px] rounded text-sm flex-shrink-0">✎</button>
             )}
           </div>
         </div>
