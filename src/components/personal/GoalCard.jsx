@@ -42,7 +42,7 @@ export default function GoalCard({ goal, isOwner, trainingPctByKind, onOpenTrain
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && saveRename()}
-                className="flex-1 px-[9px] py-1.5 rounded-md border border-stone-300 text-[13px]"
+                className="flex-1 px-[9px] py-1.5 rounded-md border border-stone-300 text-base font-semibold"
                 autoFocus
               />
               <button type="button" onClick={saveRename} className="px-3 py-1.5 rounded-md bg-stone-900 text-white text-[13px]">保存</button>
@@ -51,7 +51,7 @@ export default function GoalCard({ goal, isOwner, trainingPctByKind, onOpenTrain
             </div>
           ) : (
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[13px] font-medium">{goal.title}</span>
+              <span className="text-base font-semibold">{goal.title}</span>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 {goal.edited_at && <span className="text-[9px] text-stone-300">{editedLabel(goal.edited_at)}</span>}
                 <span className="text-xs text-stone-500">{pct}%</span>
@@ -85,17 +85,19 @@ export default function GoalCard({ goal, isOwner, trainingPctByKind, onOpenTrain
                 />
               ))}
 
-              <div className="flex gap-1.5 mt-1.5">
-                <input
-                  type="text"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
-                  placeholder="取り組みを追加..."
-                  className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs"
-                />
-                <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
-              </div>
+              {editing && isOwner && (
+                <div className="flex gap-1.5 mt-1.5">
+                  <input
+                    type="text"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
+                    placeholder="取り組みを追加..."
+                    className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs"
+                  />
+                  <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
+                </div>
+              )}
             </>
           )}
         </div>

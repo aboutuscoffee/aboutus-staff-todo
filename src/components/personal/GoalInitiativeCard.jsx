@@ -44,7 +44,7 @@ export default function GoalInitiativeCard({ initiative, editing, onToggleMilest
         </div>
       ) : (
         <div className="flex items-center justify-between gap-1.5 mb-1">
-          <span className="text-xs font-medium">{initiative.text}</span>
+          <span className="text-[13px] font-medium">{initiative.text}</span>
           {initiative.edited_at && <span className="text-[9px] text-stone-400">{editedLabel(initiative.edited_at)}</span>}
         </div>
       )}
@@ -67,17 +67,19 @@ export default function GoalInitiativeCard({ initiative, editing, onToggleMilest
           </div>
         )
       ))}
-      <div className="flex gap-1.5 mt-1.5">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
-          placeholder="マイルストーンを追加..."
-          className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs bg-white"
-        />
-        <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
-      </div>
+      {editing && (
+        <div className="flex gap-1.5 mt-1.5">
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && submit()}
+            placeholder="マイルストーンを追加..."
+            className="flex-1 px-2 py-1 rounded-md border border-stone-300 text-xs bg-white"
+          />
+          <button type="button" onClick={submit} className="px-2.5 py-1 rounded-md border border-stone-300 bg-white text-xs">＋</button>
+        </div>
+      )}
     </div>
   );
 }
