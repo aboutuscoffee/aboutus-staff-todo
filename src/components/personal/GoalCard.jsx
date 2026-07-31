@@ -76,6 +76,7 @@ export default function GoalCard({ goal, isOwner, trainingPctByKind, onOpenTrain
                   key={i.id}
                   initiative={i}
                   editing={editing && isOwner}
+                  isOwner={isOwner}
                   onToggleMilestone={onToggleMilestone}
                   onAddMilestone={(text) => onAddMilestone(i.id, text)}
                   onRenameMilestone={onRenameMilestone}
