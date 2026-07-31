@@ -1,4 +1,4 @@
-function isoDate(d) {
+export function isoDate(d) {
   return d.toISOString().split('T')[0];
 }
 

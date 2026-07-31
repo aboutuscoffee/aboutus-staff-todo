@@ -1,25 +1,24 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { STORE_INFO } from '../../constants';
 import { homeTasksForDate, homeTasksForRoleView, pendingReviewDueToday } from '../../lib/selectors';
 import { findRole } from '../../lib/permissions';
-import { today, tomorrow } from '../../utils';
+import { isoDate } from '../../utils';
 import { useSession } from '../../context/SessionContext';
 
 const dateLabel = (d) => d.slice(5).replace('-', '/');
-
-const DAYS = [
-  { date: today, title: 'Today', emptyText: '本日のタスクはありません' },
-  { date: tomorrow, title: 'Tomorrow', emptyText: '明日のタスクはありません' },
-];
+const weekdayLabel = (d) => {
+  const [y, m, day] = d.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString('en-US', { weekday: 'short' });
+};
 
 const SWIPE_THRESHOLD = 50;
 
 function DayPage({ day, items }) {
   return (
     <div className="w-full flex-shrink-0 px-4">
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-[15px] font-semibold">{day.title}</span>
-        <span className="text-[12px] text-stone-400">{dateLabel(day.date)}</span>
+      <div className="mb-3">
+        <div className="text-[22px] font-bold leading-tight">{day.title}</div>
+        <div className="text-[12px] text-stone-400 mt-0.5">{dateLabel(day.date)} {weekdayLabel(day.date)}</div>
       </div>
       {items.length === 0 ? (
         <p className="text-xs text-stone-400">{day.emptyText}</p>
@@ -43,17 +42,39 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
   const meRole = findRole(roles, me?.role);
   const isRoleView = !!(meRole?.is_owner || meRole?.key === 'GM');
   const myStores = me?.stores || [];
-  const confirmedTodayStore = me?.today_store_date === today ? me.today_store : null;
-  const [selectedStore, setSelectedStore] = useState(myStores.length === 1 ? myStores[0] : confirmedTodayStore);
+
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(id);
+  }, []);
+  const todayStr = isoDate(now);
+  const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  const DAYS = [
+    { date: todayStr, title: 'Today', emptyText: '本日のタスクはありません' },
+    { date: tomorrowStr, title: 'Tomorrow', emptyText: '明日のタスクはありません' },
+  ];
+
+  const canChooseStore = !isRoleView && myStores.length > 1;
+  const confirmedTodayStore = me?.today_store_date === todayStr ? me.today_store : null;
+  const [pendingStore, setPendingStore] = useState(null);
+  useEffect(() => { setPendingStore(null); }, [todayStr]);
+  const selectedStore = pendingStore ?? (myStores.length === 1 ? myStores[0] : confirmedTodayStore);
+  const needsChoice = canChooseStore && !selectedStore;
+
+  const [pickerOpen, setPickerOpen] = useState(needsChoice);
+  useEffect(() => {
+    if (needsChoice) setPickerOpen(true);
+  }, [needsChoice]);
+
   const [dayIndex, setDayIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const touch = useRef(null);
 
-  const needsChoice = !isRoleView && myStores.length > 1;
-
   const chooseStore = (sk) => {
-    setSelectedStore(sk);
+    setPendingStore(sk);
     onSetTodayStore(loggedInUserKey, sk);
+    setPickerOpen(false);
   };
 
   const onTouchStart = (e) => {
@@ -83,10 +104,8 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
   if (!isRoleView && myStores.length === 0) {
     return (
       <div className="rounded-2xl border border-stone-100 bg-white p-4">
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-[15px] font-semibold">Today</span>
-          <span className="text-[12px] text-stone-400">{dateLabel(today)}</span>
-        </div>
+        <div className="text-[22px] font-bold leading-tight">Today</div>
+        <div className="text-[12px] text-stone-400 mt-0.5 mb-3">{dateLabel(todayStr)} {weekdayLabel(todayStr)}</div>
         <p className="text-xs text-stone-400">所属店舗が設定されていません</p>
       </div>
     );
@@ -96,11 +115,19 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
   const getItems = (dateStr) => (isRoleView
     ? homeTasksForRoleView(tasks, staff, roles, loggedInUserKey, dateStr)
     : homeTasksForDate(tasks, staff, roles, loggedInUserKey, selectedStore, dateStr));
-  const reviewToday = meRole?.is_owner ? pendingReviewDueToday(tasks, staff, roles, loggedInUserKey, today) : [];
+  const reviewToday = meRole?.is_owner ? pendingReviewDueToday(tasks, staff, roles, loggedInUserKey, todayStr) : [];
 
   return (
-    <div className="rounded-2xl border border-stone-100 bg-white p-4">
-      {needsChoice && (
+    <div className={`relative rounded-2xl border border-stone-100 bg-white p-4 ${canChooseStore ? 'pt-11' : ''}`}>
+      {canChooseStore && (
+        <button
+          type="button"
+          onClick={() => setPickerOpen((o) => !o)}
+          className="absolute top-3 right-3 px-2 py-1 rounded-md border border-stone-300 bg-white text-[11px] text-stone-600 hover:border-[#1D9E75] hover:text-[#1D9E75]"
+        >🏪 出勤店舗を変更</button>
+      )}
+
+      {canChooseStore && pickerOpen && (
         <div className="mb-3">
           <div className="text-[11px] text-stone-400 mb-1.5">本日の出勤店舗を選択してください</div>
           <div className="flex gap-1.5">
