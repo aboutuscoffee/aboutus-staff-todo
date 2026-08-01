@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf, uploadManualPdf } from './lib/db';
-import { sha256, today, pastMonthKeys, monthKey, monthLabel } from './utils';
+import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
@@ -89,7 +89,7 @@ function AppShell({ data, setData }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissedOfferIds, setDismissedOfferIds] = useState([]);
 
-  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
+  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -200,6 +200,7 @@ function AppShell({ data, setData }) {
   const upsertInitiative = upsertInto('goalInitiatives', 'goal_initiatives', 'id');
   const upsertMilestone = upsertInto('goalMilestones', 'goal_milestones', 'id');
   const upsertStoreTodo = upsertInto('storeTodos', 'store_todos', 'id');
+  const upsertStoreWeeklyTask = upsertInto('storeWeeklyTasks', 'store_weekly_tasks', 'id');
   const upsertEvalRecord = upsertInto('evalRecords', 'eval_records', 'id');
   const upsertStoreMonthNote = upsertInto('storeMonthNotes', 'store_month_notes', 'id');
   const upsertMonthlyEvalRecord = upsertInto('monthlyEvalRecords', 'monthly_eval_records', 'id');
@@ -212,6 +213,7 @@ function AppShell({ data, setData }) {
   const removeStaffRow = removeFrom('staff', 'staff', 'key');
   const removeRoleRow = removeFrom('roles', 'roles', 'key');
   const removeStoreTodoRow = removeFrom('storeTodos', 'store_todos', 'id');
+  const removeStoreWeeklyTaskRow = removeFrom('storeWeeklyTasks', 'store_weekly_tasks', 'id');
   const removeGoalRow = removeFrom('goals', 'goals', 'id');
   const removeInitiativeRow = removeFrom('goalInitiatives', 'goal_initiatives', 'id');
   const removeMilestoneRow = removeFrom('goalMilestones', 'goal_milestones', 'id');
@@ -323,7 +325,7 @@ function AppShell({ data, setData }) {
   const onSetTodayStore = (staffKey, storeKey) => {
     const s = staff.find((x) => x.key === staffKey);
     if (!s) return;
-    upsertStaff({ ...s, today_store: storeKey, today_store_date: today });
+    upsertStaff({ ...s, today_store: storeKey, today_store_date: isoDate(new Date()) });
   };
 
   // --- 店舗月次目標 ---
@@ -337,6 +339,13 @@ function AppShell({ data, setData }) {
     if (t) upsertStoreTodo({ ...t, done: !t.done });
   };
   const onDeleteStoreTodo = (id) => removeStoreTodoRow(id);
+
+  // --- 週間タスク ---
+  const onAddWeeklyTask = (storeKey, weekday, text) => {
+    const order = storeWeeklyTasks.filter((t) => t.store_key === storeKey && t.weekday === weekday).length;
+    upsertStoreWeeklyTask({ store_key: storeKey, weekday, text, sort_order: order });
+  };
+  const onDeleteWeeklyTask = (id) => removeStoreWeeklyTaskRow(id);
   const onSaveStoreMonthComment = (storeKey, ym, comment) => {
     const existing = storeMonthNotes.find((n) => n.store_key === storeKey && n.year_month === ym);
     upsertStoreMonthNote(existing ? { ...existing, comment } : { store_key: storeKey, year_month: ym, comment }).then(() => {
@@ -714,7 +723,10 @@ function AppShell({ data, setData }) {
         </div>
         <div className="flex-1 overflow-y-auto p-4 bg-[#F5F3EE]">
           {view === 'home' && (
-            <HomeView staff={staff} roles={roles} tasks={tasks} onSetTodayStore={onSetTodayStore} />
+            <HomeView
+              staff={staff} roles={roles} tasks={tasks} onSetTodayStore={onSetTodayStore}
+              storeWeeklyTasks={storeWeeklyTasks} onAddWeeklyTask={onAddWeeklyTask} onDeleteWeeklyTask={onDeleteWeeklyTask}
+            />
           )}
           {view === 'overview' && (
             <OverviewView

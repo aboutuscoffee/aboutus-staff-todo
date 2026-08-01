@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { STORE_INFO } from '../../constants';
+import { STORE_INFO, STORE_KEYS } from '../../constants';
 import { homeTasksForDate, homeTasksForRoleView, pendingReviewDueToday } from '../../lib/selectors';
 import { findRole } from '../../lib/permissions';
 import { isoDate } from '../../utils';
 import { useSession } from '../../context/SessionContext';
+import WeeklyTasksSection from './WeeklyTasksSection';
 
 const dateLabel = (d) => d.slice(5).replace('-', '/');
 const weekdayLabel = (d) => {
@@ -36,7 +37,7 @@ function DayPage({ day, items }) {
   );
 }
 
-export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
+export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWeeklyTasks, onAddWeeklyTask, onDeleteWeeklyTask }) {
   const { loggedInUserKey } = useSession();
   const me = staff.find((s) => s.key === loggedInUserKey);
   const meRole = findRole(roles, me?.role);
@@ -50,6 +51,7 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
   }, []);
   const todayStr = isoDate(now);
   const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  const todayWeekday = (now.getDay() + 6) % 7;
   const DAYS = [
     { date: todayStr, title: 'Today', emptyText: '本日のタスクはありません' },
     { date: tomorrowStr, title: 'Tomorrow', emptyText: '明日のタスクはありません' },
@@ -163,6 +165,41 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore }) {
               <span key={day.date} className={`w-1.5 h-1.5 rounded-full ${i === dayIndex ? 'bg-stone-900' : 'bg-stone-200'}`} />
             ))}
           </div>
+        </>
+      )}
+
+      {!isRoleView && selectedStore && (
+        <>
+          <div className="h-px bg-stone-100 my-3" />
+          <WeeklyTasksSection
+            storeKey={selectedStore}
+            label={STORE_INFO[selectedStore].label}
+            weekday={todayWeekday}
+            tasks={storeWeeklyTasks}
+            canEdit={meRole?.key === 'SM'}
+            onAddWeeklyTask={onAddWeeklyTask}
+            onDeleteWeeklyTask={onDeleteWeeklyTask}
+          />
+        </>
+      )}
+
+      {isRoleView && meRole?.key === 'GM' && (
+        <>
+          <div className="h-px bg-stone-100 my-3" />
+          {STORE_KEYS.map((sk, i) => (
+            <div key={sk}>
+              {i > 0 && <div className="h-px bg-stone-100 my-3" />}
+              <WeeklyTasksSection
+                storeKey={sk}
+                label={STORE_INFO[sk].label}
+                weekday={todayWeekday}
+                tasks={storeWeeklyTasks}
+                canEdit
+                onAddWeeklyTask={onAddWeeklyTask}
+                onDeleteWeeklyTask={onDeleteWeeklyTask}
+              />
+            </div>
+          ))}
         </>
       )}
 
