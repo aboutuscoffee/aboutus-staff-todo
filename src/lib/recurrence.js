@@ -31,7 +31,3 @@ export function pendingOccurrences(rt, todayStr) {
   }
   return dates;
 }
-
-export function recurrenceLabel(rt) {
-  return rt.kind === 'weekly' ? `毎週${WEEKDAY_LABELS[rt.weekday]}曜日` : `毎月${rt.day_of_month}日`;
-}

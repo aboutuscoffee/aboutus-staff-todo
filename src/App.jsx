@@ -90,7 +90,7 @@ function AppShell({ data, setData }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissedOfferIds, setDismissedOfferIds] = useState([]);
 
-  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
+  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -514,10 +514,6 @@ function AppShell({ data, setData }) {
       deadline_offset_days: fields.deadlineOffsetDays || 0, active: true, last_generated_date: null,
     }).then(() => showToast('繰り返しタスクを設定しました'));
   };
-  const onStopRecurringTask = (id) => {
-    const rt = recurringTasks.find((x) => x.id === id);
-    if (rt) upsertRecurringTask({ ...rt, active: false }).then(() => showToast());
-  };
   const onSaveTaskEdit = (id, updates) => {
     const t = tasks.find((x) => x.id === id);
     if (t) upsertTask({ ...t, ...updates }).then(() => showToast());
@@ -813,7 +809,6 @@ function AppShell({ data, setData }) {
             <PersonalView
               staffKey={si} staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
               storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords} trainingProgress={trainingProgress}
-              recurringTasks={recurringTasks} onStopRecurringTask={onStopRecurringTask}
               initialTab={personalTab}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
               onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}

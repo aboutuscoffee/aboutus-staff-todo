@@ -14,7 +14,7 @@ const weekdayLabel = (d) => {
 
 const SWIPE_THRESHOLD = 50;
 
-function DayPage({ day, items }) {
+function DayPage({ day, items, weeklySections }) {
   return (
     <div className="w-full flex-shrink-0 px-4">
       <div className="mb-3">
@@ -33,6 +33,12 @@ function DayPage({ day, items }) {
           ))}
         </div>
       )}
+      {weeklySections.map((sec) => (
+        <div key={sec.storeKey}>
+          <div className="h-px bg-stone-100 my-3" />
+          <WeeklyTasksSection {...sec} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -43,6 +49,7 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
   const meRole = findRole(roles, me?.role);
   const isRoleView = !!(meRole?.is_owner || meRole?.key === 'GM');
   const myStores = me?.stores || [];
+  const isGM = meRole?.key === 'GM';
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
@@ -52,10 +59,7 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
   const todayStr = isoDate(now);
   const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
   const todayWeekday = (now.getDay() + 6) % 7;
-  const DAYS = [
-    { date: todayStr, title: 'Today', emptyText: '本日のタスクはありません' },
-    { date: tomorrowStr, title: 'Tomorrow', emptyText: '明日のタスクはありません' },
-  ];
+  const tomorrowWeekday = (todayWeekday + 1) % 7;
 
   const canChooseStore = !isRoleView && myStores.length > 1;
   const confirmedTodayStore = me?.today_store_date === todayStr ? me.today_store : null;
@@ -119,6 +123,29 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
     : homeTasksForDate(tasks, staff, roles, loggedInUserKey, selectedStore, dateStr));
   const reviewToday = meRole?.is_owner ? pendingReviewDueToday(tasks, staff, roles, loggedInUserKey, todayStr) : [];
 
+  const weeklySectionsFor = (weekday) => {
+    if (!isRoleView && selectedStore) {
+      return [{
+        storeKey: selectedStore, label: STORE_INFO[selectedStore].label, weekday,
+        tasks: storeWeeklyTasks, canEdit: meRole?.key === 'SM',
+        onAddWeeklyTask, onDeleteWeeklyTask,
+      }];
+    }
+    if (isGM) {
+      return STORE_KEYS.map((sk) => ({
+        storeKey: sk, label: STORE_INFO[sk].label, weekday,
+        tasks: storeWeeklyTasks, canEdit: true,
+        onAddWeeklyTask, onDeleteWeeklyTask,
+      }));
+    }
+    return [];
+  };
+
+  const DAYS = [
+    { date: todayStr, title: 'Today', emptyText: '本日のタスクはありません', weekday: todayWeekday },
+    { date: tomorrowStr, title: 'Tomorrow', emptyText: '明日のタスクはありません', weekday: tomorrowWeekday },
+  ];
+
   return (
     <div className={`relative rounded-2xl border border-stone-100 bg-white p-4 ${canChooseStore ? 'pt-11' : ''}`}>
       {canChooseStore && (
@@ -156,7 +183,7 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
               onTouchEnd={onTouchEnd}
             >
               {DAYS.map((day) => (
-                <DayPage key={day.date} day={day} items={getItems(day.date)} />
+                <DayPage key={day.date} day={day} items={getItems(day.date)} weeklySections={weeklySectionsFor(day.weekday)} />
               ))}
             </div>
           </div>
@@ -165,41 +192,6 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
               <span key={day.date} className={`w-1.5 h-1.5 rounded-full ${i === dayIndex ? 'bg-stone-900' : 'bg-stone-200'}`} />
             ))}
           </div>
-        </>
-      )}
-
-      {!isRoleView && selectedStore && (
-        <>
-          <div className="h-px bg-stone-100 my-3" />
-          <WeeklyTasksSection
-            storeKey={selectedStore}
-            label={STORE_INFO[selectedStore].label}
-            weekday={todayWeekday}
-            tasks={storeWeeklyTasks}
-            canEdit={meRole?.key === 'SM'}
-            onAddWeeklyTask={onAddWeeklyTask}
-            onDeleteWeeklyTask={onDeleteWeeklyTask}
-          />
-        </>
-      )}
-
-      {isRoleView && meRole?.key === 'GM' && (
-        <>
-          <div className="h-px bg-stone-100 my-3" />
-          {STORE_KEYS.map((sk, i) => (
-            <div key={sk}>
-              {i > 0 && <div className="h-px bg-stone-100 my-3" />}
-              <WeeklyTasksSection
-                storeKey={sk}
-                label={STORE_INFO[sk].label}
-                weekday={todayWeekday}
-                tasks={storeWeeklyTasks}
-                canEdit
-                onAddWeeklyTask={onAddWeeklyTask}
-                onDeleteWeeklyTask={onDeleteWeeklyTask}
-              />
-            </div>
-          ))}
         </>
       )}
 
