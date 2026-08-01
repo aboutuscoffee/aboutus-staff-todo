@@ -4,6 +4,7 @@ import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './u
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
+import { pendingOccurrences, addDays } from './lib/recurrence';
 import { ADVANCED_GROUP_INDEX } from './lib/trainingData';
 import { STORE_INFO } from './constants';
 import Sidebar from './components/common/Sidebar';
@@ -89,7 +90,7 @@ function AppShell({ data, setData }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissedOfferIds, setDismissedOfferIds] = useState([]);
 
-  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
+  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -201,6 +202,7 @@ function AppShell({ data, setData }) {
   const upsertMilestone = upsertInto('goalMilestones', 'goal_milestones', 'id');
   const upsertStoreTodo = upsertInto('storeTodos', 'store_todos', 'id');
   const upsertStoreWeeklyTask = upsertInto('storeWeeklyTasks', 'store_weekly_tasks', 'id');
+  const upsertRecurringTask = upsertInto('recurringTasks', 'recurring_tasks', 'id');
   const upsertEvalRecord = upsertInto('evalRecords', 'eval_records', 'id');
   const upsertStoreMonthNote = upsertInto('storeMonthNotes', 'store_month_notes', 'id');
   const upsertMonthlyEvalRecord = upsertInto('monthlyEvalRecords', 'monthly_eval_records', 'id');
@@ -219,6 +221,30 @@ function AppShell({ data, setData }) {
   const removeMilestoneRow = removeFrom('goalMilestones', 'goal_milestones', 'id');
   const removeManualCategoryRow = removeFrom('manualCategories', 'manual_categories', 'id');
   const removeManualRow = removeFrom('manuals', 'manuals', 'id');
+
+  // --- 繰り返しタスクの自動生成（読み込み時に1回だけ） ---
+  const recurringGeneratedRef = useRef(false);
+  useEffect(() => {
+    if (!data || recurringGeneratedRef.current) return;
+    recurringGeneratedRef.current = true;
+    const todayStr = isoDate(new Date());
+    data.recurringTasks.filter((rt) => rt.active).forEach((rt) => {
+      const dates = pendingOccurrences(rt, todayStr);
+      dates.forEach((d) => {
+        const alreadyExists = data.tasks.some((t) => t.recurring_task_id === rt.id && t.workdate === d);
+        if (alreadyExists) return;
+        upsertTask({
+          staff_key: rt.staff_key, text: rt.text, duty: rt.duty || 'その他', priority: rt.priority || 'mid',
+          status: '', done: false, done_date: null, workdate: d, deadline: addDays(d, rt.deadline_offset_days || 0),
+          minutes: rt.minutes, restricted: false, recurring_task_id: rt.id,
+        });
+      });
+      if (dates.length > 0 || !rt.last_generated_date) {
+        upsertRecurringTask({ ...rt, last_generated_date: todayStr });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   // --- ナビゲーション ---
   const goView = (v) => { setView(v); setCollapsed(true); };
@@ -481,6 +507,17 @@ function AppShell({ data, setData }) {
     upsertTask({ staff_key: staffKey, text: fields.text, duty: fields.duty, priority: fields.priority || 'mid', status: '', done: false, done_date: null, deadline: fields.deadline, workdate: fields.workdate || today, minutes: fields.minutes, restricted: !!fields.restricted }).then(() => showToast());
   };
   const onDeleteTask = (id) => removeTask(id);
+  const onAddRecurringTask = (staffKey, fields) => {
+    upsertRecurringTask({
+      staff_key: staffKey, text: fields.text, duty: fields.duty, priority: fields.priority || 'mid', minutes: fields.minutes,
+      kind: fields.kind, weekday: fields.kind === 'weekly' ? fields.weekday : null, day_of_month: fields.kind === 'monthly' ? fields.dayOfMonth : null,
+      deadline_offset_days: fields.deadlineOffsetDays || 0, active: true, last_generated_date: null,
+    }).then(() => showToast('繰り返しタスクを設定しました'));
+  };
+  const onStopRecurringTask = (id) => {
+    const rt = recurringTasks.find((x) => x.id === id);
+    if (rt) upsertRecurringTask({ ...rt, active: false }).then(() => showToast());
+  };
   const onSaveTaskEdit = (id, updates) => {
     const t = tasks.find((x) => x.id === id);
     if (t) upsertTask({ ...t, ...updates }).then(() => showToast());
@@ -776,6 +813,7 @@ function AppShell({ data, setData }) {
             <PersonalView
               staffKey={si} staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
               storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords} trainingProgress={trainingProgress}
+              recurringTasks={recurringTasks} onStopRecurringTask={onStopRecurringTask}
               initialTab={personalTab}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
               onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
@@ -799,6 +837,7 @@ function AppShell({ data, setData }) {
         staff={staff}
         duties={loggedInStaff?.duties || []}
         onAddTask={(fields) => onAddTask(loggedInUserKey, fields)}
+        onAddRecurringTask={(fields) => onAddRecurringTask(loggedInUserKey, fields)}
         onAddPool={(text, kind, deadline, priority, targetKeys, broadcastAll) => {
           onAddPool(text, kind, deadline, priority, targetKeys, broadcastAll);
           if (quickAddPrefill?.sourceTaskId) removeTask(quickAddPrefill.sourceTaskId);

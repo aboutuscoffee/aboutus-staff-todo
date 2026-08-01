@@ -7,7 +7,7 @@ function stripMeta(obj) {
 }
 
 export async function fetchAll() {
-  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals] = await Promise.all([
+  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals] = await Promise.all([
     supabase.from('staff').select('*').order('sort_order'),
     supabase.from('roles').select('*'),
     supabase.from('tasks').select('*'),
@@ -17,6 +17,7 @@ export async function fetchAll() {
     supabase.from('goal_milestones').select('*').order('sort_order'),
     supabase.from('store_todos').select('*').order('sort_order'),
     supabase.from('store_weekly_tasks').select('*').order('sort_order'),
+    supabase.from('recurring_tasks').select('*'),
     supabase.from('eval_records').select('*').order('date'),
     supabase.from('monthly_eval_records').select('*'),
     supabase.from('store_month_notes').select('*'),
@@ -25,7 +26,7 @@ export async function fetchAll() {
     supabase.from('manuals').select('*').order('sort_order'),
   ]);
 
-  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals]) {
+  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals]) {
     if (res.error) throw new Error(res.error.message);
   }
 
@@ -48,6 +49,7 @@ export async function fetchAll() {
     goalMilestones: goalMilestones.data ?? [],
     storeTodos: storeTodos.data ?? [],
     storeWeeklyTasks: storeWeeklyTasks.data ?? [],
+    recurringTasks: recurringTasks.data ?? [],
     evalRecords: evalRecords.data ?? [],
     monthlyEvalRecords: monthlyEvalRecords.data ?? [],
     storeMonthNotes: storeMonthNotes.data ?? [],

@@ -3,8 +3,9 @@ import { today, toMin } from '../../utils';
 import { showErrorToast } from './Toast';
 import { PRIORITY_OPTIONS } from '../../constants';
 import { useSession } from '../../context/SessionContext';
+import { WEEKDAY_LABELS } from '../../lib/recurrence';
 
-export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddPool, onSendMemo, initialMode, prefill, canRestrictTask, canPostAssignPool }) {
+export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddRecurringTask, onAddPool, onSendMemo, initialMode, prefill, canRestrictTask, canPostAssignPool }) {
   const { loggedInUserKey } = useSession();
   const [mode, setMode] = useState('task');
   const [text, setText] = useState('');
@@ -15,6 +16,10 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
   const [timeValue, setTimeValue] = useState('');
   const [unit, setUnit] = useState('min');
   const [restricted, setRestricted] = useState(false);
+  const [recurrence, setRecurrence] = useState('none');
+  const [recWeekday, setRecWeekday] = useState(0);
+  const [recDayOfMonth, setRecDayOfMonth] = useState(1);
+  const [recDeadlineOffset, setRecDeadlineOffset] = useState(0);
   const [poolKind, setPoolKind] = useState('todo');
   const [poolDeadline, setPoolDeadline] = useState('');
   const [targetKeys, setTargetKeys] = useState([]);
@@ -33,6 +38,10 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
       setTimeValue('');
       setUnit('min');
       setRestricted(false);
+      setRecurrence('none');
+      setRecWeekday(0);
+      setRecDayOfMonth(1);
+      setRecDeadlineOffset(0);
       setPoolKind('todo');
       setPoolDeadline(prefill?.deadline || '');
       setTargetKeys([]);
@@ -62,11 +71,22 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
     const trimmed = text.trim();
     if (mode === 'task') {
       const minutes = toMin(timeValue, unit);
-      if (!trimmed || minutes == null || !taskDeadline) {
-        showErrorToast('タスク名・作業時間・期限は必須です');
+      if (!trimmed || minutes == null) {
+        showErrorToast('タスク名・作業時間は必須です');
         return;
       }
-      onAddTask({ text: trimmed, duty: duty || 'その他', priority, workdate: workdate || today, deadline: taskDeadline, minutes, restricted });
+      if (recurrence === 'none') {
+        if (!taskDeadline) {
+          showErrorToast('期限は必須です');
+          return;
+        }
+        onAddTask({ text: trimmed, duty: duty || 'その他', priority, workdate: workdate || today, deadline: taskDeadline, minutes, restricted });
+      } else {
+        onAddRecurringTask({
+          text: trimmed, duty: duty || 'その他', priority, minutes,
+          kind: recurrence, weekday: recWeekday, dayOfMonth: recDayOfMonth, deadlineOffsetDays: recDeadlineOffset,
+        });
+      }
     } else {
       if (!trimmed) {
         showErrorToast('タスク名を入力してください');
@@ -126,13 +146,50 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
               </select>
             </div>
             <div className="flex flex-wrap gap-1.5 mb-2 items-center">
-              <span className="text-xs text-stone-500 w-[42px]">作業日</span>
-              <input type="date" value={workdate} onChange={(e) => setWorkdate(e.target.value)} className="px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
+              <span className="text-xs text-stone-500">繰り返し</span>
+              <div className="flex border border-stone-300 rounded-md overflow-hidden">
+                <button type="button" onClick={() => setRecurrence('none')} className={`px-[9px] py-[3px] text-xs ${recurrence === 'none' ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>なし</button>
+                <button type="button" onClick={() => setRecurrence('weekly')} className={`px-[9px] py-[3px] text-xs ${recurrence === 'weekly' ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>毎週</button>
+                <button type="button" onClick={() => setRecurrence('monthly')} className={`px-[9px] py-[3px] text-xs ${recurrence === 'monthly' ? 'bg-stone-100 font-medium' : 'text-stone-500'}`}>毎月</button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1.5 mb-2 items-center">
-              <span className="text-xs text-stone-500 w-[42px]">期限*</span>
-              <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} className="px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
-            </div>
+            {recurrence === 'weekly' && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {WEEKDAY_LABELS.map((label, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setRecWeekday(i)}
+                    className={`w-7 h-7 rounded-md text-xs border ${recWeekday === i ? 'bg-stone-900 text-white border-stone-900' : 'border-stone-300 text-stone-600'}`}
+                  >{label}</button>
+                ))}
+              </div>
+            )}
+            {recurrence === 'monthly' && (
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-xs text-stone-500">毎月</span>
+                <input type="number" min="1" max="31" value={recDayOfMonth} onChange={(e) => setRecDayOfMonth(Number(e.target.value))} className="w-14 px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
+                <span className="text-xs text-stone-500">日（末日がなければ月末に繰り上げ）</span>
+              </div>
+            )}
+            {recurrence !== 'none' ? (
+              <div className="flex flex-wrap gap-1.5 mb-2 items-center">
+                <span className="text-xs text-stone-500">期限：作業日から</span>
+                <input type="number" min="0" value={recDeadlineOffset} onChange={(e) => setRecDeadlineOffset(Number(e.target.value))} className="w-14 px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
+                <span className="text-xs text-stone-500">日後</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-1.5 mb-2 items-center">
+                  <span className="text-xs text-stone-500 w-[42px]">作業日</span>
+                  <input type="date" value={workdate} onChange={(e) => setWorkdate(e.target.value)} className="px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
+                </div>
+                <div className="flex flex-wrap gap-1.5 mb-2 items-center">
+                  <span className="text-xs text-stone-500 w-[42px]">期限*</span>
+                  <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)} className="px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
+                </div>
+              </>
+            )}
             <div className="flex gap-1.5 mb-3 items-center">
               <span className="text-xs text-stone-500">目標作業時間*</span>
               <input type="text" value={timeValue} onChange={(e) => setTimeValue(e.target.value)} placeholder="例：30" className="w-[52px] px-1.5 py-1 rounded-md border border-stone-300 text-[13px]" />

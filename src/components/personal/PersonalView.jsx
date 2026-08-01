@@ -14,6 +14,7 @@ import { useSession } from '../../context/SessionContext';
 
 export default function PersonalView({
   staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, trainingProgress,
+  recurringTasks, onStopRecurringTask,
   initialTab,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
   onApproveTaskOffer, onHandOffTaskOffer, onConvertToRequest,
@@ -43,6 +44,7 @@ export default function PersonalView({
   const myGoals = goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey);
   const otherStaff = staff.filter((s) => s.key !== staffKey);
   const myTrainingProgress = trainingProgress.filter((p) => p.staff_key === staffKey);
+  const myRecurringTasks = recurringTasks.filter((r) => r.staff_key === staffKey && r.active);
   const canConfirm = canConfirmTraining(staff, roles, loggedInUserKey);
 
   return (
@@ -102,6 +104,8 @@ export default function PersonalView({
           onStatusChange={(id, status) => onTaskStatusChange(id, status)}
           onReassign={(id, newKey) => onReassignTask(id, newKey)}
           onReleaseToPool={(id) => onReleaseTaskToPool(id)}
+          recurringTasks={myRecurringTasks}
+          onStopRecurringTask={onStopRecurringTask}
           />
         </>
       )}
