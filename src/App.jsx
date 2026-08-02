@@ -4,7 +4,7 @@ import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './u
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
-import { pendingOccurrences, addDays } from './lib/recurrence';
+import { pendingOccurrences, addDays, recurrenceLabel } from './lib/recurrence';
 import { ADVANCED_GROUP_INDEX } from './lib/trainingData';
 import { STORE_INFO } from './constants';
 import Sidebar from './components/common/Sidebar';
@@ -226,27 +226,30 @@ function AppShell({ data, setData }) {
   const removeManualCategoryRow = removeFrom('manualCategories', 'manual_categories', 'id');
   const removeManualRow = removeFrom('manuals', 'manuals', 'id');
 
-  // --- 繰り返しタスクの自動生成（読み込み時に1回だけ） ---
+  // --- 繰り返しタスクの自動生成 ---
+  const generateOccurrencesFor = useCallback((rt, currentTasks) => {
+    const todayStr = isoDate(new Date());
+    const dates = pendingOccurrences(rt, todayStr);
+    dates.forEach((d) => {
+      const alreadyExists = currentTasks.some((t) => t.recurring_task_id === rt.id && t.workdate === d);
+      if (alreadyExists) return;
+      upsertTask({
+        staff_key: rt.staff_key, text: rt.text, duty: rt.duty || 'その他', priority: rt.priority || 'mid',
+        status: '', done: false, done_date: null, workdate: d, deadline: addDays(d, rt.deadline_offset_days || 0),
+        minutes: rt.minutes, restricted: false, recurring_task_id: rt.id,
+      });
+    });
+    if (dates.length > 0 || !rt.last_generated_date) {
+      upsertRecurringTask({ ...rt, last_generated_date: todayStr });
+    }
+  }, [upsertTask, upsertRecurringTask]);
+
+  // 読み込み時に1回だけ、これまでの未生成分をまとめて生成する
   const recurringGeneratedRef = useRef(false);
   useEffect(() => {
     if (!data || recurringGeneratedRef.current) return;
     recurringGeneratedRef.current = true;
-    const todayStr = isoDate(new Date());
-    data.recurringTasks.filter((rt) => rt.active).forEach((rt) => {
-      const dates = pendingOccurrences(rt, todayStr);
-      dates.forEach((d) => {
-        const alreadyExists = data.tasks.some((t) => t.recurring_task_id === rt.id && t.workdate === d);
-        if (alreadyExists) return;
-        upsertTask({
-          staff_key: rt.staff_key, text: rt.text, duty: rt.duty || 'その他', priority: rt.priority || 'mid',
-          status: '', done: false, done_date: null, workdate: d, deadline: addDays(d, rt.deadline_offset_days || 0),
-          minutes: rt.minutes, restricted: false, recurring_task_id: rt.id,
-        });
-      });
-      if (dates.length > 0 || !rt.last_generated_date) {
-        upsertRecurringTask({ ...rt, last_generated_date: todayStr });
-      }
-    });
+    data.recurringTasks.filter((rt) => rt.active).forEach((rt) => generateOccurrencesFor(rt, data.tasks));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
@@ -533,7 +536,11 @@ function AppShell({ data, setData }) {
       staff_key: staffKey, text: fields.text, duty: fields.duty, priority: fields.priority || 'mid', minutes: fields.minutes,
       kind: fields.kind, weekday: fields.kind === 'weekly' ? fields.weekday : null, day_of_month: fields.kind === 'monthly' ? fields.dayOfMonth : null,
       deadline_offset_days: fields.deadlineOffsetDays || 0, active: true, last_generated_date: null,
-    }).then(() => showToast('繰り返しタスクを設定しました'));
+    }).then((saved) => {
+      const generatesToday = pendingOccurrences(saved, isoDate(new Date())).length > 0;
+      generateOccurrencesFor(saved, tasks);
+      showToast(generatesToday ? '繰り返しタスクを設定し、本日分をタスクに追加しました' : `繰り返しタスクを設定しました（${recurrenceLabel(saved)}に追加されます）`);
+    });
   };
   const onSaveTaskEdit = (id, updates) => {
     const t = tasks.find((x) => x.id === id);

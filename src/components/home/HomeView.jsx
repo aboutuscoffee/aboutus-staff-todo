@@ -65,7 +65,7 @@ export default function HomeView({
   const todayWeekday = (now.getDay() + 6) % 7;
   const tomorrowWeekday = (todayWeekday + 1) % 7;
 
-  const canManageStore = !isRoleView;
+  const canManageStore = !meRole?.is_owner;
   const confirmedTodayStore = me?.today_store_date === todayStr ? me.today_store : null;
   const [pendingStore, setPendingStore] = useState(null);
   useEffect(() => { setPendingStore(null); }, [todayStr]);

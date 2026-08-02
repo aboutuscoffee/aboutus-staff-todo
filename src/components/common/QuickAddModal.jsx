@@ -18,8 +18,8 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
   const [restricted, setRestricted] = useState(false);
   const [recurrence, setRecurrence] = useState('none');
   const [recWeekday, setRecWeekday] = useState(0);
-  const [recDayOfMonth, setRecDayOfMonth] = useState(1);
-  const [recDeadlineOffset, setRecDeadlineOffset] = useState(0);
+  const [recDayOfMonth, setRecDayOfMonth] = useState('1');
+  const [recDeadlineOffset, setRecDeadlineOffset] = useState('0');
   const [poolKind, setPoolKind] = useState('todo');
   const [poolDeadline, setPoolDeadline] = useState('');
   const [targetKeys, setTargetKeys] = useState([]);
@@ -40,8 +40,8 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
       setRestricted(false);
       setRecurrence('none');
       setRecWeekday(0);
-      setRecDayOfMonth(1);
-      setRecDeadlineOffset(0);
+      setRecDayOfMonth('1');
+      setRecDeadlineOffset('0');
       setPoolKind('todo');
       setPoolDeadline(prefill?.deadline || '');
       setTargetKeys([]);
@@ -84,7 +84,9 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
       } else {
         onAddRecurringTask({
           text: trimmed, duty: duty || 'その他', priority, minutes,
-          kind: recurrence, weekday: recWeekday, dayOfMonth: recDayOfMonth, deadlineOffsetDays: recDeadlineOffset,
+          kind: recurrence, weekday: recWeekday,
+          dayOfMonth: Math.min(31, Math.max(1, parseInt(recDayOfMonth, 10) || 1)),
+          deadlineOffsetDays: Math.max(0, parseInt(recDeadlineOffset, 10) || 0),
         });
       }
     } else {
@@ -168,14 +170,14 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
             {recurrence === 'monthly' && (
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-xs text-stone-500">毎月</span>
-                <input type="number" min="1" max="31" value={recDayOfMonth} onChange={(e) => setRecDayOfMonth(Number(e.target.value))} className="w-14 px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
+                <input type="number" min="1" max="31" value={recDayOfMonth} onChange={(e) => setRecDayOfMonth(e.target.value)} className="w-14 px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
                 <span className="text-xs text-stone-500">日（末日がなければ月末に繰り上げ）</span>
               </div>
             )}
             {recurrence !== 'none' ? (
               <div className="flex flex-wrap gap-1.5 mb-2 items-center">
                 <span className="text-xs text-stone-500">期限：作業日から</span>
-                <input type="number" min="0" value={recDeadlineOffset} onChange={(e) => setRecDeadlineOffset(Number(e.target.value))} className="w-14 px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
+                <input type="number" min="0" value={recDeadlineOffset} onChange={(e) => setRecDeadlineOffset(e.target.value)} className="w-14 px-1.5 py-1 rounded-md border border-stone-300 text-xs" />
                 <span className="text-xs text-stone-500">日後</span>
               </div>
             ) : (
