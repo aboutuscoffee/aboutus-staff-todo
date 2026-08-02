@@ -542,6 +542,9 @@ function AppShell({ data, setData }) {
       showToast(generatesToday ? '繰り返しタスクを設定し、本日分をタスクに追加しました' : `繰り返しタスクを設定しました（${recurrenceLabel(saved)}に追加されます）`);
     });
   };
+  const onStopRecurringTask = (recurringTaskId) => {
+    upsertRecurringTask({ id: recurringTaskId, active: false }).then(() => showToast('繰り返しを停止しました'));
+  };
   const onSaveTaskEdit = (id, updates) => {
     const t = tasks.find((x) => x.id === id);
     if (t) upsertTask({ ...t, ...updates }).then(() => showToast());
@@ -794,7 +797,7 @@ function AppShell({ data, setData }) {
               onClaimPool={onClaimPool} onDeletePool={onDeletePool}
               onToggleTaskDone={onToggleTaskDone} onOpenPersonal={goPersonal}
               onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange}
-              onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest}
+              onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest} onStopRecurringTask={onStopRecurringTask}
             />
           )}
           {view === 'storetodos' && (
@@ -828,7 +831,7 @@ function AppShell({ data, setData }) {
                 staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
                 onGoPersonalEval={goPersonalEval}
                 onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit}
-                onTaskStatusChange={onTaskStatusChange} onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest}
+                onTaskStatusChange={onTaskStatusChange} onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest} onStopRecurringTask={onStopRecurringTask}
               />
             ) : null
           )}
@@ -839,7 +842,7 @@ function AppShell({ data, setData }) {
               initialTab={personalTab}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
               onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReleaseTaskToPool={onReleaseTaskToPool}
-              onApproveTaskOffer={onApproveTaskOffer} onHandOffTaskOffer={onHandOffTaskOffer} onConvertToRequest={onConvertToRequest}
+              onApproveTaskOffer={onApproveTaskOffer} onHandOffTaskOffer={onHandOffTaskOffer} onConvertToRequest={onConvertToRequest} onStopRecurringTask={onStopRecurringTask}
               onAddGoal={onAddGoal} onRenameGoal={onRenameGoal} onDeleteGoal={onDeleteGoal}
               onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
               onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}

@@ -11,7 +11,7 @@ import { useSession } from '../../context/SessionContext';
 
 const SWIPE_OPEN = -112;
 
-export default function TaskItem({ task, duties, staffName, onOpenStaff, isOwner = true, onConvertToRequest, onToggleDone, onDelete, onSave, onStatusChange, onReleaseToPool }) {
+export default function TaskItem({ task, duties, staffName, onOpenStaff, isOwner = true, onConvertToRequest, onStopRecurrence, onToggleDone, onDelete, onSave, onStatusChange, onReleaseToPool }) {
   const { loggedInUserKey } = useSession();
   const isTaskOwner = loggedInUserKey === task.staff_key;
   const [editing, setEditing] = useState(false);
@@ -142,6 +142,7 @@ export default function TaskItem({ task, duties, staffName, onOpenStaff, isOwner
           task={task}
           duties={duties}
           onConvertToRequest={() => { onConvertToRequest(); setEditing(false); }}
+          onStopRecurrence={task.recurring_task_id ? () => { onStopRecurrence(); setEditing(false); } : undefined}
           onSave={(updates) => { onSave(updates); setEditing(false); }}
           onDelete={() => { onDelete(); setEditing(false); }}
           onReleaseToPool={() => { onReleaseToPool(); setEditing(false); }}

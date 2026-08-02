@@ -16,7 +16,7 @@ export default function PersonalView({
   staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, trainingProgress,
   initialTab,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool,
-  onApproveTaskOffer, onHandOffTaskOffer, onConvertToRequest,
+  onApproveTaskOffer, onHandOffTaskOffer, onConvertToRequest, onStopRecurringTask,
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
   onSaveProfile, onCreateRecord, onSaveRecord, onPublishRecord, onPrint, onSaveMonthlyEvalComment,
@@ -92,6 +92,7 @@ export default function PersonalView({
           duties={staffMember.duties || []}
           isOwner={isOwner}
           onConvertToRequest={onConvertToRequest}
+          onStopRecurringTask={onStopRecurringTask}
           onToggleDone={(id) => onToggleTaskDone(staffKey, id)}
           onDelete={(id) => onDeleteTask(id)}
           onSave={(id, updates) => onSaveTaskEdit(id, updates)}

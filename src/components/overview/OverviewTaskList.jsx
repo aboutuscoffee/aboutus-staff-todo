@@ -9,7 +9,7 @@ import { isOwnerRole, canViewTask } from '../../lib/permissions';
 
 export default function OverviewTaskList({
   staff, roles, tasks, onToggleDone, onOpenPersonal,
-  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest,
+  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest, onStopRecurringTask,
 }) {
   const { loggedInUserKey } = useSession();
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -74,6 +74,7 @@ export default function OverviewTaskList({
             onOpenStaff={() => onOpenPersonal(s.key)}
             isOwner={loggedInUserKey === s.key || viewerIsOwner}
             onConvertToRequest={() => onConvertToRequest(t)}
+            onStopRecurrence={() => onStopRecurringTask(t.recurring_task_id)}
             onToggleDone={() => onToggleDone(s.key, t.id)}
             onDelete={() => onDeleteTask(t.id)}
             onSave={(updates) => onSaveTaskEdit(t.id, updates)}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { fmtMin } from '../../utils';
 import { PRIORITY_OPTIONS } from '../../constants';
 
-export default function TaskEditPanel({ task, duties, onConvertToRequest, onSave, onDelete, onReleaseToPool }) {
+export default function TaskEditPanel({ task, duties, onConvertToRequest, onStopRecurrence, onSave, onDelete, onReleaseToPool }) {
   const [text, setText] = useState(task.text);
   const [duty, setDuty] = useState(task.duty);
   const [priority, setPriority] = useState(task.priority || 'mid');
@@ -28,6 +28,10 @@ export default function TaskEditPanel({ task, duties, onConvertToRequest, onSave
 
   const remove = () => {
     if (window.confirm('このタスクを削除しますか？')) onDelete();
+  };
+
+  const stopRecurrence = () => {
+    if (window.confirm('この繰り返し設定を停止しますか？今後、新しいタスクは生成されなくなります（すでに生成済みのタスクはそのまま残ります）。')) onStopRecurrence();
   };
 
   return (
@@ -66,6 +70,9 @@ export default function TaskEditPanel({ task, duties, onConvertToRequest, onSave
       <div className="flex gap-[6px] items-center w-full mt-[5px] pt-[7px] border-t border-dashed border-stone-300">
         <button type="button" onClick={onReleaseToPool} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 プールに戻す</button>
         <button type="button" onClick={onConvertToRequest} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 依頼タスクに変更する</button>
+        {task.recurring_task_id && (
+          <button type="button" onClick={stopRecurrence} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🔁 繰り返しを停止する</button>
+        )}
         <button type="button" onClick={remove} className="ml-auto px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs text-[#A32D2D] hover:bg-[#FCEBEB]">削除</button>
       </div>
     </div>

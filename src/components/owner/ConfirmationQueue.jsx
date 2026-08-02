@@ -6,7 +6,7 @@ import { pendingReviewTasks } from '../../lib/selectors';
 export default function ConfirmationQueue({
   staff, tasks,
   onGoPersonalEval,
-  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest,
+  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest, onStopRecurringTask,
 }) {
   const [sortBy, setSortBy] = useState('deadline');
   const pending = pendingReviewTasks(tasks, sortBy);
@@ -32,6 +32,7 @@ export default function ConfirmationQueue({
               onSave={(updates) => onSaveTaskEdit(t.id, updates)}
               onStatusChange={(status) => onTaskStatusChange(t.id, status)}
               onConvertToRequest={() => onConvertToRequest(t)}
+              onStopRecurrence={() => onStopRecurringTask(t.recurring_task_id)}
               onReleaseToPool={() => onReleaseTaskToPool(t.id)}
             />
           );

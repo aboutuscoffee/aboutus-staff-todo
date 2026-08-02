@@ -5,7 +5,7 @@ import StaffSummaryList from './StaffSummaryList';
 export default function OwnerView({
   staff, roles, tasks, goals, goalInitiatives, goalMilestones,
   onGoPersonalEval,
-  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest,
+  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest, onStopRecurringTask,
 }) {
   const [oTab, setOTab] = useState('review');
 
@@ -27,6 +27,7 @@ export default function OwnerView({
           onTaskStatusChange={onTaskStatusChange}
           onReleaseTaskToPool={onReleaseTaskToPool}
           onConvertToRequest={onConvertToRequest}
+          onStopRecurringTask={onStopRecurringTask}
         />
       )}
       {oTab === 'summary' && (

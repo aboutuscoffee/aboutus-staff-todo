@@ -3,7 +3,7 @@ import OverviewTaskList from './OverviewTaskList';
 
 export default function OverviewView({
   staff, roles, tasks, poolTasks, onClaimPool, onDeletePool, onToggleTaskDone, onOpenPersonal,
-  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest,
+  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest, onStopRecurringTask,
 }) {
   return (
     <div>
@@ -11,7 +11,7 @@ export default function OverviewView({
       <OverviewTaskList
         staff={staff} roles={roles} tasks={tasks} onToggleDone={onToggleTaskDone} onOpenPersonal={onOpenPersonal}
         onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange}
-        onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest}
+        onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest} onStopRecurringTask={onStopRecurringTask}
       />
     </div>
   );
