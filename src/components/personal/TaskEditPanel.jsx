@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { fmtMin } from '../../utils';
 import { PRIORITY_OPTIONS } from '../../constants';
 
-export default function TaskEditPanel({ task, duties, otherStaff, canConvertToRequest, onConvertToRequest, onSave, onDelete, onReassign, onReleaseToPool }) {
+export default function TaskEditPanel({ task, duties, onConvertToRequest, onSave, onDelete, onReleaseToPool }) {
   const [text, setText] = useState(task.text);
   const [duty, setDuty] = useState(task.duty);
   const [priority, setPriority] = useState(task.priority || 'mid');
@@ -10,7 +10,6 @@ export default function TaskEditPanel({ task, duties, otherStaff, canConvertToRe
   const [unit, setUnit] = useState('min');
   const [workdate, setWorkdate] = useState(task.workdate || '');
   const [deadline, setDeadline] = useState(task.deadline || '');
-  const [reassignKey, setReassignKey] = useState(otherStaff[0]?.key ?? '');
 
   const dutyOptions = [...new Set([...duties, 'その他', task.duty])];
 
@@ -65,19 +64,8 @@ export default function TaskEditPanel({ task, duties, otherStaff, canConvertToRe
       <button type="button" onClick={save} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">✓ 保存</button>
 
       <div className="flex gap-[6px] items-center w-full mt-[5px] pt-[7px] border-t border-dashed border-stone-300">
-        <span className="text-[11px] text-stone-500">担当変更</span>
-        <select value={reassignKey} onChange={(e) => setReassignKey(e.target.value)} className="px-[7px] py-1 rounded-md border border-stone-300 text-xs">
-          {otherStaff.map((s) => <option key={s.key} value={s.key}>{s.name}</option>)}
-        </select>
-        <button
-          type="button"
-          onClick={() => reassignKey && onReassign(reassignKey)}
-          className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs"
-        >変更</button>
         <button type="button" onClick={onReleaseToPool} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 プールに戻す</button>
-        {canConvertToRequest && (
-          <button type="button" onClick={onConvertToRequest} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 依頼タスクに変更する</button>
-        )}
+        <button type="button" onClick={onConvertToRequest} className="px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs">🎯 依頼タスクに変更する</button>
         <button type="button" onClick={remove} className="ml-auto px-[9px] py-1 rounded-md border border-stone-300 bg-white text-xs text-[#A32D2D] hover:bg-[#FCEBEB]">削除</button>
       </div>
     </div>

@@ -11,7 +11,7 @@ import { useSession } from '../../context/SessionContext';
 
 const SWIPE_OPEN = -112;
 
-export default function TaskItem({ task, duties, otherStaff, staffName, onOpenStaff, isOwner = true, canConvertToRequest, onConvertToRequest, onToggleDone, onDelete, onSave, onStatusChange, onReassign, onReleaseToPool }) {
+export default function TaskItem({ task, duties, staffName, onOpenStaff, isOwner = true, onConvertToRequest, onToggleDone, onDelete, onSave, onStatusChange, onReleaseToPool }) {
   const { loggedInUserKey } = useSession();
   const isTaskOwner = loggedInUserKey === task.staff_key;
   const [editing, setEditing] = useState(false);
@@ -141,12 +141,9 @@ export default function TaskItem({ task, duties, otherStaff, staffName, onOpenSt
         <TaskEditPanel
           task={task}
           duties={duties}
-          otherStaff={otherStaff}
-          canConvertToRequest={canConvertToRequest}
-          onConvertToRequest={onConvertToRequest ? () => { onConvertToRequest(); setEditing(false); } : undefined}
+          onConvertToRequest={() => { onConvertToRequest(); setEditing(false); }}
           onSave={(updates) => { onSave(updates); setEditing(false); }}
           onDelete={() => { onDelete(); setEditing(false); }}
-          onReassign={(newKey) => { onReassign(newKey); setEditing(false); }}
           onReleaseToPool={() => { onReleaseToPool(); setEditing(false); }}
         />
       )}

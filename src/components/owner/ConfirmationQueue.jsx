@@ -6,7 +6,7 @@ import { pendingReviewTasks } from '../../lib/selectors';
 export default function ConfirmationQueue({
   staff, tasks,
   onGoPersonalEval,
-  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
+  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest,
 }) {
   const [sortBy, setSortBy] = useState('deadline');
   const pending = pendingReviewTasks(tasks, sortBy);
@@ -24,7 +24,6 @@ export default function ConfirmationQueue({
               key={t.id}
               task={t}
               duties={s.duties || []}
-              otherStaff={staff.filter((x) => x.key !== s.key)}
               staffName={s.name}
               onOpenStaff={() => onGoPersonalEval(s.key)}
               isOwner
@@ -32,7 +31,7 @@ export default function ConfirmationQueue({
               onDelete={() => onDeleteTask(t.id)}
               onSave={(updates) => onSaveTaskEdit(t.id, updates)}
               onStatusChange={(status) => onTaskStatusChange(t.id, status)}
-              onReassign={(newKey) => onReassignTask(t.id, newKey)}
+              onConvertToRequest={() => onConvertToRequest(t)}
               onReleaseToPool={() => onReleaseTaskToPool(t.id)}
             />
           );

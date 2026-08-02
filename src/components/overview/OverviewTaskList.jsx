@@ -5,15 +5,14 @@ import SortChips from '../common/SortChips';
 import FilterSelect from '../common/FilterSelect';
 import { useSession } from '../../context/SessionContext';
 import { taskCompare } from '../../lib/selectors';
-import { isOwnerRole, canOfferOwnTask, canViewTask } from '../../lib/permissions';
+import { isOwnerRole, canViewTask } from '../../lib/permissions';
 
 export default function OverviewTaskList({
   staff, roles, tasks, onToggleDone, onOpenPersonal,
-  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool, onConvertToRequest,
+  onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest,
 }) {
   const { loggedInUserKey } = useSession();
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
-  const canConvertToRequest = loggedInUserKey && canOfferOwnTask(staff, roles, loggedInUserKey);
   const [roleFilter, setRoleFilter] = useState('all');
   const [storeFilter, setStoreFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -71,17 +70,14 @@ export default function OverviewTaskList({
             key={t.id}
             task={t}
             duties={s.duties || []}
-            otherStaff={staff.filter((x) => x.key !== s.key)}
             staffName={s.name}
             onOpenStaff={() => onOpenPersonal(s.key)}
             isOwner={loggedInUserKey === s.key || viewerIsOwner}
-            canConvertToRequest={canConvertToRequest}
             onConvertToRequest={() => onConvertToRequest(t)}
             onToggleDone={() => onToggleDone(s.key, t.id)}
             onDelete={() => onDeleteTask(t.id)}
             onSave={(updates) => onSaveTaskEdit(t.id, updates)}
             onStatusChange={(status) => onTaskStatusChange(t.id, status)}
-            onReassign={(newKey) => onReassignTask(t.id, newKey)}
             onReleaseToPool={() => onReleaseTaskToPool(t.id)}
           />
         ))}

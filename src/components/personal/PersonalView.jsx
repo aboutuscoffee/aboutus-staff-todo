@@ -9,13 +9,13 @@ import StoreCard from '../storetodos/StoreCard';
 import TaskOfferCard from './TaskOfferCard';
 import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff, trainingPctForStaff, advancedTrainingPctForStaff } from '../../lib/selectors';
 import { monthAgo, monthStart, monthKey, monthLabel } from '../../utils';
-import { isOwnerRole, isAdminRole, canOfferOwnTask, canViewTask, canConfirmTraining } from '../../lib/permissions';
+import { isOwnerRole, isAdminRole, canViewTask, canConfirmTraining } from '../../lib/permissions';
 import { useSession } from '../../context/SessionContext';
 
 export default function PersonalView({
   staffKey, staff, roles, tasks, goals, goalInitiatives, goalMilestones, storeTodos, evalRecords, monthlyEvalRecords, trainingProgress,
   initialTab,
-  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReassignTask, onReleaseTaskToPool,
+  onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool,
   onApproveTaskOffer, onHandOffTaskOffer, onConvertToRequest,
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
@@ -35,13 +35,11 @@ export default function PersonalView({
   const isOwner = loggedInUserKey === staffKey || isOwnerRole(staff, roles, loggedInUserKey);
   const isSelf = loggedInUserKey === staffKey;
   const canHandOffOffer = isAdminRole(staff, roles, loggedInUserKey);
-  const canConvertToRequest = isOwner && canOfferOwnTask(staff, roles, loggedInUserKey);
 
   const summary = computeSummary(tasks, goals, goalInitiatives, goalMilestones, staffKey, monthAgo, monthStart);
   const myTasks = tasksForStaff(tasks, staffKey).filter((t) => canViewTask(staff, roles, loggedInUserKey, t));
   const myOffers = isSelf ? pendingOffersForStaff(tasks, staffKey) : [];
   const myGoals = goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey);
-  const otherStaff = staff.filter((s) => s.key !== staffKey);
   const myTrainingProgress = trainingProgress.filter((p) => p.staff_key === staffKey);
   const canConfirm = canConfirmTraining(staff, roles, loggedInUserKey);
 
@@ -92,15 +90,12 @@ export default function PersonalView({
           <TaskPanel
           tasks={myTasks}
           duties={staffMember.duties || []}
-          otherStaff={otherStaff}
           isOwner={isOwner}
-          canConvertToRequest={canConvertToRequest}
           onConvertToRequest={onConvertToRequest}
           onToggleDone={(id) => onToggleTaskDone(staffKey, id)}
           onDelete={(id) => onDeleteTask(id)}
           onSave={(id, updates) => onSaveTaskEdit(id, updates)}
           onStatusChange={(id, status) => onTaskStatusChange(id, status)}
-          onReassign={(id, newKey) => onReassignTask(id, newKey)}
           onReleaseToPool={(id) => onReleaseTaskToPool(id)}
           />
         </>

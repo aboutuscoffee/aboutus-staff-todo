@@ -561,10 +561,6 @@ function AppShell({ data, setData }) {
       }
     }
   };
-  const onReassignTask = (id, newKey) => {
-    const t = tasks.find((x) => x.id === id);
-    if (t) upsertTask({ ...t, staff_key: newKey, status: '' }).then(() => showToast());
-  };
   const onReleaseTaskToPool = (id) => {
     const t = tasks.find((x) => x.id === id);
     if (!t) return;
@@ -798,7 +794,7 @@ function AppShell({ data, setData }) {
               onClaimPool={onClaimPool} onDeletePool={onDeletePool}
               onToggleTaskDone={onToggleTaskDone} onOpenPersonal={goPersonal}
               onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange}
-              onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest}
+              onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest}
             />
           )}
           {view === 'storetodos' && (
@@ -832,7 +828,7 @@ function AppShell({ data, setData }) {
                 staff={staff} roles={roles} tasks={tasks} goals={goals} goalInitiatives={goalInitiatives} goalMilestones={goalMilestones}
                 onGoPersonalEval={goPersonalEval}
                 onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit}
-                onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
+                onTaskStatusChange={onTaskStatusChange} onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest}
               />
             ) : null
           )}
@@ -842,7 +838,7 @@ function AppShell({ data, setData }) {
               storeTodos={storeTodos} evalRecords={evalRecords} monthlyEvalRecords={monthlyEvalRecords} trainingProgress={trainingProgress}
               initialTab={personalTab}
               onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask}
-              onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReassignTask={onReassignTask} onReleaseTaskToPool={onReleaseTaskToPool}
+              onSaveTaskEdit={onSaveTaskEdit} onTaskStatusChange={onTaskStatusChange} onReleaseTaskToPool={onReleaseTaskToPool}
               onApproveTaskOffer={onApproveTaskOffer} onHandOffTaskOffer={onHandOffTaskOffer} onConvertToRequest={onConvertToRequest}
               onAddGoal={onAddGoal} onRenameGoal={onRenameGoal} onDeleteGoal={onDeleteGoal}
               onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
