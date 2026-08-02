@@ -4,7 +4,7 @@ import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './u
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
-import { pendingOccurrences, addDays, recurrenceLabel } from './lib/recurrence';
+import { pendingOccurrences, addDays, addMonths, recurrenceLabel } from './lib/recurrence';
 import { ADVANCED_GROUP_INDEX } from './lib/trainingData';
 import { STORE_INFO } from './constants';
 import Sidebar from './components/common/Sidebar';
@@ -226,10 +226,10 @@ function AppShell({ data, setData }) {
   const removeManualCategoryRow = removeFrom('manualCategories', 'manual_categories', 'id');
   const removeManualRow = removeFrom('manuals', 'manuals', 'id');
 
-  // --- 繰り返しタスクの自動生成 ---
+  // --- 繰り返しタスクの自動生成（常に本日から1ヶ月先まで生成しておく） ---
   const generateOccurrencesFor = useCallback((rt, currentTasks) => {
-    const todayStr = isoDate(new Date());
-    const dates = pendingOccurrences(rt, todayStr);
+    const horizonStr = addMonths(isoDate(new Date()), 1);
+    const dates = pendingOccurrences(rt, horizonStr);
     dates.forEach((d) => {
       const alreadyExists = currentTasks.some((t) => t.recurring_task_id === rt.id && t.workdate === d);
       if (alreadyExists) return;
@@ -239,8 +239,8 @@ function AppShell({ data, setData }) {
         minutes: rt.minutes, restricted: false, recurring_task_id: rt.id,
       });
     });
-    if (dates.length > 0 || !rt.last_generated_date) {
-      upsertRecurringTask({ ...rt, last_generated_date: todayStr });
+    if (horizonStr !== rt.last_generated_date) {
+      upsertRecurringTask({ ...rt, last_generated_date: horizonStr });
     }
   }, [upsertTask, upsertRecurringTask]);
 

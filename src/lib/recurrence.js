@@ -8,6 +8,11 @@ export function addDays(dateStr, n) {
   return new Date(Date.UTC(y, m - 1, d + n)).toISOString().split('T')[0];
 }
 
+export function addMonths(dateStr, n) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1 + n, d)).toISOString().split('T')[0];
+}
+
 export function isOccurrenceDate(rt, dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number);
   if (rt.kind === 'weekly') {
@@ -19,12 +24,12 @@ export function isOccurrenceDate(rt, dateStr) {
   return d === targetDay;
 }
 
-export function pendingOccurrences(rt, todayStr) {
+export function pendingOccurrences(rt, untilStr) {
   const startStr = rt.last_generated_date ? addDays(rt.last_generated_date, 1) : isoDate(new Date(rt.created_at));
   const dates = [];
   let cursor = startStr;
   let guard = 0;
-  while (cursor <= todayStr && guard < 400) {
+  while (cursor <= untilStr && guard < 400) {
     if (isOccurrenceDate(rt, cursor)) dates.push(cursor);
     cursor = addDays(cursor, 1);
     guard += 1;

@@ -18,10 +18,7 @@ const SWIPE_THRESHOLD = 50;
 function DayPage({ day, items, weeklySections }) {
   return (
     <div className="w-full flex-shrink-0 px-4">
-      <div className="mb-3">
-        <div className="text-[22px] font-bold leading-tight">{day.title}</div>
-        <div className="text-[12px] text-stone-400 mt-0.5">{dateLabel(day.date)} {weekdayLabel(day.date)}</div>
-      </div>
+      <div className="text-[12px] text-stone-400 mb-3">{dateLabel(day.date)} {weekdayLabel(day.date)}</div>
       {items.length === 0 ? (
         <p className="text-xs text-stone-400">{day.emptyText}</p>
       ) : (
@@ -142,14 +139,17 @@ export default function HomeView({
 
   return (
     <>
-    <div className={`relative rounded-2xl border border-stone-100 bg-white p-4 ${canManageStore ? 'pt-11' : ''}`}>
-      {canManageStore && (
-        <button
-          type="button"
-          onClick={() => setPickerOpen((o) => !o)}
-          className="absolute top-3 right-3 px-2 py-1 rounded-md border border-stone-300 bg-white text-[11px] text-stone-600 hover:border-[#1D9E75] hover:text-[#1D9E75]"
-        >🏪 出勤店舗を変更</button>
-      )}
+    <div className="rounded-2xl border border-stone-100 bg-white p-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[22px] font-bold leading-tight">{DAYS[dayIndex]?.title ?? 'Today'}</span>
+        {canManageStore && (
+          <button
+            type="button"
+            onClick={() => setPickerOpen((o) => !o)}
+            className="px-2 py-1 rounded-md border border-stone-300 bg-white text-[11px] text-stone-600 hover:border-[#1D9E75] hover:text-[#1D9E75] flex-shrink-0"
+          >出勤店舗を変更</button>
+        )}
+      </div>
 
       {canManageStore && pickerOpen && (
         <div className="mb-3">
