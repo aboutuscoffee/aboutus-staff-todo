@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { fourMoAgo } from '../utils';
+import { fourMoAgo, isoDate } from '../utils';
 
 function stripMeta(obj) {
   const { updated_at, ...rest } = obj;
@@ -7,7 +7,7 @@ function stripMeta(obj) {
 }
 
 export async function fetchAll() {
-  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals] = await Promise.all([
+  const [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, dailyChecklistItems, dailyChecklistChecks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals] = await Promise.all([
     supabase.from('staff').select('*').order('sort_order'),
     supabase.from('roles').select('*'),
     supabase.from('tasks').select('*'),
@@ -18,6 +18,8 @@ export async function fetchAll() {
     supabase.from('store_todos').select('*').order('sort_order'),
     supabase.from('store_weekly_tasks').select('*').order('sort_order'),
     supabase.from('recurring_tasks').select('*'),
+    supabase.from('daily_checklist_items').select('*').order('sort_order'),
+    supabase.from('daily_checklist_checks').select('*'),
     supabase.from('eval_records').select('*').order('date'),
     supabase.from('monthly_eval_records').select('*'),
     supabase.from('store_month_notes').select('*'),
@@ -26,7 +28,7 @@ export async function fetchAll() {
     supabase.from('manuals').select('*').order('sort_order'),
   ]);
 
-  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals]) {
+  for (const res of [staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, recurringTasks, dailyChecklistItems, dailyChecklistChecks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals]) {
     if (res.error) throw new Error(res.error.message);
   }
 
@@ -37,6 +39,16 @@ export async function fetchAll() {
   const freshTasks = (tasks.data ?? []).filter((t) => !staleIds.includes(t.id));
   if (staleIds.length) {
     supabase.from('tasks').delete().in('id', staleIds);
+  }
+
+  // 前日以前のデイリーチェックは読み込み時に削除する（毎日リセットするため）
+  const todayStr = isoDate(new Date());
+  const staleCheckIds = (dailyChecklistChecks.data ?? [])
+    .filter((c) => c.date < todayStr)
+    .map((c) => c.id);
+  const freshChecks = (dailyChecklistChecks.data ?? []).filter((c) => !staleCheckIds.includes(c.id));
+  if (staleCheckIds.length) {
+    supabase.from('daily_checklist_checks').delete().in('id', staleCheckIds);
   }
 
   return {
@@ -50,6 +62,8 @@ export async function fetchAll() {
     storeTodos: storeTodos.data ?? [],
     storeWeeklyTasks: storeWeeklyTasks.data ?? [],
     recurringTasks: recurringTasks.data ?? [],
+    dailyChecklistItems: dailyChecklistItems.data ?? [],
+    dailyChecklistChecks: freshChecks,
     evalRecords: evalRecords.data ?? [],
     monthlyEvalRecords: monthlyEvalRecords.data ?? [],
     storeMonthNotes: storeMonthNotes.data ?? [],

@@ -5,6 +5,7 @@ import { findRole } from '../../lib/permissions';
 import { isoDate } from '../../utils';
 import { useSession } from '../../context/SessionContext';
 import WeeklyTasksSection from './WeeklyTasksSection';
+import DailyChecklistCard from './DailyChecklistCard';
 
 const dateLabel = (d) => d.slice(5).replace('-', '/');
 const weekdayLabel = (d) => {
@@ -43,7 +44,10 @@ function DayPage({ day, items, weeklySections }) {
   );
 }
 
-export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWeeklyTasks, onAddWeeklyTask, onDeleteWeeklyTask }) {
+export default function HomeView({
+  staff, roles, tasks, onSetTodayStore, storeWeeklyTasks, onAddWeeklyTask, onDeleteWeeklyTask,
+  dailyChecklistItems, dailyChecklistChecks, onAddDailyChecklistItem, onDeleteDailyChecklistItem, onToggleDailyChecklistCheck,
+}) {
   const { loggedInUserKey } = useSession();
   const me = staff.find((s) => s.key === loggedInUserKey);
   const meRole = findRole(roles, me?.role);
@@ -61,12 +65,12 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
   const todayWeekday = (now.getDay() + 6) % 7;
   const tomorrowWeekday = (todayWeekday + 1) % 7;
 
-  const canChooseStore = !isRoleView && myStores.length > 1;
+  const canManageStore = !isRoleView;
   const confirmedTodayStore = me?.today_store_date === todayStr ? me.today_store : null;
   const [pendingStore, setPendingStore] = useState(null);
   useEffect(() => { setPendingStore(null); }, [todayStr]);
-  const selectedStore = pendingStore ?? (myStores.length === 1 ? myStores[0] : confirmedTodayStore);
-  const needsChoice = canChooseStore && !selectedStore;
+  const selectedStore = pendingStore ?? confirmedTodayStore ?? (myStores.length === 1 ? myStores[0] : null);
+  const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
 
   const [pickerOpen, setPickerOpen] = useState(needsChoice);
   useEffect(() => {
@@ -107,16 +111,6 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
 
   if (!me) return null;
 
-  if (!isRoleView && myStores.length === 0) {
-    return (
-      <div className="rounded-2xl border border-stone-100 bg-white p-4">
-        <div className="text-[22px] font-bold leading-tight">Today</div>
-        <div className="text-[12px] text-stone-400 mt-0.5 mb-3">{dateLabel(todayStr)} {weekdayLabel(todayStr)}</div>
-        <p className="text-xs text-stone-400">所属店舗が設定されていません</p>
-      </div>
-    );
-  }
-
   const canShowDays = isRoleView || !!selectedStore;
   const getItems = (dateStr) => (isRoleView
     ? homeTasksForRoleView(tasks, staff, roles, loggedInUserKey, dateStr)
@@ -147,8 +141,9 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
   ];
 
   return (
-    <div className={`relative rounded-2xl border border-stone-100 bg-white p-4 ${canChooseStore ? 'pt-11' : ''}`}>
-      {canChooseStore && (
+    <>
+    <div className={`relative rounded-2xl border border-stone-100 bg-white p-4 ${canManageStore ? 'pt-11' : ''}`}>
+      {canManageStore && (
         <button
           type="button"
           onClick={() => setPickerOpen((o) => !o)}
@@ -156,11 +151,11 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
         >🏪 出勤店舗を変更</button>
       )}
 
-      {canChooseStore && pickerOpen && (
+      {canManageStore && pickerOpen && (
         <div className="mb-3">
           <div className="text-[11px] text-stone-400 mb-1.5">本日の出勤店舗を選択してください</div>
           <div className="flex gap-1.5">
-            {myStores.map((sk) => (
+            {STORE_KEYS.map((sk) => (
               <button
                 key={sk}
                 type="button"
@@ -170,6 +165,10 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
             ))}
           </div>
         </div>
+      )}
+
+      {!canShowDays && canManageStore && (
+        <p className="text-xs text-stone-400">出勤店舗を選択してください</p>
       )}
 
       {canShowDays && (
@@ -214,5 +213,15 @@ export default function HomeView({ staff, roles, tasks, onSetTodayStore, storeWe
         </>
       )}
     </div>
+    <DailyChecklistCard
+      staffKey={loggedInUserKey}
+      items={dailyChecklistItems}
+      checks={dailyChecklistChecks}
+      todayStr={todayStr}
+      onAddItem={onAddDailyChecklistItem}
+      onDeleteItem={onDeleteDailyChecklistItem}
+      onToggleCheck={onToggleDailyChecklistCheck}
+    />
+    </>
   );
 }

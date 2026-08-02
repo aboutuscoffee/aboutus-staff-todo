@@ -90,7 +90,7 @@ function AppShell({ data, setData }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissedOfferIds, setDismissedOfferIds] = useState([]);
 
-  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
+  const { staff, roles, tasks, poolTasks, goals, goalInitiatives, goalMilestones, storeTodos, storeWeeklyTasks, dailyChecklistItems, dailyChecklistChecks, evalRecords, monthlyEvalRecords, storeMonthNotes, trainingProgress, manualCategories, manuals } = data;
   const loggedInStaff = staff.find((s) => s.key === loggedInUserKey);
   const unreadCount = notifications.filter((n) => !n.read).length;
   const viewerIsOwner = loggedInUserKey && isOwnerRole(staff, roles, loggedInUserKey);
@@ -202,6 +202,8 @@ function AppShell({ data, setData }) {
   const upsertMilestone = upsertInto('goalMilestones', 'goal_milestones', 'id');
   const upsertStoreTodo = upsertInto('storeTodos', 'store_todos', 'id');
   const upsertStoreWeeklyTask = upsertInto('storeWeeklyTasks', 'store_weekly_tasks', 'id');
+  const upsertDailyChecklistItem = upsertInto('dailyChecklistItems', 'daily_checklist_items', 'id');
+  const upsertDailyChecklistCheck = upsertInto('dailyChecklistChecks', 'daily_checklist_checks', 'id');
   const upsertRecurringTask = upsertInto('recurringTasks', 'recurring_tasks', 'id');
   const upsertEvalRecord = upsertInto('evalRecords', 'eval_records', 'id');
   const upsertStoreMonthNote = upsertInto('storeMonthNotes', 'store_month_notes', 'id');
@@ -216,6 +218,8 @@ function AppShell({ data, setData }) {
   const removeRoleRow = removeFrom('roles', 'roles', 'key');
   const removeStoreTodoRow = removeFrom('storeTodos', 'store_todos', 'id');
   const removeStoreWeeklyTaskRow = removeFrom('storeWeeklyTasks', 'store_weekly_tasks', 'id');
+  const removeDailyChecklistItemRow = removeFrom('dailyChecklistItems', 'daily_checklist_items', 'id');
+  const removeDailyChecklistCheckRow = removeFrom('dailyChecklistChecks', 'daily_checklist_checks', 'id');
   const removeGoalRow = removeFrom('goals', 'goals', 'id');
   const removeInitiativeRow = removeFrom('goalInitiatives', 'goal_initiatives', 'id');
   const removeMilestoneRow = removeFrom('goalMilestones', 'goal_milestones', 'id');
@@ -372,6 +376,23 @@ function AppShell({ data, setData }) {
     upsertStoreWeeklyTask({ store_key: storeKey, weekday, text, sort_order: order });
   };
   const onDeleteWeeklyTask = (id) => removeStoreWeeklyTaskRow(id);
+
+  // --- デイリーチェックリスト（個人管理） ---
+  const onAddDailyChecklistItem = (staffKey, text) => {
+    const order = dailyChecklistItems.filter((i) => i.staff_key === staffKey).length;
+    upsertDailyChecklistItem({ staff_key: staffKey, text, sort_order: order });
+  };
+  const onDeleteDailyChecklistItem = (id) => {
+    removeDailyChecklistItemRow(id).then(() => {
+      setData((d) => ({ ...d, dailyChecklistChecks: d.dailyChecklistChecks.filter((c) => c.item_id !== id) }));
+    });
+  };
+  const onToggleDailyChecklistCheck = (itemId, dateStr) => {
+    const existing = dailyChecklistChecks.find((c) => c.item_id === itemId && c.date === dateStr);
+    if (existing) removeDailyChecklistCheckRow(existing.id);
+    else upsertDailyChecklistCheck({ item_id: itemId, date: dateStr });
+  };
+
   const onSaveStoreMonthComment = (storeKey, ym, comment) => {
     const existing = storeMonthNotes.find((n) => n.store_key === storeKey && n.year_month === ym);
     upsertStoreMonthNote(existing ? { ...existing, comment } : { store_key: storeKey, year_month: ym, comment }).then(() => {
@@ -759,6 +780,9 @@ function AppShell({ data, setData }) {
             <HomeView
               staff={staff} roles={roles} tasks={tasks} onSetTodayStore={onSetTodayStore}
               storeWeeklyTasks={storeWeeklyTasks} onAddWeeklyTask={onAddWeeklyTask} onDeleteWeeklyTask={onDeleteWeeklyTask}
+              dailyChecklistItems={dailyChecklistItems} dailyChecklistChecks={dailyChecklistChecks}
+              onAddDailyChecklistItem={onAddDailyChecklistItem} onDeleteDailyChecklistItem={onDeleteDailyChecklistItem}
+              onToggleDailyChecklistCheck={onToggleDailyChecklistCheck}
             />
           )}
           {view === 'overview' && (
