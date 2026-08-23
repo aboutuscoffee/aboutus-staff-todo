@@ -84,6 +84,9 @@ export default function TaskItem({ task, duties, staffName, onOpenStaff, isOwner
         >
           {!isOwner && <div className="absolute inset-0 z-10 cursor-default" />}
           {offset !== 0 && <div className="absolute inset-0 z-10" onClick={() => setOffset(0)} />}
+          {task.recurring_task_id && (
+            <span className="absolute top-1.5 right-1.5 text-stone-300 text-[13px] leading-none select-none" title="繰り返しタスク">↻</span>
+          )}
           <div className="flex items-start gap-2.5">
             <input
               type="checkbox"
