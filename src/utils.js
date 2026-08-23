@@ -2,11 +2,11 @@ export function isoDate(d) {
   return d.toISOString().split('T')[0];
 }
 
-// デイリーチェック専用：JST午前4時を営業日の境界とする日付文字列を返す。
-// 03:59までは前日扱い、04:00になった時点で当日扱いになる。システムのタイムゾーン設定に関わらず
+// デイリーチェック専用：JST午前3時を営業日の境界とする日付文字列を返す。
+// 02:59までは前日扱い、03:00になった時点で当日扱いになる。システムのタイムゾーン設定に関わらず
 // 常に日本時間で判定する（toISOString()のようなUTC基準の日付ズレを避けるため）。
 // today/tomorrow等の通常の日付境界（0時）には影響しない、デイリーチェックのためだけの関数
-export function businessDayJST(d, boundaryHour = 4) {
+export function businessDayJST(d, boundaryHour = 3) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Tokyo',
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false,

@@ -59,7 +59,7 @@ export default function HomeView({
   }, []);
   const todayStr = isoDate(now);
   const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
-  // デイリーチェックだけはJST午前4時を境界とする営業日で判定する（today/tomorrowなど他の用途には影響させない）
+  // デイリーチェックだけはJST午前3時を境界とする営業日で判定する（today/tomorrowなど他の用途には影響させない）
   const dailyChecklistDateStr = businessDayJST(now);
   const todayWeekday = (now.getDay() + 6) % 7;
   const tomorrowWeekday = (todayWeekday + 1) % 7;
