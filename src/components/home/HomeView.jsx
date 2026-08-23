@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { STORE_INFO, STORE_KEYS } from '../../constants';
 import { homeTasksForDate, homeTasksForRoleView, pendingReviewDueToday } from '../../lib/selectors';
 import { findRole } from '../../lib/permissions';
-import { isoDate } from '../../utils';
+import { isoDate, businessDayJST } from '../../utils';
 import { useSession } from '../../context/SessionContext';
 import WeeklyTasksSection from './WeeklyTasksSection';
 import DailyChecklistCard from './DailyChecklistCard';
@@ -59,6 +59,8 @@ export default function HomeView({
   }, []);
   const todayStr = isoDate(now);
   const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  // デイリーチェックだけはJST午前4時を境界とする営業日で判定する（today/tomorrowなど他の用途には影響させない）
+  const dailyChecklistDateStr = businessDayJST(now);
   const todayWeekday = (now.getDay() + 6) % 7;
   const tomorrowWeekday = (todayWeekday + 1) % 7;
 
@@ -217,7 +219,7 @@ export default function HomeView({
       staffKey={loggedInUserKey}
       items={dailyChecklistItems}
       checks={dailyChecklistChecks}
-      todayStr={todayStr}
+      todayStr={dailyChecklistDateStr}
       onAddItem={onAddDailyChecklistItem}
       onDeleteItem={onDeleteDailyChecklistItem}
       onToggleCheck={onToggleDailyChecklistCheck}
