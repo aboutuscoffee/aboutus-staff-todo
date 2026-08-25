@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf, uploadManualPdf } from './lib/db';
+import { subscribeToPush, sendPush } from './lib/push';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './utils';
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
@@ -131,6 +132,9 @@ function AppShell({ data, setData }) {
   }, []);
 
   const notify = useCallback((staffKey, type, message, fromKey, relatedId) => {
+    if (fromKey && fromKey !== staffKey && (type === 'task_offered' || type === 'memo')) {
+      sendPush(staffKey, 'ABOUT US STAFF TODO', message).catch(() => {});
+    }
     return upsertItem('notifications', { staff_key: staffKey, type, message, from_key: fromKey || null, related_id: relatedId || null, read: false }, 'id')
       .then((saved) => {
         if (staffKey === loggedInUserKey) setNotifications((n) => [saved, ...n]);
@@ -890,6 +894,7 @@ function AppShell({ data, setData }) {
         onRetractMemo={onRetractMemo}
         onClearNotifications={onClearNotifications}
         onOpenMemoCompose={() => { setNotifOpen(false); setQuickAddMode('memo'); setQuickAddOpen(true); }}
+        onEnablePush={() => subscribeToPush(loggedInUserKey)}
       />
       <CalendarModal
         open={calendarOpen}

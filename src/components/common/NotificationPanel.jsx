@@ -1,5 +1,28 @@
 import { useRef, useState } from 'react';
 
+function PushEnableButton({ onEnablePush }) {
+  const [status, setStatus] = useState('');
+
+  async function handleClick() {
+    setStatus('登録中…');
+    try {
+      await onEnablePush();
+      setStatus('有効化しました');
+    } catch (e) {
+      setStatus(e.message);
+    }
+  }
+
+  return (
+    <div className="px-4 py-2 border-b border-stone-100 flex items-center justify-between flex-shrink-0">
+      <button type="button" onClick={handleClick} className="text-[11px] text-stone-500 hover:text-stone-900">
+        🔔 プッシュ通知を有効化
+      </button>
+      {status && <span className="text-[10px] text-stone-400">{status}</span>}
+    </div>
+  );
+}
+
 const TYPE_ICON = {
   pool_posted: '🎯',
   pool_claimed: '✅',
@@ -103,7 +126,7 @@ function NotificationRow({ n, onDelete }) {
   );
 }
 
-export default function NotificationPanel({ open, onClose, notifications, onDeleteNotification, onClearNotifications, onOpenMemoCompose, onRetractMemo }) {
+export default function NotificationPanel({ open, onClose, notifications, onDeleteNotification, onClearNotifications, onOpenMemoCompose, onRetractMemo, onEnablePush }) {
   if (!open) return null;
 
   const memos = notifications.filter((n) => n.type === 'memo' || n.type === 'memo_sent');
@@ -124,6 +147,8 @@ export default function NotificationPanel({ open, onClose, notifications, onDele
           <span className="text-sm font-semibold">通知</span>
           <button type="button" onClick={onClose} className="text-stone-400 hover:text-stone-900 text-lg leading-none px-1">✕</button>
         </div>
+
+        <PushEnableButton onEnablePush={onEnablePush} />
 
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-2 bg-stone-50 flex items-center justify-between flex-shrink-0">
