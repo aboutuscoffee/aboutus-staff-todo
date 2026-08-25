@@ -39,7 +39,13 @@ Deno.serve(async (req) => {
     });
   }
 
-  const payload = JSON.stringify({ title: title || "通知", body: body || "" });
+  const { count: badge } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("staff_key", staff_key)
+    .eq("read", false);
+
+  const payload = JSON.stringify({ title: title || "通知", body: body || "", badge: badge ?? 0 });
   const results = await Promise.allSettled(
     (subs ?? []).map((s) =>
       webpush.sendNotification(

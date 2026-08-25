@@ -103,6 +103,12 @@ function AppShell({ data, setData }) {
     if (loggedInUserKey) fetchNotifications(loggedInUserKey).then(setNotifications).catch(() => {});
   }, [loggedInUserKey]);
 
+  useEffect(() => {
+    if (!('setAppBadge' in navigator)) return;
+    if (unreadCount > 0) navigator.setAppBadge(unreadCount).catch(() => {});
+    else navigator.clearAppBadge().catch(() => {});
+  }, [unreadCount]);
+
   // --- 月次評価スナップショット：先月以前の未保存分を自動生成 ---
   const didBackfillMonthly = useRef(false);
   useEffect(() => {
