@@ -98,6 +98,8 @@ function AppShell({ data, setData }) {
   const canViewPersonal = (key) => key === loggedInUserKey || !isOwnerRole(staff, roles, key);
   const myPendingOffers = tasks.filter((t) => t.pending_approval && t.staff_key === loggedInUserKey);
   const offersToPopup = myPendingOffers.filter((t) => !dismissedOfferIds.includes(t.id));
+  // task_offered は承認するまでバッジを減らさないので、通常の未読カウントからは除外
+  const badgeCount = notifications.filter((n) => !n.read && n.type !== 'task_offered').length + myPendingOffers.length;
 
   useEffect(() => {
     if (loggedInUserKey) fetchNotifications(loggedInUserKey).then(setNotifications).catch(() => {});
@@ -105,9 +107,9 @@ function AppShell({ data, setData }) {
 
   useEffect(() => {
     if (!('setAppBadge' in navigator)) return;
-    if (unreadCount > 0) navigator.setAppBadge(unreadCount).catch(() => {});
+    if (badgeCount > 0) navigator.setAppBadge(badgeCount).catch(() => {});
     else navigator.clearAppBadge().catch(() => {});
-  }, [unreadCount]);
+  }, [badgeCount]);
 
   // --- 月次評価スナップショット：先月以前の未保存分を自動生成 ---
   const didBackfillMonthly = useRef(false);

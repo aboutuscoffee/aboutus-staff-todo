@@ -39,13 +39,24 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { count: badge } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("staff_key", staff_key)
-    .eq("read", false);
+  // task_offered は承認するまでバッジを減らさないので、未読カウントからは除外し
+  // 代わりに未承認のタスク依頼件数を加算する
+  const [{ count: unreadOther }, { count: pendingOffers }] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("staff_key", staff_key)
+      .eq("read", false)
+      .neq("type", "task_offered"),
+    supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("staff_key", staff_key)
+      .eq("pending_approval", true),
+  ]);
+  const badge = (unreadOther ?? 0) + (pendingOffers ?? 0);
 
-  const payload = JSON.stringify({ title: title || "通知", body: body || "", badge: badge ?? 0 });
+  const payload = JSON.stringify({ title: title || "通知", body: body || "", badge });
   const results = await Promise.allSettled(
     (subs ?? []).map((s) =>
       webpush.sendNotification(
