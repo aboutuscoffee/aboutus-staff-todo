@@ -1,18 +1,25 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import { MAX_ATTEMPTS } from '../constants';
-import { sha256 } from '../utils';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 
 const SessionContext = createContext(null);
-const STORAGE_KEY = 'aboutus_login_key';
 
-export function SessionProvider({ staff, onPersistStaff, children }) {
-  const [loggedInUserKey, setLoggedInUserKey] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return null;
-    const user = staff.find((s) => s.key === saved);
-    return user && !user.blocked ? saved : null;
-  });
+export function SessionProvider({ staff, children }) {
+  // undefined = セッション確認中, null = 未ログイン, オブジェクト = ログイン中のSupabase Authセッション
+  const [session, setSession] = useState(undefined);
   const [modal, setModal] = useState({ open: false, subText: '', cancelable: true, onSuccess: null });
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  // staff.auth_user_idはSupabase Authのuser.idと突き合わせるためのキー。
+  // 業務データ側は引き続きstaff.keyで紐付いているため、ここでstaff.keyに変換してから渡す
+  const loggedInStaff = session?.user ? staff.find((s) => s.auth_user_id === session.user.id) : null;
+  const loggedInUserKey = loggedInStaff ? loggedInStaff.key : null;
 
   const openLoginModal = useCallback(({ subText = '', onSuccess = null, cancelable = true } = {}) => {
     setModal({ open: true, subText, cancelable, onSuccess });
@@ -24,32 +31,18 @@ export function SessionProvider({ staff, onPersistStaff, children }) {
 
   const login = useCallback(async (key, password) => {
     const user = staff.find((s) => s.key === key);
-    if (!user) return { ok: false };
-    if (user.blocked) return { ok: false, blocked: true };
+    if (!user || !user.email) return { ok: false };
+    const { error } = await supabase.auth.signInWithPassword({ email: user.email, password });
+    if (error) return { ok: false };
+    setModal((m) => ({ ...m, open: false }));
+    if (modal.onSuccess) modal.onSuccess(key);
+    return { ok: true };
+  }, [staff, modal]);
 
-    const hash = await sha256(password);
-    if (hash === user.password_hash) {
-      await onPersistStaff({ ...user, attempts: 0 });
-      setLoggedInUserKey(key);
-      localStorage.setItem(STORAGE_KEY, key);
-      setModal((m) => ({ ...m, open: false }));
-      if (modal.onSuccess) modal.onSuccess(key);
-      return { ok: true };
-    }
-
-    const attempts = (user.attempts || 0) + 1;
-    const blocked = attempts >= MAX_ATTEMPTS;
-    await onPersistStaff({ ...user, attempts, blocked });
-    return { ok: false, blocked, attemptsLeft: MAX_ATTEMPTS - attempts };
-  }, [staff, onPersistStaff, modal]);
-
-  const logout = useCallback(() => {
-    setLoggedInUserKey(null);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+  const logout = useCallback(() => supabase.auth.signOut(), []);
 
   return (
-    <SessionContext.Provider value={{ loggedInUserKey, login, logout, modal, openLoginModal, closeLoginModal }}>
+    <SessionContext.Provider value={{ loggedInUserKey, sessionLoading: session === undefined, login, logout, modal, openLoginModal, closeLoginModal }}>
       {children}
     </SessionContext.Provider>
   );

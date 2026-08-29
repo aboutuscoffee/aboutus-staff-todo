@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf, uploadManualPdf } from './lib/db';
 import { subscribeToPush, sendPush } from './lib/push';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './utils';
+import { supabase } from './lib/supabase';
 import { SessionProvider, useSession } from './context/SessionContext';
 import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
@@ -36,12 +37,6 @@ export default function App() {
     fetchAll().then(setData).catch((e) => setLoadError(e.message));
   }, []);
 
-  const persistStaff = useCallback(async (staffObj) => {
-    const saved = await upsertItem('staff', staffObj, 'key');
-    setData((d) => ({ ...d, staff: d.staff.map((s) => (s.key === saved.key ? saved : s)) }));
-    return saved;
-  }, []);
-
   if (loadError) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f4efe9' }}>
@@ -50,23 +45,26 @@ export default function App() {
     );
   }
 
-  if (data === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f4efe9' }}>
-        <p className="text-sm text-stone-400 tracking-widest">読み込み中...</p>
-      </div>
-    );
-  }
+  if (data === null) return <LoadingScreen />;
 
   return (
-    <SessionProvider staff={data.staff} onPersistStaff={persistStaff}>
+    <SessionProvider staff={data.staff}>
       <Gate data={data} setData={setData} />
     </SessionProvider>
   );
 }
 
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#f4efe9' }}>
+      <p className="text-sm text-stone-400 tracking-widest">読み込み中...</p>
+    </div>
+  );
+}
+
 function Gate({ data, setData }) {
-  const { loggedInUserKey } = useSession();
+  const { loggedInUserKey, sessionLoading } = useSession();
+  if (sessionLoading) return <LoadingScreen />;
   if (!loggedInUserKey) return <LoginScreen staff={data.staff} roles={data.roles} />;
   return <AppShell data={data} setData={setData} />;
 }
@@ -529,11 +527,13 @@ function AppShell({ data, setData }) {
   };
   const onChangeOwnPassword = async (currentPassword, newPassword) => {
     const s = staff.find((x) => x.key === loggedInUserKey);
-    if (!s) return { ok: false, message: 'エラーが発生しました' };
-    const hash = await sha256(currentPassword);
-    if (hash !== s.password_hash) return { ok: false, message: '現在のパスワードが正しくありません' };
-    const password_hash = await sha256(newPassword);
-    await upsertStaff({ ...s, password_hash, attempts: 0, blocked: false });
+    if (!s || !s.email) return { ok: false, message: 'エラーが発生しました' };
+    // updateUser自体は現在のパスワードを検証しないため、先にsignInWithPasswordで
+    // 現在のパスワードを再確認してから新しいパスワードに変更する
+    const { error: reauthError } = await supabase.auth.signInWithPassword({ email: s.email, password: currentPassword });
+    if (reauthError) return { ok: false, message: '現在のパスワードが正しくありません' };
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) return { ok: false, message: 'パスワードの変更に失敗しました' };
     showToast('パスワードを変更しました');
     return { ok: true };
   };
