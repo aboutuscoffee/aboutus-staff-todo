@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf, uploadManualPdf } from './lib/db';
 import { subscribeToPush, sendPush } from './lib/push';
+import { resetStaffPassword } from './lib/adminAuth';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './utils';
 import { supabase } from './lib/supabase';
 import { SessionProvider, useSession } from './context/SessionContext';
@@ -520,10 +521,17 @@ function AppShell({ data, setData }) {
   };
   const onResetPassword = async (key, newPassword) => {
     const s = staff.find((x) => x.key === key);
-    if (!s) return;
+    if (!s) return { ok: false, message: 'エラーが発生しました' };
+    // 実際のログインに使われるSupabase Authのパスワードを更新する。
+    // 権限確認（GM/オーナーか）はEdge Function側で必ず再判定される
+    const result = await resetStaffPassword(key, newPassword);
+    if (!result.ok) return result;
+    // 旧password_hash/attempts/blockedもPasswordTableの既存バッジ表示を壊さないよう
+    // 引き続き更新するが、実際の認証にはもう使われない
     const password_hash = await sha256(newPassword);
     await upsertStaff({ ...s, password_hash, attempts: 0, blocked: false });
-    showToast();
+    showToast('パスワードを変更しました');
+    return { ok: true };
   };
   const onChangeOwnPassword = async (currentPassword, newPassword) => {
     const s = staff.find((x) => x.key === loggedInUserKey);

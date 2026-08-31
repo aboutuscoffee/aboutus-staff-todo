@@ -2,12 +2,19 @@ import { useState } from 'react';
 
 export default function PasswordTable({ staff, roles, onReset }) {
   const [pwValues, setPwValues] = useState({});
+  const [messages, setMessages] = useState({});
 
-  const submit = (key) => {
+  const submit = async (key) => {
     const val = (pwValues[key] || '').trim();
     if (!val) { alert('新しいパスワードを入力してください'); return; }
-    onReset(key, val);
-    setPwValues((v) => ({ ...v, [key]: '' }));
+    setMessages((m) => ({ ...m, [key]: null }));
+    const result = await onReset(key, val);
+    if (result?.ok) {
+      setPwValues((v) => ({ ...v, [key]: '' }));
+      setMessages((m) => ({ ...m, [key]: { type: 'success', text: 'パスワードを変更しました' } }));
+    } else {
+      setMessages((m) => ({ ...m, [key]: { type: 'error', text: result?.message || '変更に失敗しました' } }));
+    }
   };
 
   return (
@@ -22,6 +29,7 @@ export default function PasswordTable({ staff, roles, onReset }) {
       <tbody>
         {staff.map((s) => {
           const role = roles.find((r) => r.key === s.role);
+          const message = messages[s.key];
           return (
             <tr key={s.key}>
               <td className="px-2.5 py-2 border-b border-stone-100">{s.name}（{role?.label}）</td>
@@ -42,6 +50,9 @@ export default function PasswordTable({ staff, roles, onReset }) {
                   />
                   <button type="button" onClick={() => submit(s.key)} className="px-2.5 py-0.5 rounded-md border border-stone-300 bg-white text-[11px]">再設定</button>
                 </div>
+                {message && (
+                  <p className={`text-[10px] mt-1 ${message.type === 'error' ? 'text-[#A32D2D]' : 'text-[#3B6D11]'}`}>{message.text}</p>
+                )}
               </td>
             </tr>
           );
