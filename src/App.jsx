@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAll, upsertItem, deleteItem, renameWithTimestamp, fetchNotifications, markNotificationsRead, deleteNotification, clearNotifications, uploadMeetingPdf, uploadManualPdf } from './lib/db';
 import { subscribeToPush, sendPush } from './lib/push';
-import { resetStaffPassword } from './lib/adminAuth';
+import { resetStaffPassword, createStaffWithAuth } from './lib/adminAuth';
 import { sha256, today, pastMonthKeys, monthKey, monthLabel, isoDate } from './utils';
 import { supabase } from './lib/supabase';
 import { SessionProvider, useSession } from './context/SessionContext';
@@ -484,16 +484,22 @@ function AppShell({ data, setData }) {
       showToast();
     });
   };
-  const onAddStaff = ({ name, stores, role }) => {
+  const onAddStaff = async ({ name, stores, role, email, initialPassword }) => {
     const key = `staff_${Date.now()}`;
     if (roles.find((r) => r.key === role)?.is_owner) {
       const prevOwner = staff.find((x) => roles.find((r) => r.key === x.role)?.is_owner);
       if (prevOwner) upsertStaff({ ...prevOwner, role: 'GM' });
     }
-    upsertStaff({
-      key, name, stores, role, duties: [], password_hash: null, attempts: 0, blocked: false,
-      sort_order: staff.length, hire_date: today, position: '', strengths_html: '', notes_html: '', overall_eval_html: '',
-    }).then(() => showToast());
+    // Supabase Authユーザー作成とstaffレコード作成をEdge Function側で一連の処理として行う
+    // （Auth作成成功→staff INSERT失敗、またはその逆、という中途半端な状態を避けるため）
+    const result = await createStaffWithAuth({
+      key, name, stores, role, email, initialPassword,
+      sortOrder: staff.length, hireDate: today,
+    });
+    if (!result.ok) return result;
+    setData((d) => ({ ...d, staff: [...d.staff, result.staff] }));
+    showToast();
+    return { ok: true };
   };
   const onTogglePerm = (roleKey, permKey, value) => {
     const r = roles.find((x) => x.key === roleKey);

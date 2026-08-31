@@ -15,3 +15,9 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/staff-todo-reset-password/deno.json"
 entrypoint = "./functions/staff-todo-reset-password/index.ts"
+
+[functions.staff-todo-create-staff]
+enabled = true
+verify_jwt = true
+import_map = "./functions/staff-todo-create-staff/deno.json"
+entrypoint = "./functions/staff-todo-create-staff/index.ts"

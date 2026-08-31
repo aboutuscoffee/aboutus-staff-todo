@@ -8,6 +8,9 @@ export default function StaffTable({ staff, roles, canAssignOwner, onReorder, on
   const [newName, setNewName] = useState('');
   const [newStores, setNewStores] = useState([]);
   const [newRole, setNewRole] = useState(roles[0]?.key ?? '');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [addMessage, setAddMessage] = useState(null);
 
   const nameValue = (s) => names[s.key] ?? s.name;
   const roleOptionsFor = (currentRoleKey) => (canAssignOwner ? roles : roles.filter((r) => !r.is_owner || r.key === currentRoleKey));
@@ -23,12 +26,23 @@ export default function StaffTable({ staff, roles, canAssignOwner, onReorder, on
     onReorder(next);
   };
 
-  const submitAdd = () => {
+  const submitAdd = async () => {
     const trimmed = newName.trim();
+    const trimmedEmail = newEmail.trim();
     if (!trimmed) return;
-    onAdd({ name: trimmed, stores: newStores, role: newRole });
-    setNewName('');
-    setNewStores([]);
+    if (!trimmedEmail) { setAddMessage({ type: 'error', text: 'メールアドレスを入力してください' }); return; }
+    if (!newPassword) { setAddMessage({ type: 'error', text: '初期パスワードを入力してください' }); return; }
+    setAddMessage(null);
+    const result = await onAdd({ name: trimmed, stores: newStores, role: newRole, email: trimmedEmail, initialPassword: newPassword });
+    if (result?.ok) {
+      setNewName('');
+      setNewStores([]);
+      setNewEmail('');
+      setNewPassword('');
+      setAddMessage({ type: 'success', text: 'スタッフを追加しました' });
+    } else {
+      setAddMessage({ type: 'error', text: result?.message || '追加に失敗しました' });
+    }
   };
 
   return (
@@ -124,8 +138,13 @@ export default function StaffTable({ staff, roles, canAssignOwner, onReorder, on
           <select value={newRole} onChange={(e) => setNewRole(e.target.value)} className="px-2 py-1 rounded-md border border-stone-300 text-xs">
             {addableRoles.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
           </select>
+          <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="メールアドレス" type="email" className="px-2 py-1 rounded-md border border-stone-300 text-xs w-48" />
+          <input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="初期パスワード" type="text" className="px-2 py-1 rounded-md border border-stone-300 text-xs w-32" />
           <button type="button" onClick={submitAdd} className="px-3 py-1.5 rounded-md border border-stone-300 bg-white text-xs">＋ 追加</button>
         </div>
+        {addMessage && (
+          <p className={`text-[11px] ${addMessage.type === 'error' ? 'text-[#A32D2D]' : 'text-[#3B6D11]'}`}>{addMessage.text}</p>
+        )}
       </div>
     </div>
   );
