@@ -18,6 +18,4 @@ export const PRIORITY_CLASSES = {
   low: 'bg-stone-100 text-stone-500',
 };
 
-export const MAX_ATTEMPTS = 5;
-
 export const BASE_ROLE_KEYS = ['staff', 'SM', 'GM', 'owner'];

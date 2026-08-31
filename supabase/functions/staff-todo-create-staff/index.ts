@@ -117,8 +117,8 @@ Deno.serve(async (req) => {
 
   const authUserId = createdUser.user.id;
 
-  // staffレコードを作成する。password_hashは使わないためnullのまま、
-  // attempts/blockedは既存の初期化ルールを踏襲する
+  // staffレコードを作成する。実際の認証情報はSupabase Auth側(auth_user_id)にあるため、
+  // 旧認証方式の列(password_hash/attempts/blocked)は指定しない
   const { data: insertedStaff, error: insertError } = await adminClient
     .from("staff")
     .insert({
@@ -129,9 +129,6 @@ Deno.serve(async (req) => {
       email,
       auth_user_id: authUserId,
       duties: [],
-      password_hash: null,
-      attempts: 0,
-      blocked: false,
       sort_order: sortOrder ?? 0,
       hire_date: hireDate ?? null,
       position: "",

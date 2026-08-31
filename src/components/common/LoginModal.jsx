@@ -7,15 +7,13 @@ export default function LoginModal({ staff, roles }) {
   const options = loginableStaff(staff, roles);
   const [selectedKey, setSelectedKey] = useState(options[0]?.key ?? '');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null); // 'wrong' | 'blocked' | null
-  const [attemptsLeft, setAttemptsLeft] = useState(null);
+  const [error, setError] = useState(null); // 'wrong' | null
 
   useEffect(() => {
     if (modal.open) {
       setSelectedKey(options[0]?.key ?? '');
       setPassword('');
       setError(null);
-      setAttemptsLeft(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modal.open]);
@@ -26,13 +24,8 @@ export default function LoginModal({ staff, roles }) {
     if (!selectedKey) return;
     const res = await login(selectedKey, password);
     if (!res.ok) {
-      if (res.blocked) {
-        setError('blocked');
-      } else {
-        setError('wrong');
-        setAttemptsLeft(res.attemptsLeft ?? null);
-        setPassword('');
-      }
+      setError('wrong');
+      setPassword('');
     }
   };
 
@@ -85,17 +78,7 @@ export default function LoginModal({ staff, roles }) {
         )}
 
         {error === 'wrong' && (
-          <>
-            <p className="text-[11px] text-red-600 mt-1.5 text-center">パスワードが正しくありません</p>
-            {attemptsLeft !== null && (
-              <p className="text-[10px] text-stone-400 text-center mt-1">残り試行回数：{attemptsLeft}回</p>
-            )}
-          </>
-        )}
-        {error === 'blocked' && (
-          <div className="text-[11px] text-[#A32D2D] bg-[#FCEBEB] rounded-md px-[10px] py-2 mt-2 text-center">
-            試行回数の上限に達しました。GMにパスワード再設定を依頼してください。
-          </div>
+          <p className="text-[11px] text-red-600 mt-1.5 text-center">パスワードが正しくありません</p>
         )}
       </div>
     </div>
