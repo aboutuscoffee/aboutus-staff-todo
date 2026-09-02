@@ -177,7 +177,7 @@ export function pendingReviewTasks(tasks, criterion = 'deadline') {
 
 export function ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives, goalMilestones, monthAgo) {
   return staff
-    .filter((s) => !findRole(roles, s.role)?.is_owner)
+    .filter((s) => s.is_active && !findRole(roles, s.role)?.is_owner)
     .map((s) => {
       const staffTasks = tasks.filter((t) => t.staff_key === s.key && !t.pending_approval);
       const poolDoneCount = staffTasks.filter((t) => t.done && t.from_pool).length;

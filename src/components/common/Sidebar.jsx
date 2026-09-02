@@ -14,7 +14,7 @@ function RoleBadge({ staffMember, roles }) {
 
 export default function Sidebar({ collapsed, staff, roles, view, si, onGoView, onGoPersonal, onTrySettings, onClose }) {
   const groups = { fushimi: [], nijo: [], gm: [] };
-  staff.forEach((s) => {
+  staff.filter((s) => s.is_active).forEach((s) => {
     const role = roles.find((r) => r.key === s.role);
     if (role?.key === 'GM' || role?.is_owner) {
       groups.gm.push(s);

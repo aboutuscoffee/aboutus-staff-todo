@@ -6,7 +6,7 @@ import { loginableStaff } from '../../lib/permissions';
 
 export default function SettingsView({
   staff, roles, isAdmin, canAssignOwner,
-  onReorderStaff, onUpdateStaffField, onDeleteStaff, onAddStaff,
+  onReorderStaff, onUpdateStaffField, onArchiveStaff, onReactivateStaff, onAddStaff,
   onTogglePerm, onToggleViewScope, onAddRole, onDeleteRole,
   onResetPassword, onChangeOwnPassword,
 }) {
@@ -28,7 +28,7 @@ export default function SettingsView({
 
       <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-3">
         <div className="text-xs font-semibold mb-2.5 pb-1.5 border-b border-stone-100">スタッフ管理</div>
-        <StaffTable staff={staff} roles={roles} canAssignOwner={canAssignOwner} onReorder={onReorderStaff} onUpdateField={onUpdateStaffField} onDelete={onDeleteStaff} onAdd={onAddStaff} />
+        <StaffTable staff={staff} roles={roles} canAssignOwner={canAssignOwner} onReorder={onReorderStaff} onUpdateField={onUpdateStaffField} onArchive={onArchiveStaff} onReactivate={onReactivateStaff} onAdd={onAddStaff} />
       </div>
 
       <div className="rounded-2xl border border-stone-100 bg-white p-4 mb-3">

@@ -80,7 +80,7 @@ export default function PersonalView({
                   task={t}
                   offererName={staff.find((s) => s.key === t.offered_by)?.name || ''}
                   canHandOff={canHandOffOffer}
-                  otherStaff={staff.filter((s) => s.key !== staffKey)}
+                  otherStaff={staff.filter((s) => s.is_active && s.key !== staffKey)}
                   onApprove={() => onApproveTaskOffer(t.id)}
                   onHandOff={(newKey) => onHandOffTaskOffer(t.id, newKey)}
                 />

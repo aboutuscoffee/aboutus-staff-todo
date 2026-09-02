@@ -22,7 +22,7 @@ export default function OverviewTaskList({
 
   const rows = useMemo(() => {
     const out = [];
-    staff.forEach((s) => {
+    staff.filter((s) => s.is_active).forEach((s) => {
       const role = roles.find((r) => r.key === s.role);
       if (!role?.show_in_overview) return;
       if (roleFilter !== 'all' && s.role !== roleFilter) return;

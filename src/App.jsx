@@ -117,7 +117,7 @@ function AppShell({ data, setData }) {
     didBackfillMonthly.current = true;
     const missing = [];
     pastMonthKeys(3).filter((ym) => ym >= MONTHLY_EVAL_START_YM).forEach((ym) => {
-      staff.forEach((s) => {
+      staff.filter((s) => s.is_active).forEach((s) => {
         if (monthlyEvalRecords.some((r) => r.staff_key === s.key && r.year_month === ym)) return;
         const stats = computeMonthlyStats(tasks, goals, goalInitiatives, goalMilestones, s.key, ym);
         missing.push({
@@ -225,7 +225,6 @@ function AppShell({ data, setData }) {
 
   const removeTask = removeFrom('tasks', 'tasks', 'id');
   const removePool = removeFrom('poolTasks', 'pool_tasks', 'id');
-  const removeStaffRow = removeFrom('staff', 'staff', 'key');
   const removeRoleRow = removeFrom('roles', 'roles', 'key');
   const removeStoreTodoRow = removeFrom('storeTodos', 'store_todos', 'id');
   const removeStoreWeeklyTaskRow = removeFrom('storeWeeklyTasks', 'store_weekly_tasks', 'id');
@@ -274,7 +273,7 @@ function AppShell({ data, setData }) {
   const onAddPool = (text, kind, deadline, priority, targetKeys, broadcastAll) => {
     if (kind === 'assign' && !isAdminRole(staff, roles, loggedInUserKey)) return;
     if (kind === 'todo' && broadcastAll && (!targetKeys || !targetKeys.length)) {
-      const recipientKeys = staff.filter((s) => s.key !== loggedInUserKey).map((s) => s.key);
+      const recipientKeys = staff.filter((s) => s.is_active && s.key !== loggedInUserKey).map((s) => s.key);
       Promise.all(recipientKeys.map((key) => upsertTask({
         staff_key: key, text, duty: 'その他', priority: priority || 'mid', status: '',
         done: false, done_date: null, deadline: deadline || today, workdate: today, minutes: null,
@@ -300,7 +299,7 @@ function AppShell({ data, setData }) {
       });
       return;
     }
-    const recipients = targetKeys && targetKeys.length ? targetKeys : staff.filter((s) => s.key !== loggedInUserKey).map((s) => s.key);
+    const recipients = targetKeys && targetKeys.length ? targetKeys : staff.filter((s) => s.is_active && s.key !== loggedInUserKey).map((s) => s.key);
     upsertPool({ text, kind, deadline, workdate: null, minutes: null, priority: priority || 'mid', target_keys: targetKeys && targetKeys.length ? targetKeys : null, created_by: loggedInUserKey, created_at: today }).then(() => {
       showToast();
       notify(loggedInUserKey, 'pool_posted', `「${text}」を依頼タスクとして投稿しました`);
@@ -477,12 +476,32 @@ function AppShell({ data, setData }) {
     }
     upsertStaff({ ...s, ...partial }).then(() => showToast());
   };
-  const onDeleteStaff = (key) => {
-    removeStaffRow(key).then(() => {
-      if (si === key) { setSi(null); setView('overview'); }
-      if (loggedInUserKey === key) logout();
-      showToast();
-    });
+  // 退職処理。staffレコードはDELETEせず、is_activeをfalseに更新するだけにする。
+  // 過去のタスク・評価等はstaff_key経由でそのまま参照され続け、Authユーザーも削除しない
+  const onArchiveStaff = async (key) => {
+    const s = staff.find((x) => x.key === key);
+    if (!s) return { ok: false, message: 'エラーが発生しました' };
+    try {
+      await upsertStaff({ ...s, is_active: false });
+    } catch {
+      return { ok: false, message: '退職処理に失敗しました' };
+    }
+    if (si === key) { setSi(null); setView('overview'); }
+    if (loggedInUserKey === key) logout();
+    showToast('退職処理をしました');
+    return { ok: true };
+  };
+  // 再有効化。is_activeをtrueに戻すだけで、同じAuthアカウントで再びログインできるようになる
+  const onReactivateStaff = async (key) => {
+    const s = staff.find((x) => x.key === key);
+    if (!s) return { ok: false, message: 'エラーが発生しました' };
+    try {
+      await upsertStaff({ ...s, is_active: true });
+    } catch {
+      return { ok: false, message: '再有効化に失敗しました' };
+    }
+    showToast('再有効化しました');
+    return { ok: true };
   };
   const onAddStaff = async ({ name, stores, role, email, initialPassword }) => {
     const key = `staff_${Date.now()}`;
@@ -581,7 +600,7 @@ function AppShell({ data, setData }) {
       if (becameReview) {
         notify(t.staff_key, 'status_review', `「${t.text}」の確認願いをオーナーに通知しました`);
         const staffName = staff.find((x) => x.key === t.staff_key)?.name || '';
-        staff.filter((o) => o.key !== t.staff_key && isOwnerRole(staff, roles, o.key))
+        staff.filter((o) => o.is_active && o.key !== t.staff_key && isOwnerRole(staff, roles, o.key))
           .forEach((o) => notify(o.key, 'review_owner', `${staffName}さんが「${t.text}」を確認待ちにしました`));
       }
     }
@@ -842,7 +861,7 @@ function AppShell({ data, setData }) {
               staff={staff} roles={roles}
               isAdmin={isAdminRole(staff, roles, loggedInUserKey)}
               canAssignOwner={canAssignOwner(staff, roles, loggedInUserKey)}
-              onReorderStaff={onReorderStaff} onUpdateStaffField={onUpdateStaffField} onDeleteStaff={onDeleteStaff} onAddStaff={onAddStaff}
+              onReorderStaff={onReorderStaff} onUpdateStaffField={onUpdateStaffField} onArchiveStaff={onArchiveStaff} onReactivateStaff={onReactivateStaff} onAddStaff={onAddStaff}
               onTogglePerm={onTogglePerm} onToggleViewScope={onToggleViewScope} onAddRole={onAddRole} onDeleteRole={onDeleteRole}
               onResetPassword={onResetPassword} onChangeOwnPassword={onChangeOwnPassword}
             />

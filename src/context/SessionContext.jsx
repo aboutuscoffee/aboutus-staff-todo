@@ -17,9 +17,18 @@ export function SessionProvider({ staff, children }) {
   }, []);
 
   // staff.auth_user_idはSupabase Authのuser.idと突き合わせるためのキー。
-  // 業務データ側は引き続きstaff.keyで紐付いているため、ここでstaff.keyに変換してから渡す
+  // 業務データ側は引き続きstaff.keyで紐付いているため、ここでstaff.keyに変換してから渡す。
+  // is_active=falseのスタッフ（退職・無効化済み）はここで弾き、ログイン中扱いにしない
   const loggedInStaff = session?.user ? staff.find((s) => s.auth_user_id === session.user.id) : null;
-  const loggedInUserKey = loggedInStaff ? loggedInStaff.key : null;
+  const loggedInUserKey = loggedInStaff && loggedInStaff.is_active ? loggedInStaff.key : null;
+
+  // 既にログイン中のブラウザで、staffデータの再取得によって本人がis_active=falseだと
+  // 判明した場合（他の管理者が退職処理をした場合等）、Supabase Authのセッション自体を破棄する
+  useEffect(() => {
+    if (loggedInStaff && !loggedInStaff.is_active) {
+      supabase.auth.signOut();
+    }
+  }, [loggedInStaff]);
 
   const openLoginModal = useCallback(({ subText = '', onSuccess = null, cancelable = true } = {}) => {
     setModal({ open: true, subText, cancelable, onSuccess });
@@ -31,7 +40,7 @@ export function SessionProvider({ staff, children }) {
 
   const login = useCallback(async (key, password) => {
     const user = staff.find((s) => s.key === key);
-    if (!user || !user.email) return { ok: false };
+    if (!user || !user.email || !user.is_active) return { ok: false };
     const { error } = await supabase.auth.signInWithPassword({ email: user.email, password });
     if (error) return { ok: false };
     setModal((m) => ({ ...m, open: false }));

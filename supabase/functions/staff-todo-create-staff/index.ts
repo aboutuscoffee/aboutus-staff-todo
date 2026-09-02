@@ -128,6 +128,7 @@ Deno.serve(async (req) => {
       role,
       email,
       auth_user_id: authUserId,
+      is_active: true,
       duties: [],
       sort_order: sortOrder ?? 0,
       hire_date: hireDate ?? null,

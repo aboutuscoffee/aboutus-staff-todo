@@ -51,7 +51,7 @@ export function canViewTask(staff, roles, viewerKey, task) {
 }
 
 export function loginableStaff(staff, roles) {
-  return staff.filter((s) => findRole(roles, s.role)?.can_login);
+  return staff.filter((s) => s.is_active && findRole(roles, s.role)?.can_login);
 }
 
 export function currentOwnerKey(staff, roles) {

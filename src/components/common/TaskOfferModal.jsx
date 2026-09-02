@@ -13,7 +13,7 @@ export default function TaskOfferModal({ offers, staff, canHandOff, onApprove, o
             task={t}
             offererName={staff.find((s) => s.key === t.offered_by)?.name || ''}
             canHandOff={canHandOff}
-            otherStaff={staff.filter((s) => s.key !== t.staff_key)}
+            otherStaff={staff.filter((s) => s.is_active && s.key !== t.staff_key)}
             onApprove={() => onApprove(t.id)}
             onHandOff={(newKey) => onHandOff(t.id, newKey)}
           />

@@ -21,7 +21,7 @@ export default function CalendarModal({ open, onClose, staff, roles, tasks, onOp
 
   if (!open) return null;
 
-  const shownStaff = staff.filter((s) => roles.find((r) => r.key === s.role)?.show_in_overview);
+  const shownStaff = staff.filter((s) => s.is_active && roles.find((r) => r.key === s.role)?.show_in_overview);
 
   const scopedStaffKeys = (() => {
     if (scope === 'mine') return new Set([loggedInUserKey]);
