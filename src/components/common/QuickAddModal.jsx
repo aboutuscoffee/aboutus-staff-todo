@@ -4,8 +4,9 @@ import { showErrorToast } from './Toast';
 import { PRIORITY_OPTIONS } from '../../constants';
 import { useSession } from '../../context/SessionContext';
 import { WEEKDAY_LABELS } from '../../lib/recurrence';
+import { isOwnerRole } from '../../lib/permissions';
 
-export default function QuickAddModal({ open, onClose, staff, duties, onAddTask, onAddRecurringTask, onAddPool, onSendMemo, initialMode, prefill, canRestrictTask, canPostAssignPool }) {
+export default function QuickAddModal({ open, onClose, staff, roles, duties, onAddTask, onAddRecurringTask, onAddPool, onSendMemo, initialMode, prefill, canRestrictTask, canPostAssignPool }) {
   const { loggedInUserKey } = useSession();
   const [mode, setMode] = useState('task');
   const [text, setText] = useState('');
@@ -94,7 +95,15 @@ export default function QuickAddModal({ open, onClose, staff, duties, onAddTask,
         showErrorToast('タスク名を入力してください');
         return;
       }
-      onAddPool(trimmed, poolKind, poolKind === 'assign' ? null : (poolDeadline || null), priority, targetKeys, poolKind === 'todo' && targetKeys.length === 0 && broadcastAll);
+      const isBroadcast = poolKind === 'todo' && targetKeys.length === 0 && broadcastAll;
+      let excludeOwner = false;
+      if (isBroadcast && !isOwnerRole(staff, roles, loggedInUserKey)) {
+        const ownerStaff = (staff || []).find((s) => s.is_active && isOwnerRole(staff, roles, s.key));
+        if (ownerStaff) {
+          excludeOwner = !window.confirm('オーナーも含めて依頼しますか？');
+        }
+      }
+      onAddPool(trimmed, poolKind, poolKind === 'assign' ? null : (poolDeadline || null), priority, targetKeys, isBroadcast, excludeOwner);
     }
     onClose();
   };

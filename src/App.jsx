@@ -270,14 +270,16 @@ function AppShell({ data, setData }) {
   const trySettings = () => { setCollapsed(true); setView('settings'); };
 
   // --- 全員一覧・担当者募集プール ---
-  const onAddPool = (text, kind, deadline, priority, targetKeys, broadcastAll) => {
+  const onAddPool = (text, kind, deadline, priority, targetKeys, broadcastAll, excludeOwner) => {
     if (kind === 'assign' && !isAdminRole(staff, roles, loggedInUserKey)) return;
     if (kind === 'todo' && broadcastAll && (!targetKeys || !targetKeys.length)) {
-      const recipientKeys = staff.filter((s) => s.is_active && s.key !== loggedInUserKey).map((s) => s.key);
+      const recipientKeys = staff
+        .filter((s) => s.is_active && s.key !== loggedInUserKey && !(excludeOwner && isOwnerRole(staff, roles, s.key)))
+        .map((s) => s.key);
       Promise.all(recipientKeys.map((key) => upsertTask({
         staff_key: key, text, duty: 'その他', priority: priority || 'mid', status: '',
         done: false, done_date: null, deadline: deadline || today, workdate: today, minutes: null,
-        from_pool: true,
+        from_pool: true, offered_by: loggedInUserKey,
       }))).then(() => {
         showToast();
         notify(loggedInUserKey, 'pool_posted', `「${text}」を全員のタスクとして配布しました`);
@@ -338,7 +340,7 @@ function AppShell({ data, setData }) {
     if (p.kind === 'assign') {
       if (!s.duties.includes(p.text)) await upsertStaff({ ...s, duties: [...s.duties, p.text] });
     } else {
-      await upsertTask({ staff_key: staffKey, text: p.text, duty: 'その他', priority: p.priority || 'mid', status: '', done: false, done_date: null, deadline: p.deadline || today, workdate: today, minutes: p.minutes, from_pool: true });
+      await upsertTask({ staff_key: staffKey, text: p.text, duty: 'その他', priority: p.priority || 'mid', status: '', done: false, done_date: null, deadline: p.deadline || today, workdate: today, minutes: p.minutes, from_pool: true, offered_by: p.created_by || null });
     }
     if (p.created_by && p.created_by !== staffKey) {
       notify(p.created_by, 'pool_claimed', `「${p.text}」を${s.name}さんが受け取りました`);
@@ -901,11 +903,12 @@ function AppShell({ data, setData }) {
         open={quickAddOpen}
         onClose={() => { setQuickAddOpen(false); setQuickAddPrefill(null); }}
         staff={staff}
+        roles={roles}
         duties={loggedInStaff?.duties || []}
         onAddTask={(fields) => onAddTask(loggedInUserKey, fields)}
         onAddRecurringTask={(fields) => onAddRecurringTask(loggedInUserKey, fields)}
-        onAddPool={(text, kind, deadline, priority, targetKeys, broadcastAll) => {
-          onAddPool(text, kind, deadline, priority, targetKeys, broadcastAll);
+        onAddPool={(text, kind, deadline, priority, targetKeys, broadcastAll, excludeOwner) => {
+          onAddPool(text, kind, deadline, priority, targetKeys, broadcastAll, excludeOwner);
           if (quickAddPrefill?.sourceTaskId) removeTask(quickAddPrefill.sourceTaskId);
           setQuickAddPrefill(null);
         }}
