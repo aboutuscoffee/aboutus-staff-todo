@@ -91,6 +91,14 @@ export default function TaskItem({ task, duties, staffName, onOpenStaff, isOwner
               onChange={onToggleDone}
               className="w-[16px] h-[16px] mt-[3px] cursor-pointer accent-[#1D9E75] flex-shrink-0"
             />
+            {isTaskOwner && (
+              <button
+                type="button"
+                onClick={() => onSave({ important: !task.important })}
+                className={`text-[17px] leading-none mt-[1px] flex-shrink-0 ${task.important ? 'text-[#EF9F27]' : 'text-stone-300 hover:text-stone-400'}`}
+                aria-label="重要マーク"
+              >{task.important ? '★' : '✩'}</button>
+            )}
             <div className="min-w-0 flex-1">
               <span className={`text-[16px] font-bold leading-snug break-words ${task.done ? 'line-through text-stone-500' : ''}`}>{task.text}</span>
               {isTaskOwner ? (

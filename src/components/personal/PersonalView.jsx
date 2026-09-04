@@ -7,7 +7,8 @@ import EvalPanel from './EvalPanel';
 import TrainingPanel from './TrainingPanel';
 import StoreCard from '../storetodos/StoreCard';
 import TaskOfferCard from './TaskOfferCard';
-import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff, trainingPctForStaff, advancedTrainingPctForStaff } from '../../lib/selectors';
+import { tasksForStaff, goalsForStaff, storeTodosForStore, computeSummary, pendingOffersForStaff, importantTasksForStaff, trainingPctForStaff, advancedTrainingPctForStaff } from '../../lib/selectors';
+import ReminderCard from '../common/ReminderCard';
 import { monthAgo, monthStart, monthKey, monthLabel } from '../../utils';
 import { isOwnerRole, isAdminRole, canViewTask, canConfirmTraining } from '../../lib/permissions';
 import { useSession } from '../../context/SessionContext';
@@ -41,6 +42,7 @@ export default function PersonalView({
   const myOffers = isSelf ? pendingOffersForStaff(tasks, staffKey) : [];
   const myGoals = goalsForStaff(goals, goalInitiatives, goalMilestones, staffKey);
   const myTrainingProgress = trainingProgress.filter((p) => p.staff_key === staffKey);
+  const myImportantTasks = importantTasksForStaff(tasks, staffKey);
   const canConfirm = canConfirmTraining(staff, roles, loggedInUserKey);
 
   return (
@@ -60,6 +62,7 @@ export default function PersonalView({
           ))}
         </div>
       )}
+      <ReminderCard tasks={myImportantTasks} />
 
       <div className="flex gap-1.5 mb-3.5 flex-wrap">
         <button type="button" onClick={() => setPTab('tasks')} className={`px-3 py-1.5 rounded-md border border-stone-300 text-xs ${pTab === 'tasks' ? 'bg-stone-100 font-medium' : 'bg-transparent text-stone-500'}`}>📋 日次タスク</button>

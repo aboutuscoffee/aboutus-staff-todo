@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { STORE_INFO, STORE_KEYS } from '../../constants';
-import { homeTasksForDate, homeTasksForRoleView, pendingReviewDueToday } from '../../lib/selectors';
+import { homeTasksForDate, homeTasksForRoleView, pendingReviewDueToday, importantTasksForStaff } from '../../lib/selectors';
+import ReminderCard from '../common/ReminderCard';
 import { findRole } from '../../lib/permissions';
 import { isoDate, businessDayJST } from '../../utils';
 import { useSession } from '../../context/SessionContext';
@@ -110,6 +111,7 @@ export default function HomeView({
 
   if (!me) return null;
 
+  const myImportantTasks = importantTasksForStaff(tasks, loggedInUserKey);
   const canShowDays = isRoleView || !!selectedStore;
   const getItems = (dateStr) => (isRoleView
     ? homeTasksForRoleView(tasks, staff, roles, loggedInUserKey, dateStr)
@@ -141,6 +143,7 @@ export default function HomeView({
 
   return (
     <>
+    <ReminderCard tasks={myImportantTasks} />
     <div className="rounded-2xl border border-stone-100 bg-white p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[22px] font-bold leading-tight">{DAYS[dayIndex]?.title ?? 'Today'}</span>

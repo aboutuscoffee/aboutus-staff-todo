@@ -40,6 +40,10 @@ export function tasksForStaff(tasks, staffKey, criterion = 'deadline') {
   return sortTasks(tasks.filter((t) => t.staff_key === staffKey && !t.pending_approval), criterion);
 }
 
+export function importantTasksForStaff(tasks, staffKey) {
+  return sortTasks(tasks.filter((t) => t.staff_key === staffKey && t.important && !t.done));
+}
+
 export function pendingOffersForStaff(tasks, staffKey) {
   return tasks.filter((t) => t.staff_key === staffKey && t.pending_approval);
 }
