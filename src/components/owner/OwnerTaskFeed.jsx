@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import TaskItem from '../common/TaskItem';
-import { ownerTaskFeed } from '../../lib/selectors';
+import TaskOfferCard from '../personal/TaskOfferCard';
+import { ownerTaskFeed, pendingOffersForStaff } from '../../lib/selectors';
 import { today } from '../../utils';
 
 const FILTERS = [
@@ -14,11 +15,14 @@ export default function OwnerTaskFeed({
   staff, tasks, ownerKey,
   onGoPersonalEval,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest, onStopRecurringTask,
+  onApproveTaskOffer, onHandOffTaskOffer,
 }) {
   const [filter, setFilter] = useState('all');
   const feed = ownerTaskFeed(tasks, ownerKey, today);
-  const listByFilter = { all: feed.merged, review: feed.reviewTasks, delegated: feed.delegatedTasks, own: feed.ownTasks };
+  const listByFilter = { all: feed.merged, today: feed.todayItems, review: feed.reviewTasks, delegated: feed.delegatedTasks, own: feed.ownTasks };
   const shown = listByFilter[filter];
+  const myOffers = pendingOffersForStaff(tasks, ownerKey);
+  const otherStaff = staff.filter((s) => s.is_active && s.key !== ownerKey);
 
   const tile = (label, count, targetFilter) => (
     <button
@@ -33,8 +37,24 @@ export default function OwnerTaskFeed({
 
   return (
     <div>
+      {myOffers.length > 0 && (
+        <div className="mb-3">
+          {myOffers.map((t) => (
+            <TaskOfferCard
+              key={t.id}
+              task={t}
+              offererName={staff.find((s) => s.key === t.offered_by)?.name || ''}
+              canHandOff
+              otherStaff={otherStaff}
+              onApprove={() => onApproveTaskOffer(t.id)}
+              onHandOff={(newKey) => onHandOffTaskOffer(t.id, newKey)}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-1.5 mb-3.5 flex-wrap">
-        {tile('今日のタスク', feed.todayCount, 'all')}
+        {tile('今日のタスク', feed.todayCount, 'today')}
         {tile('期限超過の依頼', feed.overdueDelegatedCount, 'delegated')}
         {tile('確認待ち', feed.reviewCount, 'review')}
       </div>

@@ -192,12 +192,14 @@ export function ownerTaskFeed(tasks, ownerKey, todayStr) {
   const seen = new Map();
   [...reviewTasks, ...delegatedTasks, ...ownTasks].forEach((t) => { if (!seen.has(t.id)) seen.set(t.id, t); });
   const merged = sortTasks(Array.from(seen.values()));
+  const todayItems = merged.filter((t) => t.deadline && t.deadline <= todayStr);
   return {
     reviewTasks,
     delegatedTasks,
     ownTasks,
     merged,
-    todayCount: merged.filter((t) => t.deadline && t.deadline <= todayStr).length,
+    todayItems,
+    todayCount: todayItems.length,
     overdueDelegatedCount: delegatedTasks.filter((t) => t.deadline && t.deadline < todayStr).length,
     reviewCount: reviewTasks.length,
   };

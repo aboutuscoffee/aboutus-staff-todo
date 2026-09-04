@@ -878,6 +878,7 @@ function AppShell({ data, setData }) {
                 onGoPersonalEval={goPersonalEval}
                 onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit}
                 onTaskStatusChange={onTaskStatusChange} onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest} onStopRecurringTask={onStopRecurringTask}
+                onApproveTaskOffer={onApproveTaskOffer} onHandOffTaskOffer={onHandOffTaskOffer}
                 onAddGoal={onAddGoal} onRenameGoal={onRenameGoal} onDeleteGoal={onDeleteGoal}
                 onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
                 onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}

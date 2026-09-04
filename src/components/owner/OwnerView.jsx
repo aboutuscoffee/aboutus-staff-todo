@@ -9,6 +9,7 @@ export default function OwnerView({
   staff, roles, tasks, goals, goalInitiatives, goalMilestones,
   onGoPersonalEval,
   onToggleTaskDone, onDeleteTask, onSaveTaskEdit, onTaskStatusChange, onReleaseTaskToPool, onConvertToRequest, onStopRecurringTask,
+  onApproveTaskOffer, onHandOffTaskOffer,
   onAddGoal, onRenameGoal, onDeleteGoal, onAddInitiative, onRenameInitiative, onDeleteInitiative,
   onAddMilestone, onToggleMilestone, onRenameMilestone, onDeleteMilestone,
 }) {
@@ -37,6 +38,8 @@ export default function OwnerView({
           onReleaseTaskToPool={onReleaseTaskToPool}
           onConvertToRequest={onConvertToRequest}
           onStopRecurringTask={onStopRecurringTask}
+          onApproveTaskOffer={onApproveTaskOffer}
+          onHandOffTaskOffer={onHandOffTaskOffer}
         />
       )}
       {oTab === 'goals' && ownerKey && (
