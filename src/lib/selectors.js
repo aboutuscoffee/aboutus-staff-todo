@@ -175,6 +175,34 @@ export function pendingReviewTasks(tasks, criterion = 'deadline') {
   return tasks.filter((t) => t.status === 'review' && !t.done).sort(taskCompare(criterion));
 }
 
+export function delegatedTasksForOwner(tasks, ownerKey) {
+  return sortTasks(tasks.filter((t) => t.offered_by === ownerKey && !t.done));
+}
+
+export function ownerOwnTasks(tasks, ownerKey) {
+  return sortTasks(tasks.filter((t) => t.staff_key === ownerKey && !t.pending_approval && !t.done));
+}
+
+// オーナーページの「タスク」タブ用：確認待ち・依頼タスク・自分のタスクを統合し、
+// カード上部のカウント（今日のタスク＝期限が今日以前／期限超過の依頼／確認待ち）も併せて算出する。
+export function ownerTaskFeed(tasks, ownerKey, todayStr) {
+  const reviewTasks = pendingReviewTasks(tasks);
+  const delegatedTasks = delegatedTasksForOwner(tasks, ownerKey);
+  const ownTasks = ownerOwnTasks(tasks, ownerKey);
+  const seen = new Map();
+  [...reviewTasks, ...delegatedTasks, ...ownTasks].forEach((t) => { if (!seen.has(t.id)) seen.set(t.id, t); });
+  const merged = sortTasks(Array.from(seen.values()));
+  return {
+    reviewTasks,
+    delegatedTasks,
+    ownTasks,
+    merged,
+    todayCount: merged.filter((t) => t.deadline && t.deadline <= todayStr).length,
+    overdueDelegatedCount: delegatedTasks.filter((t) => t.deadline && t.deadline < todayStr).length,
+    reviewCount: reviewTasks.length,
+  };
+}
+
 export function ownerStaffSummaries(staff, roles, tasks, goals, goalInitiatives, goalMilestones, monthAgo) {
   return staff
     .filter((s) => s.is_active && !findRole(roles, s.role)?.is_owner)

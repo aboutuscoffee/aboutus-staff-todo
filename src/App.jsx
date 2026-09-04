@@ -75,11 +75,11 @@ function AppShell({ data, setData }) {
   const [collapsed, setCollapsed] = useState(true);
   const isOwnerLogin = loggedInUserKey && isOwnerRole(data.staff, data.roles, loggedInUserKey);
   const [view, setView] = useState(() => {
-    if (isOwnerLogin) return 'personal';
+    if (isOwnerLogin) return 'owner';
     if (typeof window !== 'undefined' && window.innerWidth < 768) return 'home';
     return 'overview';
   });
-  const [si, setSi] = useState(isOwnerLogin ? loggedInUserKey : null);
+  const [si, setSi] = useState(null);
   const [personalTab, setPersonalTab] = useState(null);
   const [printData, setPrintData] = useState(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -265,7 +265,10 @@ function AppShell({ data, setData }) {
 
   // --- ナビゲーション ---
   const goView = (v) => { setView(v); setCollapsed(true); };
-  const goPersonal = (key) => { setView('personal'); setSi(key); setPersonalTab(null); setCollapsed(true); };
+  const goPersonal = (key) => {
+    if (key === loggedInUserKey && isOwnerRole(staff, roles, key)) { goView('owner'); return; }
+    setView('personal'); setSi(key); setPersonalTab(null); setCollapsed(true);
+  };
   const goPersonalEval = (key) => { setView('personal'); setSi(key); setPersonalTab('eval'); setCollapsed(true); };
   const trySettings = () => { setCollapsed(true); setView('settings'); };
 
@@ -875,6 +878,10 @@ function AppShell({ data, setData }) {
                 onGoPersonalEval={goPersonalEval}
                 onToggleTaskDone={onToggleTaskDone} onDeleteTask={onDeleteTask} onSaveTaskEdit={onSaveTaskEdit}
                 onTaskStatusChange={onTaskStatusChange} onReleaseTaskToPool={onReleaseTaskToPool} onConvertToRequest={onConvertToRequest} onStopRecurringTask={onStopRecurringTask}
+                onAddGoal={onAddGoal} onRenameGoal={onRenameGoal} onDeleteGoal={onDeleteGoal}
+                onAddInitiative={onAddInitiative} onRenameInitiative={onRenameInitiative} onDeleteInitiative={onDeleteInitiative}
+                onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}
+                onRenameMilestone={onRenameMilestone} onDeleteMilestone={onDeleteMilestone}
               />
             ) : null
           )}
