@@ -5,7 +5,7 @@ import { resetStaffPassword, createStaffWithAuth } from './lib/adminAuth';
 import { today, pastMonthKeys, monthKey, monthLabel, isoDate } from './utils';
 import { supabase } from './lib/supabase';
 import { SessionProvider, useSession } from './context/SessionContext';
-import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining } from './lib/permissions';
+import { isAdminRole, isOwnerRole, canAssignOwner, canRestrictTask, canConfirmTraining, currentOwnerKey } from './lib/permissions';
 import { computeMonthlyStats } from './lib/selectors';
 import { pendingOccurrences, addDays, addMonths, recurrenceLabel } from './lib/recurrence';
 import { ADVANCED_GROUP_INDEX } from './lib/trainingData';
@@ -25,6 +25,7 @@ import ManualsView from './components/manuals/ManualsView';
 import SettingsView from './components/settings/SettingsView';
 import PersonalView from './components/personal/PersonalView';
 import OwnerView from './components/owner/OwnerView';
+import OwnerReviewQueue from './components/owner/OwnerReviewQueue';
 import PrintRecord from './components/personal/PrintRecord';
 
 const VIEW_TITLES = { overview: '全員一覧', storetodos: '店舗月次目標', manuals: 'マニュアル一覧', settings: '設定', owner: 'オーナーページ' };
@@ -884,7 +885,14 @@ function AppShell({ data, setData }) {
                 onAddMilestone={onAddMilestone} onToggleMilestone={onToggleMilestone}
                 onRenameMilestone={onRenameMilestone} onDeleteMilestone={onDeleteMilestone}
               />
-            ) : null
+            ) : (
+              <OwnerReviewQueue
+                staff={staff} tasks={tasks}
+                ownerKey={currentOwnerKey(staff, roles)}
+                ownerName={staff.find((s) => s.key === currentOwnerKey(staff, roles))?.name || ''}
+                onGoPersonalEval={goPersonalEval}
+              />
+            )
           )}
           {view === 'personal' && si && canViewPersonal(si) && (
             <PersonalView
