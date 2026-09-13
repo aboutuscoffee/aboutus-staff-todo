@@ -62,6 +62,20 @@ export default function HomeView({
     return () => clearInterval(id);
   }, []);
 
+  const todayStr = isoDate(now);
+  const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  // デイリーチェックだけはJST午前3時を境界とする営業日で判定する（today/tomorrowなど他の用途には影響させない）
+  const dailyChecklistDateStr = businessDayJST(now);
+  const todayWeekday = (now.getDay() + 6) % 7;
+  const tomorrowWeekday = (todayWeekday + 1) % 7;
+
+  const canManageStore = !meRole?.is_owner;
+  const confirmedTodayStore = me?.today_store_date === todayStr ? me.today_store : null;
+  const [pendingStore, setPendingStore] = useState(null);
+  useEffect(() => { setPendingStore(null); }, [todayStr]);
+  const selectedStore = pendingStore ?? confirmedTodayStore ?? (myStores.length === 1 ? myStores[0] : null);
+  const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
+
   const isMatsuda = me?.name?.startsWith('松田');
   const [reportBanner, setReportBanner] = useState(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -79,19 +93,6 @@ export default function HomeView({
       setReportBanner({ date: yd, store: selectedStore });
     });
   }, [isMatsuda, selectedStore, bannerDismissed]); // eslint-disable-line react-hooks/exhaustive-deps
-  const todayStr = isoDate(now);
-  const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
-  // デイリーチェックだけはJST午前3時を境界とする営業日で判定する（today/tomorrowなど他の用途には影響させない）
-  const dailyChecklistDateStr = businessDayJST(now);
-  const todayWeekday = (now.getDay() + 6) % 7;
-  const tomorrowWeekday = (todayWeekday + 1) % 7;
-
-  const canManageStore = !meRole?.is_owner;
-  const confirmedTodayStore = me?.today_store_date === todayStr ? me.today_store : null;
-  const [pendingStore, setPendingStore] = useState(null);
-  useEffect(() => { setPendingStore(null); }, [todayStr]);
-  const selectedStore = pendingStore ?? confirmedTodayStore ?? (myStores.length === 1 ? myStores[0] : null);
-  const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
 
   const [pickerOpen, setPickerOpen] = useState(needsChoice);
   useEffect(() => {
