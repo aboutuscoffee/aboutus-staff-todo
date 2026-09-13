@@ -5,8 +5,11 @@ import ReminderCard from '../common/ReminderCard';
 import { findRole } from '../../lib/permissions';
 import { isoDate, businessDayJST } from '../../utils';
 import { useSession } from '../../context/SessionContext';
+import { getSalesReport } from '../../lib/db';
 import WeeklyTasksSection from './WeeklyTasksSection';
 import DailyChecklistCard from './DailyChecklistCard';
+
+const SALES_APP_URL = 'https://aboutuscoffee.github.io/aboutus-sales/';
 
 const dateLabel = (d) => d.slice(5).replace('-', '/');
 const weekdayLabel = (d) => {
@@ -58,6 +61,24 @@ export default function HomeView({
     const id = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(id);
   }, []);
+
+  const isMatsuda = me?.name?.startsWith('松田');
+  const [reportBanner, setReportBanner] = useState(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!isMatsuda || !selectedStore || bannerDismissed) return;
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yd = isoDate(yesterday);
+    getSalesReport(yd, selectedStore).then((rep) => {
+      if (!rep || rep.closed) { setReportBanner(null); return; }
+      const readBy = Array.isArray(rep.read_by) ? rep.read_by : [];
+      const alreadyRead = readBy.some((surname) => me.name.startsWith(surname));
+      if (alreadyRead) { setReportBanner(null); return; }
+      setReportBanner({ date: yd, store: selectedStore });
+    });
+  }, [isMatsuda, selectedStore, bannerDismissed]); // eslint-disable-line react-hooks/exhaustive-deps
   const todayStr = isoDate(now);
   const tomorrowStr = isoDate(new Date(now.getTime() + 24 * 60 * 60 * 1000));
   // デイリーチェックだけはJST午前3時を境界とする営業日で判定する（today/tomorrowなど他の用途には影響させない）
@@ -144,6 +165,25 @@ export default function HomeView({
   return (
     <>
     <ReminderCard tasks={myImportantTasks} />
+    {reportBanner && !bannerDismissed && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+        <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xs text-center">
+          <p className="text-base font-bold text-stone-800 mb-1">昨日の日報が更新されています</p>
+          <p className="text-sm text-stone-500 mb-4">
+            {STORE_INFO[reportBanner.store]?.label} · {reportBanner.date.slice(5).replace('-', '/')}
+          </p>
+          <a
+            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view&date=${reportBanner.date}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setBannerDismissed(true)}
+            className="block w-full bg-[#1D9E75] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#178a64]"
+          >
+            日報を確認する →
+          </a>
+        </div>
+      </div>
+    )}
     <div className="rounded-2xl border border-stone-100 bg-white p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[22px] font-bold leading-tight">{DAYS[dayIndex]?.title ?? 'Today'}</span>

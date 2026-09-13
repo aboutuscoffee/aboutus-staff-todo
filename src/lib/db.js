@@ -157,3 +157,15 @@ export async function uploadManualPdf(categoryId, file) {
   const { data } = supabase.storage.from('manuals').getPublicUrl(path);
   return data.publicUrl;
 }
+
+export async function getSalesReport(dateStr, storeKey) {
+  const { data, error } = await supabase
+    .from('sales_reports')
+    .select('date, store_id, read_by, closed')
+    .eq('store_id', storeKey)
+    .eq('date', dateStr)
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
