@@ -87,9 +87,7 @@ export default function HomeView({
     const yd = isoDate(yesterday);
     getSalesReport(yd, selectedStore).then((rep) => {
       if (!rep || rep.closed) { setReportBanner(null); return; }
-      const readBy = Array.isArray(rep.read_by) ? rep.read_by : [];
-      const alreadyRead = readBy.some((surname) => me.name.startsWith(surname));
-      if (alreadyRead) { setReportBanner(null); return; }
+      if (rep.check_matsuda) { setReportBanner(null); return; }
       setReportBanner({ date: yd, store: selectedStore });
     });
   }, [isMatsuda, selectedStore, bannerDismissed]); // eslint-disable-line react-hooks/exhaustive-deps
