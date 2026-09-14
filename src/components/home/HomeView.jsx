@@ -5,6 +5,7 @@ import ReminderCard from '../common/ReminderCard';
 import { findRole } from '../../lib/permissions';
 import { isoDate, businessDayJST } from '../../utils';
 import { useSession } from '../../context/SessionContext';
+import { getLatestSalesDate } from '../../lib/db';
 import WeeklyTasksSection from './WeeklyTasksSection';
 import DailyChecklistCard from './DailyChecklistCard';
 
@@ -77,8 +78,15 @@ export default function HomeView({
 
   const showBanner = loggedInUserKey === 'staff_1783595020166';
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [latestSalesDate, setLatestSalesDate] = useState(null);
+
+  useEffect(() => {
+    if (!showBanner || !selectedStore) return;
+    getLatestSalesDate(selectedStore).then((d) => { if (d) setLatestSalesDate(d); });
+  }, [showBanner, selectedStore]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const reportBanner = showBanner && selectedStore && !bannerDismissed
-    ? { store: selectedStore }
+    ? { store: selectedStore, date: latestSalesDate }
     : null;
 
   const [pickerOpen, setPickerOpen] = useState(needsChoice);
@@ -158,10 +166,10 @@ export default function HomeView({
         <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xs text-center">
           <p className="text-base font-bold text-stone-800 mb-1">日報が更新されています</p>
           <p className="text-sm text-stone-500 mb-4">
-            {STORE_INFO[reportBanner.store]?.label}
+            {STORE_INFO[reportBanner.store]?.label}{reportBanner.date ? ` · ${reportBanner.date.slice(5).replace('-', '/')}` : ''}
           </p>
           <a
-            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view`}
+            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view${reportBanner.date ? `&date=${reportBanner.date}` : ''}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setBannerDismissed(true)}
