@@ -76,16 +76,15 @@ export default function HomeView({
   const selectedStore = pendingStore ?? confirmedTodayStore ?? (myStores.length === 1 ? myStores[0] : null);
   const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
 
-  const isMatsuda = me?.name === '松田夕奈';
   const [reportBanner, setReportBanner] = useState(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
-    if (!isMatsuda || !selectedStore || bannerDismissed) return;
+    if (!selectedStore || bannerDismissed) return;
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     setReportBanner({ date: isoDate(yesterday), store: selectedStore });
-  }, [isMatsuda, selectedStore, bannerDismissed]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedStore, bannerDismissed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [pickerOpen, setPickerOpen] = useState(needsChoice);
   useEffect(() => {
