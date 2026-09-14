@@ -76,7 +76,8 @@ export default function HomeView({
   const selectedStore = pendingStore ?? confirmedTodayStore ?? (myStores.length === 1 ? myStores[0] : null);
   const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
 
-  const isMatsuda = me?.name === '松田夕奈';
+  console.log('[banner] me.name:', me?.name);
+  const isMatsuda = me?.name?.includes('松田');
   const [reportBanner, setReportBanner] = useState(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -88,10 +89,11 @@ export default function HomeView({
         d.setDate(d.getDate() - delta);
         const dateStr = isoDate(d);
         const rep = await getSalesReport(dateStr, selectedStore);
+        console.log('[banner] checking', dateStr, selectedStore, rep);
         if (!rep || rep.closed) continue;
         const readBy = Array.isArray(rep.read_by) ? rep.read_by : [];
         const alreadyRead = readBy.some((surname) => me.name.startsWith(surname));
-        if (alreadyRead) break;
+        if (alreadyRead) { setReportBanner(null); return; }
         setReportBanner({ date: dateStr, store: selectedStore });
         return;
       }
