@@ -89,9 +89,6 @@ export default function HomeView({
         const dateStr = isoDate(d);
         const rep = await getSalesReport(dateStr, selectedStore);
         if (!rep || rep.closed) continue;
-        const readBy = Array.isArray(rep.read_by) ? rep.read_by : [];
-        const alreadyRead = readBy.some((s) => s?.includes('松田'));
-        if (alreadyRead) { setReportBanner(null); return; }
         setReportBanner({ date: dateStr, store: selectedStore });
         return;
       }
