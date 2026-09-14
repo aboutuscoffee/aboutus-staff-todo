@@ -161,7 +161,7 @@ export async function uploadManualPdf(categoryId, file) {
 export async function getSalesReport(dateStr, storeKey) {
   const { data, error } = await supabase
     .from('sales_reports')
-    .select('date, store_id, check_matsuda, closed')
+    .select('date, store_id, read_by, closed')
     .eq('store_id', storeKey)
     .eq('date', dateStr)
     .maybeSingle();

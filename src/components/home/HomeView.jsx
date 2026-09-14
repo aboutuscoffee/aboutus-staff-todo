@@ -77,26 +77,27 @@ export default function HomeView({
   const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
 
   const showBanner = loggedInUserKey === 'staff_1783595020166';
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = isoDate(yesterday);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [bannerHidden, setBannerHidden] = useState(false);
-
-  const reportBanner = showBanner && selectedStore && !bannerDismissed && !bannerHidden
-    ? { date: yesterdayStr, store: selectedStore }
-    : null;
+  const [reportBanner, setReportBanner] = useState(null);
 
   useEffect(() => {
     if (!showBanner || !selectedStore || bannerDismissed) return;
-    getSalesReport(yesterdayStr, selectedStore).then((rep) => {
-      if (!rep) return;
-      if (rep.closed) { setBannerHidden(true); return; }
-      const readBy = Array.isArray(rep.read_by) ? rep.read_by : [];
-      const alreadyRead = readBy.some((s) => me?.name?.includes(s) || s?.includes('松田'));
-      if (alreadyRead) setBannerHidden(true);
-    });
-  }, [showBanner, selectedStore, bannerDismissed, yesterdayStr]); // eslint-disable-line react-hooks/exhaustive-deps
+    (async () => {
+      for (let delta = 1; delta <= 5; delta++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - delta);
+        const dateStr = isoDate(d);
+        const rep = await getSalesReport(dateStr, selectedStore);
+        if (!rep || rep.closed) continue;
+        const readBy = Array.isArray(rep.read_by) ? rep.read_by : [];
+        const alreadyRead = readBy.some((s) => s?.includes('松田'));
+        if (alreadyRead) { setReportBanner(null); return; }
+        setReportBanner({ date: dateStr, store: selectedStore });
+        return;
+      }
+      setReportBanner(null);
+    })();
+  }, [showBanner, selectedStore, bannerDismissed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [pickerOpen, setPickerOpen] = useState(needsChoice);
   useEffect(() => {
