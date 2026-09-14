@@ -5,7 +5,6 @@ import ReminderCard from '../common/ReminderCard';
 import { findRole } from '../../lib/permissions';
 import { isoDate, businessDayJST } from '../../utils';
 import { useSession } from '../../context/SessionContext';
-import { getSalesReport } from '../../lib/db';
 import WeeklyTasksSection from './WeeklyTasksSection';
 import DailyChecklistCard from './DailyChecklistCard';
 
@@ -78,23 +77,9 @@ export default function HomeView({
 
   const showBanner = loggedInUserKey === 'staff_1783595020166';
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [reportBanner, setReportBanner] = useState(null);
-
-  useEffect(() => {
-    if (!showBanner || !selectedStore || bannerDismissed) return;
-    (async () => {
-      for (let delta = 1; delta <= 5; delta++) {
-        const d = new Date(now);
-        d.setDate(d.getDate() - delta);
-        const dateStr = isoDate(d);
-        const rep = await getSalesReport(dateStr, selectedStore);
-        if (!rep || rep.closed) continue;
-        setReportBanner({ date: dateStr, store: selectedStore });
-        return;
-      }
-      setReportBanner(null);
-    })();
-  }, [showBanner, selectedStore, bannerDismissed]); // eslint-disable-line react-hooks/exhaustive-deps
+  const reportBanner = showBanner && selectedStore && !bannerDismissed
+    ? { store: selectedStore }
+    : null;
 
   const [pickerOpen, setPickerOpen] = useState(needsChoice);
   useEffect(() => {
@@ -171,12 +156,12 @@ export default function HomeView({
     {reportBanner && !bannerDismissed && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
         <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xs text-center">
-          <p className="text-base font-bold text-stone-800 mb-1">昨日の日報が更新されています</p>
+          <p className="text-base font-bold text-stone-800 mb-1">日報が更新されています</p>
           <p className="text-sm text-stone-500 mb-4">
-            {STORE_INFO[reportBanner.store]?.label} · {reportBanner.date.slice(5).replace('-', '/')}
+            {STORE_INFO[reportBanner.store]?.label}
           </p>
           <a
-            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view&date=${reportBanner.date}`}
+            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setBannerDismissed(true)}
