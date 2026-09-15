@@ -135,6 +135,19 @@ export async function clearNotifications(staffKey) {
   if (error) throw new Error(error.message);
 }
 
+export async function getYesterdayReport(storeKey) {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const { data } = await supabase
+    .from('sales_reports')
+    .select('date, read_by, sales, diary, closed')
+    .eq('store_id', storeKey)
+    .eq('date', dateStr)
+    .maybeSingle();
+  return data;
+}
+
 // Supabase Storage rejects object keys containing non-ASCII characters (e.g. Japanese filenames),
 // so the storage path uses only the file extension; the original name is kept separately for display.
 function safeExt(filename) {

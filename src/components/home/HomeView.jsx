@@ -5,7 +5,7 @@ import ReminderCard from '../common/ReminderCard';
 import { findRole } from '../../lib/permissions';
 import { isoDate, businessDayJST } from '../../utils';
 import { useSession } from '../../context/SessionContext';
-
+import { getYesterdayReport } from '../../lib/db';
 import WeeklyTasksSection from './WeeklyTasksSection';
 import DailyChecklistCard from './DailyChecklistCard';
 
@@ -73,6 +73,22 @@ export default function HomeView({
   useEffect(() => { setPendingStore(null); }, [todayStr]);
   const selectedStore = pendingStore ?? confirmedTodayStore ?? (myStores.length === 1 ? myStores[0] : null);
   const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
+
+  const isMatsuda = loggedInUserKey === 'staff_1783595020166';
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [yesterdayReport, setYesterdayReport] = useState(undefined); // undefined=未取得, null=存在しない
+
+  useEffect(() => {
+    if (!isMatsuda || !selectedStore) return;
+    getYesterdayReport(selectedStore).then((r) => setYesterdayReport(r ?? null));
+  }, [isMatsuda, selectedStore]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const reportHasData = yesterdayReport != null
+    && (yesterdayReport.sales != null || yesterdayReport.diary != null || yesterdayReport.closed != null);
+  const reportNotRead = !Array.isArray(yesterdayReport?.read_by) || !yesterdayReport.read_by.includes('松田');
+  const showReportBanner = isMatsuda && !bannerDismissed && yesterdayReport !== undefined && reportHasData && reportNotRead;
+
+  const SALES_APP_URL = 'https://aboutuscoffee.github.io/aboutus-sales/';
 
   const [pickerOpen, setPickerOpen] = useState(needsChoice);
   useEffect(() => {
@@ -146,6 +162,29 @@ export default function HomeView({
   return (
     <>
     <ReminderCard tasks={myImportantTasks} />
+    {showReportBanner && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
+        <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xs text-center">
+          <p className="text-base font-bold text-stone-800 mb-1">日報が更新されています</p>
+          <p className="text-sm text-stone-500 mb-4">{STORE_INFO[selectedStore]?.label}</p>
+          <a
+            href={`${SALES_APP_URL}?store=${selectedStore}&view=daily-view&date=${yesterdayReport.date}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setBannerDismissed(true)}
+            className="block w-full bg-[#1D9E75] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#178a64] mb-2"
+          >
+            日報を確認する →
+          </a>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="block w-full py-2.5 text-sm text-stone-400 hover:text-stone-600"
+          >
+            あとで確認する
+          </button>
+        </div>
+      </div>
+    )}
     <div className="rounded-2xl border border-stone-100 bg-white p-4">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[22px] font-bold leading-tight">{DAYS[dayIndex]?.title ?? 'Today'}</span>
