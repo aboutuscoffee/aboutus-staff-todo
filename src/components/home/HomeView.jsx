@@ -166,10 +166,10 @@ export default function HomeView({
         <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xs text-center">
           <p className="text-base font-bold text-stone-800 mb-1">日報が更新されています</p>
           <p className="text-sm text-stone-500 mb-4">
-            {STORE_INFO[reportBanner.store]?.label}{reportBanner.date ? ` · ${reportBanner.date.slice(5).replace('-', '/')}` : ''}
+            {STORE_INFO[reportBanner.store]?.label}
           </p>
           <a
-            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view${reportBanner.date ? `&date=${reportBanner.date}` : ''}`}
+            href={SALES_APP_URL}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setBannerDismissed(true)}
