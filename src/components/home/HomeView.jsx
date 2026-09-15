@@ -169,7 +169,7 @@ export default function HomeView({
             {STORE_INFO[reportBanner.store]?.label}
           </p>
           <a
-            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view`}
+            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view${reportBanner.date ? `&date=${reportBanner.date}` : ''}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setBannerDismissed(true)}

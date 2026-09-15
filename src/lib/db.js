@@ -163,6 +163,7 @@ export async function getLatestSalesDate(storeKey) {
     .from('sales_reports')
     .select('date')
     .eq('store_id', storeKey)
+    .or('sales.not.is.null,diary.not.is.null,closed.not.is.null')
     .order('date', { ascending: false })
     .limit(1)
     .maybeSingle();
