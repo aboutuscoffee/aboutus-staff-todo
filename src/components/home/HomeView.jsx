@@ -169,14 +169,20 @@ export default function HomeView({
             {STORE_INFO[reportBanner.store]?.label}
           </p>
           <a
-            href={SALES_APP_URL}
+            href={`${SALES_APP_URL}?store=${reportBanner.store}&view=daily-view`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setBannerDismissed(true)}
-            className="block w-full bg-[#1D9E75] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#178a64]"
+            className="block w-full bg-[#1D9E75] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#178a64] mb-2"
           >
             日報を確認する →
           </a>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            className="block w-full py-2.5 text-sm text-stone-400 hover:text-stone-600"
+          >
+            あとで確認する
+          </button>
         </div>
       </div>
     )}
