@@ -139,7 +139,14 @@ export async function getYesterdayReport(storeKey) {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  console.log('[getYesterdayReport] querying date:', dateStr, 'store_id:', storeKey, 'SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+  console.log('[getYesterdayReport] querying date:', dateStr, 'store_id:', storeKey);
+  // debug: まず直近5件を store_id フィルターなしで取得して何が入っているか確認
+  const { data: recent, error: recentErr } = await supabase
+    .from('sales_reports')
+    .select('date, store_id, read_by')
+    .order('date', { ascending: false })
+    .limit(5);
+  console.log('[getYesterdayReport] recent rows:', recent, 'err:', recentErr);
   const { data, error } = await supabase
     .from('sales_reports')
     .select('date, read_by, sales, diary, closed')
