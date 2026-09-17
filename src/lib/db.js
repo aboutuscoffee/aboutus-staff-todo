@@ -139,12 +139,14 @@ export async function getYesterdayReport(storeKey) {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const { data } = await supabase
+  console.log('[getYesterdayReport] querying date:', dateStr, 'store_id:', storeKey);
+  const { data, error } = await supabase
     .from('sales_reports')
     .select('date, read_by, sales, diary, closed')
     .eq('store_id', storeKey)
     .eq('date', dateStr)
     .maybeSingle();
+  console.log('[getYesterdayReport] result:', { data, error });
   return data;
 }
 
