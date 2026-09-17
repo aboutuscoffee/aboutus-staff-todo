@@ -139,22 +139,15 @@ export async function getYesterdayReport(storeKey) {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  console.log('[getYesterdayReport] querying date:', dateStr, 'store_id:', storeKey);
-  // debug: まず直近5件を store_id フィルターなしで取得して何が入っているか確認
-  const { data: recent, error: recentErr } = await supabase
-    .from('sales_reports')
-    .select('date, store_id, read_by')
-    .order('date', { ascending: false })
-    .limit(5);
-  console.log('[getYesterdayReport] recent rows:', recent, 'err:', recentErr);
-  const { data, error } = await supabase
-    .from('sales_reports')
-    .select('date, read_by, sales, diary, closed')
-    .eq('store_id', storeKey)
-    .eq('date', dateStr)
-    .maybeSingle();
-  console.log('[getYesterdayReport] result:', { data, error });
-  return data;
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const res = await fetch(
+    `${url}/rest/v1/sales_reports?select=date,read_by,sales,diary,closed&store_id=eq.${storeKey}&date=eq.${dateStr}&limit=1`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: 'no-store' }
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  return rows[0] ?? null;
 }
 
 // Supabase Storage rejects object keys containing non-ASCII characters (e.g. Japanese filenames),
