@@ -80,13 +80,18 @@ export default function HomeView({
 
   useEffect(() => {
     if (!isMatsuda || !selectedStore) return;
-    getYesterdayReport(selectedStore).then((r) => setYesterdayReport(r ?? null));
+    getYesterdayReport(selectedStore).then((r) => {
+      const result = r ?? null;
+      console.log('[banner] isMatsuda:', isMatsuda, 'selectedStore:', selectedStore, 'report:', result);
+      setYesterdayReport(result);
+    });
   }, [isMatsuda, selectedStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reportHasData = yesterdayReport != null
     && (yesterdayReport.sales != null || yesterdayReport.diary != null || yesterdayReport.closed != null);
   const reportNotRead = !Array.isArray(yesterdayReport?.read_by) || !yesterdayReport.read_by.includes('松田');
   const showReportBanner = isMatsuda && !bannerDismissed && yesterdayReport !== undefined && reportHasData && reportNotRead;
+  console.log('[banner] show:', showReportBanner, '| dismissed:', bannerDismissed, '| hasData:', reportHasData, '| notRead:', reportNotRead, '| report:', yesterdayReport);
 
   const SALES_APP_URL = 'https://aboutuscoffee.github.io/aboutus-sales/';
 
