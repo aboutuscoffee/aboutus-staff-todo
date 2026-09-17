@@ -74,19 +74,23 @@ export default function HomeView({
   const selectedStore = pendingStore ?? confirmedTodayStore ?? (myStores.length === 1 ? myStores[0] : null);
   const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
 
-  const isMatsuda = loggedInUserKey === 'staff_1783595020166';
+  const REPORT_BANNER_STAFF = {
+    'staff_1783595020166': '松田',
+    'staff_1783603208490': '宗清',
+  };
+  const myBannerName = REPORT_BANNER_STAFF[loggedInUserKey] ?? null;
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [yesterdayReport, setYesterdayReport] = useState(undefined); // undefined=未取得, null=存在しない
 
   useEffect(() => {
-    if (!isMatsuda || !selectedStore) return;
+    if (!myBannerName || !selectedStore) return;
     getYesterdayReport(selectedStore).then((r) => setYesterdayReport(r ?? null));
-  }, [isMatsuda, selectedStore]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [myBannerName, selectedStore]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reportHasData = yesterdayReport != null
     && (yesterdayReport.sales != null || yesterdayReport.diary != null || yesterdayReport.closed != null);
-  const reportNotRead = !Array.isArray(yesterdayReport?.read_by) || !yesterdayReport.read_by.includes('松田');
-  const showReportBanner = isMatsuda && !bannerDismissed && yesterdayReport !== undefined && reportHasData && reportNotRead;
+  const reportNotRead = myBannerName != null && (!Array.isArray(yesterdayReport?.read_by) || !yesterdayReport.read_by.includes(myBannerName));
+  const showReportBanner = myBannerName != null && !bannerDismissed && yesterdayReport !== undefined && reportHasData && reportNotRead;
 
   const SALES_APP_URL = 'https://aboutuscoffee.github.io/aboutus-sales/';
 
