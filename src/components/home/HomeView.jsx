@@ -75,8 +75,14 @@ export default function HomeView({
   const needsChoice = canManageStore && myStores.length > 1 && !selectedStore;
 
   const REPORT_BANNER_STAFF = {
-    'staff_1783595020166': '松田',
-    'staff_1783603208490': '宗清',
+    'staff_1783595020166': '松田',   // nijo
+    'staff_1783603208490': '宗清',   // nijo
+    'staff_1783594992722': '芳野',   // nijo
+    'staff_1783595130799': '宮田',   // nijo/fushimi
+    'staff_1783595055042': '宮尾',   // fushimi
+    'staff_1783595164275': '川端',   // fushimi
+    'staff_1783595253634': '中尾',   // fushimi
+    // 澤野井・金川はバナーなし
   };
   const myBannerName = REPORT_BANNER_STAFF[loggedInUserKey] ?? null;
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -180,12 +186,6 @@ export default function HomeView({
           >
             日報を確認する →
           </a>
-          <button
-            onClick={() => setBannerDismissed(true)}
-            className="block w-full py-2.5 text-sm text-stone-400 hover:text-stone-600"
-          >
-            あとで確認する
-          </button>
         </div>
       </div>
     )}
