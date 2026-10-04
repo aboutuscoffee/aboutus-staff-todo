@@ -135,6 +135,28 @@ export async function clearNotifications(staffKey) {
   if (error) throw new Error(error.message);
 }
 
+export async function addToReadBy(dateStr, storeKey, name) {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const getRes = await fetch(
+    `${url}/rest/v1/sales_reports?select=read_by&store_id=eq.${storeKey}&date=eq.${dateStr}&limit=1`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: 'no-store' }
+  );
+  if (!getRes.ok) return;
+  const rows = await getRes.json();
+  const current = Array.isArray(rows[0]?.read_by) ? rows[0].read_by : [];
+  if (current.includes(name)) return;
+  await fetch(
+    `${url}/rest/v1/sales_reports?date=eq.${dateStr}&store_id=eq.${storeKey}`,
+    {
+      method: 'PATCH',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ read_by: [...current, name] }),
+      cache: 'no-store',
+    }
+  );
+}
+
 export async function getYesterdayReport(storeKey) {
   const d = new Date();
   d.setDate(d.getDate() - 1);

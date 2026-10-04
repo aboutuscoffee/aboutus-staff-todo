@@ -5,7 +5,7 @@ import ReminderCard from '../common/ReminderCard';
 import { findRole } from '../../lib/permissions';
 import { isoDate, businessDayJST } from '../../utils';
 import { useSession } from '../../context/SessionContext';
-import { getYesterdayReport } from '../../lib/db';
+import { getYesterdayReport, addToReadBy } from '../../lib/db';
 import WeeklyTasksSection from './WeeklyTasksSection';
 import DailyChecklistCard from './DailyChecklistCard';
 
@@ -181,7 +181,7 @@ export default function HomeView({
             href={`${SALES_APP_URL}?store=${selectedStore}&view=daily-view&date=${yesterdayReport.date}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setBannerDismissed(true)}
+            onClick={() => { setBannerDismissed(true); addToReadBy(yesterdayReport.date, selectedStore, myBannerName).catch(() => {}); }}
             className="block w-full bg-[#1D9E75] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#178a64] mb-2"
           >
             日報を確認する →
