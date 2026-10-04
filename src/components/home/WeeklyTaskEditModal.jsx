@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const WEEKDAY_LABELS = ['月', '火', '水', '木', '金', '土', '日'];
 
@@ -41,9 +42,11 @@ export default function WeeklyTaskEditModal({ storeKey, label, tasks, onAdd, onD
     .filter((t) => t.store_key === storeKey && t.weekday === weekday)
     .sort((a, b) => a.sort_order - b.sort_order);
 
-  return (
+  // 呼び出し元はスワイプ用のtransform/overflow-hiddenコンテナ内にあり、そのままだとfixedが画面ではなく
+  // カードを基準にしてしまうため、document.bodyへポータルで描画する
+  return createPortal(
     <div className="fixed inset-0 bg-black/35 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="w-[340px] max-h-[80vh] overflow-y-auto bg-white rounded-2xl px-5 py-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-[340px] max-w-[calc(100vw-32px)] max-h-[80vh] overflow-y-auto bg-white rounded-2xl px-5 py-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <span className="text-[15px] font-semibold">{label}の週間タスク編集</span>
           <button type="button" onClick={onClose} className="text-stone-400 hover:text-stone-900 text-lg leading-none">✕</button>
@@ -52,6 +55,7 @@ export default function WeeklyTaskEditModal({ storeKey, label, tasks, onAdd, onD
           <DaySection key={weekday} weekday={weekday} tasks={tasksFor(weekday)} onAdd={onAdd} onDelete={onDelete} />
         ))}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
